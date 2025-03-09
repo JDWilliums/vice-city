@@ -55,6 +55,43 @@ Make sure you have Node.js (v14 or newer) and npm installed on your machine.
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
+## 🚀 Deployment on Vercel
+
+This project is configured for seamless deployment on Vercel.
+
+### One-Click Deployment
+
+1. Push your code to a GitHub, GitLab, or Bitbucket repository
+2. Visit [Vercel](https://vercel.com/new) and import your repository
+3. Vercel will automatically detect Next.js and configure the build settings
+4. Click "Deploy" and your site will be live in minutes!
+
+### Using Vercel CLI
+
+1. Install Vercel CLI:
+   ```
+   npm install -g vercel
+   ```
+
+2. From your project directory, run:
+   ```
+   vercel
+   ```
+
+3. Follow the prompts to link to your Vercel account and project
+
+4. For production deployment, use:
+   ```
+   vercel --prod
+   ```
+
+### Environment Variables
+
+If your project uses environment variables, make sure to add them in the Vercel project settings:
+1. Go to your project on Vercel dashboard
+2. Navigate to Settings > Environment Variables
+3. Add any required environment variables
+
 ## 📷 Screenshots
 
 ### Home Page
