@@ -43,8 +43,8 @@ export default function Home() {
                 <Image 
                   src="/logo-wp.png" 
                   alt="GTA 6 Map & Wiki" 
-                  width={500} 
-                  height={500} 
+                  width={250} 
+                  height={250} 
                   className="w-auto max-w-full h-auto relative" 
                   priority
                 />

@@ -28,14 +28,27 @@ export default function NewsPage() {
         <div className="relative overflow-hidden bg-gradient-to-b from-gray-900 to-black border-b border-gta-blue/30">
           <div className="absolute inset-0 z-0">
             <div className="absolute top-0 right-0 w-96 h-96 bg-gta-pink/10 rounded-full blur-[100px] animate-pulse"></div>
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-gta-blue/10 rounded-full blur-[20px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-gta-blue/10 rounded-full blur-[200px] animate-pulse" style={{ animationDelay: '1s' }}></div>
           </div>
           
           <div className="container mx-auto px-4 py-12 relative z-10">
             <div className="flex flex-col items-center justify-center">
               {/* VCNEWS Logo Image */}
               <div className="relative mb-8 w-full max-w-2xl mx-auto">
-                <div className="absolute -inset-4 bg-gradient-to-r from-gta-pink via-gta-blue to-gta-blue rounded-full blur-[200px] opacity-10 animate-pulse"></div>
+
+                <div className="animate-pulse">
+                <div className="absolute -inset-4  from-gta-pink via-gta-blue to-gta-blue  blur-[50px] opacity-10000 animate-spin"> 
+                <Image
+                    src="/vcnews.png"
+                    alt="Vice City News Network"
+                    width={9999}
+                    height={999}
+                    className="h-100"
+                    priority
+                  />
+                </div>
+                </div>
+                
                 <div className="relative">
                   <Image
                     src="/vcnews.png"
