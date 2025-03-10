@@ -2,17 +2,49 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-const Navbar = () => {
+interface NavbarProps {
+  transparent?: boolean;
+}
+
+const Navbar = ({ transparent = false }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  // Add scroll event listener
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 50;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+
+    if (transparent) {
+      window.addEventListener('scroll', handleScroll);
+      
+      // Initial check
+      handleScroll();
+    }
+
+    return () => {
+      if (transparent) {
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [transparent, scrolled]);
+
+  const navbarClasses = transparent && !isMenuOpen && !scrolled
+    ? "navbar-fixed fixed w-full z-50 bg-gradient-to-b from-black/50 to-transparent backdrop-blur-sm transition-all duration-300"
+    : "navbar-fixed bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 fixed w-full z-50 shadow-lg border-gta-blue/30 transition-all duration-300";
+
   return (
-    <nav className="navbar-fixed bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 fixed w-full z-50 shadow-lg border-b border-gta-blue/30">
+    <nav className={navbarClasses}>
       <div className="container-custom py-3">
         <div className="flex justify-between items-center">
           {/* Logo */}
@@ -47,6 +79,12 @@ const Navbar = () => {
               className="text-white hover:text-gta-green transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-green after:transition-all"
             >
               NEWS
+            </Link>
+            <Link 
+              href="/countdown" 
+              className="text-white hover:text-gta-yellow transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-yellow after:transition-all"
+            >
+              COUNTDOWN
             </Link>
             <Link 
               href="/tools" 
@@ -118,6 +156,13 @@ const Navbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 NEWS
+              </Link>
+              <Link 
+                href="/countdown" 
+                className="text-white hover:text-gta-yellow transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-yellow"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                COUNTDOWN
               </Link>
               <Link 
                 href="/tools" 

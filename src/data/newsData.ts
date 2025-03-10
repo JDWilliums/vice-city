@@ -20,7 +20,7 @@ export const newsArticles: NewsArticle[] = [
     author: 'Mike Johnson',
     date: '2023-12-09',
     category: 'news',
-    imageUrl: '/article.jpg',
+    imageUrl: '/article.png',
     excerpt: 'In a recent press release, Rockstar Games has confirmed that GTA 6 will feature two playable protagonists, Lucia and Jason, in a Bonnie and Clyde-inspired story.',
     content: `
 # Rockstar Confirms GTA 6 Will Feature Two Playable Protagonists

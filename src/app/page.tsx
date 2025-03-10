@@ -8,14 +8,14 @@ import Footer from '@/components/Footer';
 export default function Home() {
   return (
     <>
-      <Navbar />
+      <Navbar transparent={true} />
       <main>
         {/* Hero Section */}
         <div className="relative h-screen flex items-center justify-center overflow-hidden">
           {/* Background image */}
           <div className="absolute inset-0 z-0">
             <Image 
-              src="/gta6-background.jpg" 
+              src="/4kVI.png" 
               alt="GTA 6 Background" 
               fill
               priority
@@ -41,10 +41,10 @@ export default function Home() {
                 {/* Significantly larger and blurrier glow behind the logo */}
                 <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[80px] opacity-40 group-hover:opacity-70 transition duration-1000 animate-pulse"></div>
                 <Image 
-                  src="/logo-wp.png" 
+                  src="/images/logo-tw.png" 
                   alt="GTA 6 Map & Wiki" 
-                  width={250} 
-                  height={250} 
+                  width={300} 
+                  height={300} 
                   className="w-auto max-w-full h-auto relative" 
                   priority
                 />
