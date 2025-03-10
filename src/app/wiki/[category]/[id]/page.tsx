@@ -66,7 +66,7 @@ export default function WikiEntryPage() {
   // If page not found
   if (loaded && (notFound || !page)) {
     return (
-      <div className="min-h-screen bg-black text-white bg-opacity-90 flex flex-col">
+      <div className="min-h-screen bg-black text-white h-12 bg-opacity-90 flex flex-col">
         <Navbar />
         <main className="flex-grow container mx-auto p-4 md:p-8 pt-28">
           <div className="bg-gray-900 bg-opacity-80 backdrop-blur-sm rounded-lg shadow-2xl p-6 border border-red-500">
