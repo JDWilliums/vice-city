@@ -62,7 +62,7 @@ export default function NewsPage() {
               </div>
               
               <p className="text-gray-400 max-w-2xl text-center mb-8 text-lg">
-                Your source for the latest updates, features and guides for Grand Theft Auto VI
+                Weeeee
               </p>
               
               <div className="flex flex-wrap justify-center gap-4">
