@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import Image from 'next/image';
 
 // Sample location data (in a real app, this would come from an API or database)
 const SAMPLE_LOCATIONS = [
@@ -165,7 +166,8 @@ export default function LocationPage() {
   return (
     <>
       <Navbar />
-      <main className="pt-16 min-h-screen bg-dark-bg">
+      <div className="h-24 w-full"></div> {/* Fixed height spacer */}
+      <main className="min-h-screen bg-dark-bg">
         <div className="container-custom py-12">
           {/* Breadcrumbs */}
           <nav className="flex mb-6 text-sm">

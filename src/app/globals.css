@@ -1,0 +1,9 @@
+/* Ensure space for fixed navbar globally */
+.h-24 {
+  height: 7rem; /* Increased to provide more space on all devices */
+}
+
+/* This will be loaded dynamically when map component mounts */
+.leaflet-container {
+  @apply bg-map-bg h-full z-0;
+} 

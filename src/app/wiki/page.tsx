@@ -4,82 +4,28 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { WIKI_CATEGORIES } from '@/data/wikiData';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-// Main wiki categories
-const WIKI_CATEGORIES = [
-  {
-    id: 'characters',
-    title: 'Characters',
-    description: 'Information about all playable and non-playable characters in GTA VI.',
-    icon: '👤',
-    color: 'bg-gta-pink',
-    textColor: 'text-gta-pink',
-    borderColor: 'border-gta-pink',
-    shadowColor: 'shadow-gta-pink/20',
-    subcategories: ['Protagonists', 'Antagonists', 'Side Characters', 'Faction Leaders'],
-  },
-  {
-    id: 'missions',
-    title: 'Missions',
-    description: 'Walkthroughs and guides for all main and side missions in the game.',
-    icon: '🎯',
-    color: 'bg-gta-blue',
-    textColor: 'text-gta-blue',
-    borderColor: 'border-gta-blue',
-    shadowColor: 'shadow-gta-blue/20',
-    subcategories: ['Main Story', 'Side Missions', 'Strangers', 'Heists'],
-  },
-  {
-    id: 'locations',
-    title: 'Locations',
-    description: 'Detailed information about all locations in Vice City and Leonida.',
-    icon: '🗺️',
-    color: 'bg-gta-green',
-    textColor: 'text-gta-green',
-    borderColor: 'border-gta-green',
-    shadowColor: 'shadow-gta-green/20',
-    subcategories: ['Vice City', 'Leonida', 'Landmarks', 'Hidden Areas'],
-  },
-  {
-    id: 'vehicles',
-    title: 'Vehicles',
-    description: 'Stats and information about all vehicles available in GTA VI.',
-    icon: '🚗',
-    color: 'bg-gta-yellow',
-    textColor: 'text-gta-yellow',
-    borderColor: 'border-gta-yellow',
-    shadowColor: 'shadow-gta-yellow/20',
-    subcategories: ['Cars', 'Motorcycles', 'Boats', 'Aircraft', 'Special Vehicles'],
-  },
-  {
-    id: 'weapons',
-    title: 'Weapons',
-    description: 'Details on all weapons, attachments, and combat mechanics.',
-    icon: '🔫',
-    color: 'bg-gta-purple',
-    textColor: 'text-gta-purple',
-    borderColor: 'border-gta-purple',
-    shadowColor: 'shadow-gta-purple/20',
-    subcategories: ['Handguns', 'Rifles', 'Heavy Weapons', 'Melee', 'Throwables'],
-  },
-  {
-    id: 'collectibles',
-    title: 'Collectibles',
-    description: 'Guides to find all collectible items scattered throughout the game world.',
-    icon: '💎',
-    color: 'bg-blue-600',
-    textColor: 'text-blue-600',
-    borderColor: 'border-blue-600',
-    shadowColor: 'shadow-blue-500/20',
-    subcategories: ['Hidden Packages', 'Stunt Jumps', 'Street Art', 'Easter Eggs'],
-  },
-];
+// Main wiki categories moved to data/wikiData.ts
 
 export default function WikiHomePage() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/tools/wiki-browser?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return (
     <>
       <Navbar />
-      <main className="pt-16 min-h-screen relative">
+      <div className="h-24 w-full"></div> {/* Fixed height spacer */}
+      <main className="min-h-screen relative">
         {/* Background image */}
         <div className="absolute inset-0 z-0">
           <Image 
@@ -101,7 +47,7 @@ export default function WikiHomePage() {
           <header className="text-center mb-16 relative z-10">
             <div className="flex justify-center mb-4">
               <div className="relative group p-8">
-                <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[80px] opacity-40 group-hover:opacity-70 transition duration-1000 animate-pulse"></div>
+                <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[200px] opacity-100 group-hover:opacity-70 transition duration-10000 animate-pulse"></div>
                 <Image 
                   src="/logo-wp.png" 
                   alt="GTA 6 Wiki" 
@@ -111,9 +57,40 @@ export default function WikiHomePage() {
                 />
               </div>
             </div>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
               Your comprehensive guide to all things Grand Theft Auto VI. Browse through detailed information about characters, missions, locations, and more.
             </p>
+            
+            {/* Search Bar */}
+            <div className="max-w-2xl mx-auto mb-12">
+              <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-gta-pink to-gta-blue rounded-lg blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+                <form onSubmit={handleSearch} className="relative flex items-center bg-gray-900/90 backdrop-blur-md rounded-lg border border-gray-700">
+                  <input
+                    type="text"
+                    placeholder="Search the Vice City Wiki..."
+                    className="w-full px-6 py-4 bg-transparent text-white outline-none placeholder-gray-500"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <button 
+                    type="submit"
+                    className="mr-2 px-4 py-2 bg-gradient-to-r from-gta-blue to-gta-pink text-white rounded-md hover:from-gta-pink hover:to-gta-blue transition-all duration-300"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                </form>
+              </div>
+              <div className="flex justify-center mt-3 space-x-3 text-sm text-gray-400">
+                <span>Popular:</span>
+                <a href="/wiki/characters/lucia" className="hover:text-gta-pink">Lucia</a>
+                <a href="/wiki/characters/jason" className="hover:text-gta-pink">Jason</a>
+                <a href="/wiki/locations/vice-beach" className="hover:text-gta-blue">Vice Beach</a>
+                <a href="/wiki/missions/heists" className="hover:text-gta-green">Heists</a>
+              </div>
+            </div>
           </header>
 
           {/* Wiki Categories Grid */}
@@ -198,14 +175,26 @@ export default function WikiHomePage() {
           </section>
           
           {/* How to Contribute */}
-          <section className="mt-20 text-center">
-            <h2 className="text-3xl font-bold mb-4">Contribute to the Wiki</h2>
-            <p className="text-gray-300 max-w-3xl mx-auto mb-8">
-              Help us build the most comprehensive resource for GTA VI by contributing your knowledge and discoveries. Join our community of contributors!
-            </p>
-            <Link href="/contribute" className="btn btn-primary">
-              How to Contribute
-            </Link>
+          <section className="mt-20 text-center relative overflow-hidden">
+            <div className="absolute -inset-px bg-gradient-to-r from-gta-pink/5 via-gta-blue/10 to-gta-green/5 rounded-xl"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-gray-800/20 to-transparent"></div>
+            <div className="absolute -top-20 -left-20 w-60 h-60 bg-gta-pink/5 rounded-full blur-[100px]"></div>
+            <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-gta-blue/5 rounded-full blur-[100px]"></div>
+            
+            <div className="relative z-10 bg-gray-900/50 backdrop-blur-sm p-10 rounded-xl border border-gray-800">
+              <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gta-blue to-gta-pink">Contribute to the Wiki</h2>
+              <p className="text-gray-300 max-w-3xl mx-auto mb-8">
+                Help us build the most comprehensive resource for GTA VI by contributing your knowledge and discoveries. Join our community of contributors!
+              </p>
+              <div className="space-x-4">
+                <Link href="/contribute" className="px-6 py-3 bg-gradient-to-r from-gta-blue to-blue-600 text-white rounded-md hover:shadow-lg hover:shadow-gta-blue/20 transition-all duration-300 hover:-translate-y-1">
+                  How to Contribute
+                </Link>
+                <Link href="/tools/wiki-generator" className="px-6 py-3 bg-gradient-to-r from-gta-pink to-pink-600 text-white rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all duration-300 hover:-translate-y-1">
+                  Use Wiki Generator
+                </Link>
+              </div>
+            </div>
           </section>
         </div>
       </main>

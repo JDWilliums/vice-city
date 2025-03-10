@@ -12,7 +12,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 fixed w-full z-50 shadow-lg border-b border-gta-blue/30">
+    <nav className="navbar-fixed bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 fixed w-full z-50 shadow-lg border-b border-gta-blue/30">
       <div className="container-custom py-3">
         <div className="flex justify-between items-center">
           {/* Logo */}
@@ -47,6 +47,12 @@ const Navbar = () => {
               className="text-white hover:text-gta-green transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-green after:transition-all"
             >
               NEWS
+            </Link>
+            <Link 
+              href="/tools" 
+              className="text-white hover:text-gta-yellow transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-yellow after:transition-all"
+            >
+              TOOLS
             </Link>
             <Link 
               href="/about" 
@@ -112,6 +118,13 @@ const Navbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 NEWS
+              </Link>
+              <Link 
+                href="/tools" 
+                className="text-white hover:text-gta-yellow transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-yellow"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                TOOLS
               </Link>
               <Link 
                 href="/about" 
