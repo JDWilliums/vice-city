@@ -8,11 +8,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'gta-blue': '#0051FF',
-        'gta-pink': '#FF00B7',
-        'gta-green': '#00FF85',
-        'gta-purple': '#8C00FF',
-        'gta-yellow': '#FFF500',
+        'gta-blue': '#52FDFF',
+        'gta-pink': '#F152FF',
+        'gta-green': '#56FF52',
+        'gta-purple': '#AC52FF',
+        'gta-yellow': '#FFE552',
         'dark-bg': '#121212',
         'map-bg': '#0fa8d2'
       },

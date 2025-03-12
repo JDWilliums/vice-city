@@ -39,25 +39,25 @@ export default function Home() {
             <div className="flex justify-center mb-6 animate-fadeIn">
               <div className="relative group p-8">
                 {/* Significantly larger and blurrier glow behind the logo */}
-                <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[80px] opacity-40 group-hover:opacity-70 transition duration-1000 animate-pulse"></div>
+                <div className="absolute -inset-20 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[80px] opacity-40 group-hover:opacity-70 transition duration-1000 animate-pulse"></div>
                 <Image 
                   src="/images/logo-tw.png" 
                   alt="GTA 6 Map & Wiki" 
-                  width={300} 
-                  height={300} 
+                  width={400} 
+                  height={400} 
                   className="w-auto max-w-full h-auto relative" 
                   priority
                 />
               </div>
             </div>
-            <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto text-gray-100 animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
+            <p className="text-l md:text-xl mb-12 max-w-2xl mx-auto text-gray-100 animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
               Your ultimate destination for everything about Grand Theft Auto VI - interactive map, locations, missions, characters and more.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp" style={{ animationDelay: '0.7s' }}>
-              <Link href="/map" className="bg-gradient-to-r from-gta-blue to-blue-700 hover:from-blue-600 hover:to-gta-blue text-lg px-8 py-4 rounded-full text-white font-bold shadow-lg hover:shadow-gta-blue/50 transition-all transform hover:-translate-y-1">
+              <Link href="/map" className="bg-gta-blue text-m px-8 py-4 rounded-full text-black font-bold shadow-lg transition-all transform hover:-translate-y-1">
                 Explore the Map
               </Link>
-              <Link href="/wiki" className="bg-gradient-to-r from-gta-pink to-pink-700 hover:from-pink-600 hover:to-gta-pink text-lg px-8 py-4 rounded-full text-white font-bold shadow-lg hover:shadow-gta-pink/50 transition-all transform hover:-translate-y-1">
+              <Link href="/wiki" className="bg-gta-pink text-m px-8 py-4 rounded-full text-black font-bold shadow-lg transition-all transform hover:-translate-y-1">
                 Browse the Wiki
               </Link>
             </div>
@@ -72,7 +72,7 @@ export default function Home() {
           
           <div className="container-custom relative z-10">
             <h2 className="text-4xl font-bold text-center mb-12 relative inline-block mx-auto">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-gta-blue via-gta-pink to-gta-green animate-gradient">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-gta-blue to-gta-pink animate-gradient">
                 Everything You Need to Know About GTA VI
               </span>
             </h2>
