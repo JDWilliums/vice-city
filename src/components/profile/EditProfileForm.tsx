@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/AuthContext';
-import { updateProfile } from 'firebase/auth';
+import { updateProfile, User } from 'firebase/auth';
 import Image from 'next/image';
 import InputField from '@/components/auth/InputField';
 import AuthButton from '@/components/auth/AuthButton';
 import { PROFILE_PICTURES } from '@/constants/profilePictures';
 import { updateUserProfile, getUserData, updateUserPreferences } from '@/lib/userService';
 
-export default function EditProfileForm() {
-  const { user } = useAuth();
-  const [displayName, setDisplayName] = useState(user?.displayName || '');
-  const [selectedPicture, setSelectedPicture] = useState(user?.photoURL || '');
+interface EditProfileFormProps {
+  userData: User;
+  onClose: () => void;
+  onUpdate: () => void;
+}
+
+export default function EditProfileForm({ userData, onClose, onUpdate }: EditProfileFormProps) {
+  const [displayName, setDisplayName] = useState(userData?.displayName || '');
+  const [selectedPicture, setSelectedPicture] = useState(userData?.photoURL || '');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [isLoading, setIsLoading] = useState(false);
@@ -20,15 +24,15 @@ export default function EditProfileForm() {
   // Load user data from Firestore
   useEffect(() => {
     async function loadUserData() {
-      if (!user) return;
+      if (!userData) return;
       
       try {
-        const userData = await getUserData(user.uid);
-        if (userData) {
-          setDisplayName(userData.displayName || '');
-          setSelectedPicture(userData.photoURL || '');
-          setEmailNotifications(userData.preferences.emailNotifications);
-          setTheme(userData.preferences.theme);
+        const userPreferences = await getUserData(userData.uid);
+        if (userPreferences) {
+          setDisplayName(userPreferences.displayName || '');
+          setSelectedPicture(userPreferences.photoURL || '');
+          setEmailNotifications(userPreferences.preferences.emailNotifications);
+          setTheme(userPreferences.preferences.theme);
         }
       } catch (error) {
         console.error('Error loading user data:', error);
@@ -37,11 +41,11 @@ export default function EditProfileForm() {
     }
 
     loadUserData();
-  }, [user]);
+  }, [userData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!userData) return;
 
     setIsLoading(true);
     setError('');
@@ -49,24 +53,28 @@ export default function EditProfileForm() {
 
     try {
       // Update Firebase Auth profile
-      await updateProfile(user, {
+      await updateProfile(userData, {
         displayName: displayName,
         photoURL: selectedPicture
       });
 
       // Update Firestore user data
-      await updateUserProfile(user.uid, {
+      await updateUserProfile(userData.uid, {
         displayName: displayName,
         photoURL: selectedPicture
       });
 
       // Update user preferences
-      await updateUserPreferences(user.uid, {
+      await updateUserPreferences(userData.uid, {
         emailNotifications,
         theme
       });
 
       setSuccess('Profile updated successfully!');
+      onUpdate();
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     } catch (error) {
       console.error('Error updating profile:', error);
       setError('Failed to update profile. Please try again.');
