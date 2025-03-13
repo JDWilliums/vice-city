@@ -64,7 +64,7 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
           <div className="hidden md:flex space-x-8 items-center">
             <Link 
               href="/map" 
-              className="text-white hover:text-gta-blue transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-blue after:transition-all"
+              className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
             >
               MAP
             </Link>
@@ -76,25 +76,25 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
             </Link>
             <Link 
               href="/news" 
-              className="text-white hover:text-gta-green transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-green after:transition-all"
+              className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
             >
               NEWS
             </Link>
             <Link 
               href="/countdown" 
-              className="text-white hover:text-gta-yellow transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-yellow after:transition-all"
+              className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
             >
               COUNTDOWN
             </Link>
             <Link 
               href="/tools" 
-              className="text-white hover:text-gta-yellow transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-yellow after:transition-all"
+              className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
             >
               TOOLS
             </Link>
             <Link 
               href="/about" 
-              className="text-white hover:text-gta-yellow transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-yellow after:transition-all"
+              className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
             >
               ABOUT
             </Link>

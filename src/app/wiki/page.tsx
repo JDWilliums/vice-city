@@ -75,7 +75,7 @@ export default function WikiHomePage() {
                   />
                   <button 
                     type="submit"
-                    className="mr-2 px-4 py-2 bg-gradient-to-r from-gta-blue to-gta-pink text-white rounded-md hover:from-gta-pink hover:to-gta-blue transition-all duration-300"
+                    className="mr-2 px-4 py-2 bg-gradient-to-b from-gta-pink to-pink-500 text-white rounded-md hover:from-pink-500 hover:to-gta-pink transition-all duration-300"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -142,7 +142,7 @@ export default function WikiHomePage() {
           {/* Recent Updates */}
           <section className="mt-20">
             <h2 className="text-3xl font-bold mb-12 text-center relative inline-block mx-auto">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-gta-blue via-gta-pink to-gta-green animate-gradient">
+              <span className="bg-clip-text text-white">
                 Recently Updated
               </span>
             </h2>
@@ -182,15 +182,15 @@ export default function WikiHomePage() {
             <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-gta-blue/5 rounded-full blur-[100px]"></div>
             
             <div className="relative z-10 bg-gray-900/50 backdrop-blur-sm p-10 rounded-xl border border-gray-800">
-              <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gta-blue to-gta-pink">Contribute to the Wiki</h2>
+              <h2 className="text-3xl font-bold mb-4 bg-clip-text text-white">Contribute to the Wiki</h2>
               <p className="text-gray-300 max-w-3xl mx-auto mb-8">
                 Help us build the most comprehensive resource for GTA VI by contributing your knowledge and discoveries. Join our community of contributors!
               </p>
               <div className="space-x-4">
-                <Link href="/contribute" className="px-6 py-3 bg-gradient-to-r from-gta-blue to-blue-600 text-white rounded-md hover:shadow-lg hover:shadow-gta-blue/20 transition-all duration-300 hover:-translate-y-1">
+                <Link href="/contribute" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
                   How to Contribute
                 </Link>
-                <Link href="/tools/wiki-generator" className="px-6 py-3 bg-gradient-to-r from-gta-pink to-pink-600 text-white rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all duration-300 hover:-translate-y-1">
+                <Link href="/tools/wiki-generator" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
                   Use Wiki Generator
                 </Link>
               </div>

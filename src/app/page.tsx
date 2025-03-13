@@ -50,14 +50,11 @@ export default function Home() {
                 />
               </div>
             </div>
-            <p className="text-l md:text-xl mb-12 max-w-2xl mx-auto text-gray-100 animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
-              Your ultimate destination for everything about Grand Theft Auto VI - interactive map, locations, missions, characters and more.
-            </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp" style={{ animationDelay: '0.7s' }}>
-              <Link href="/map" className="bg-gta-blue text-m px-8 py-4 rounded-full text-black font-bold shadow-lg transition-all transform hover:-translate-y-1">
+              <Link href="/map" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
                 Explore the Map
               </Link>
-              <Link href="/wiki" className="bg-gta-pink text-m px-8 py-4 rounded-full text-black font-bold shadow-lg transition-all transform hover:-translate-y-1">
+              <Link href="/wiki" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
                 Browse the Wiki
               </Link>
             </div>
@@ -71,8 +68,8 @@ export default function Home() {
           <div className="absolute bottom-0 right-1/4 w-1/3 h-1/3 bg-gta-pink opacity-5 rounded-full blur-[150px]"></div>
           
           <div className="container-custom relative z-10">
-            <h2 className="text-4xl font-bold text-center mb-12 relative inline-block mx-auto">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-gta-blue to-gta-pink animate-gradient">
+            <h2 className="text-4xl font-bold text-center mb-12 relative mx-auto">
+              <span className="bg-clip-text">
                 Everything You Need to Know About GTA VI
               </span>
             </h2>
@@ -149,7 +146,7 @@ export default function Home() {
             </div>
             
             <div className="mt-12 text-center">
-              <Link href="/news" className="inline-block px-6 py-3 border border-gta-pink text-gta-pink hover:bg-gta-pink hover:text-white transition-all duration-300 rounded-md">
+              <Link href="/news" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
                 View All News
               </Link>
             </div>

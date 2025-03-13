@@ -135,11 +135,11 @@ export default function CountdownPage() {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center px-4 animate-fadeIn">
             <h1 className="text-5xl md:text-7xl font-bold mb-8 text-white">
-              <span className="text-gta-blue">GTA VI</span> Countdown
+              GTA VI Countdown
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
-              Experience the next chapter in the Grand Theft Auto series. Return to Vice City, coming Fall 2025.
+              Experience the next chapter in the Grand Theft Auto series. <br /> Return to Vice City, coming Fall 2025.
             </p>
             
             {/* Countdown Timer */}
@@ -180,10 +180,10 @@ export default function CountdownPage() {
             
             {/* Call to Action */}
             <div className="flex flex-col md:flex-row gap-4 justify-center mb-16 animate-fadeInUp" style={{ animationDelay: '1.2s' }}>
-              <Link href="/wiki" className="px-8 py-3 bg-gradient-to-r from-gta-blue to-blue-600 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-blue/20 transition-all hover:-translate-y-1">
+              <Link href="/wiki" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
                 Explore the Wiki
               </Link>
-              <Link href="/map" className="px-8 py-3 bg-gradient-to-r from-gta-pink to-pink-600 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
+              <Link href="/map" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
                 View the Map
               </Link>
             </div>
@@ -191,7 +191,7 @@ export default function CountdownPage() {
         </div>
 
         {/* What We Know So Far Section */}
-        <section className="min-h-screen flex items-center relative py-20">
+        <section className="flex items-center relative py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
@@ -237,7 +237,7 @@ export default function CountdownPage() {
               </div>
               
               <div className="flex justify-center animate-fadeInUp">
-                <Link href="/wiki" className="px-8 py-3 bg-gradient-to-r from-gta-blue to-gta-pink text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-blue/20 transition-all hover:-translate-y-1">
+                <Link href="/wiki" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-blue/20 transition-all hover:-translate-y-1">
                   Explore Full Wiki
                 </Link>
               </div>
@@ -246,7 +246,7 @@ export default function CountdownPage() {
         </section>
         
         {/* Trailer Section */}
-        <section className="min-h-screen flex items-center relative py-20">
+        <section className="flex items-center relative py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
               <span className="text-white">Official <span className="text-gta-pink">Trailer</span></span>
@@ -266,17 +266,17 @@ export default function CountdownPage() {
               </div>
               
               <div className="mt-8 text-center text-gray-400 animate-fadeInUp">
-                <p>Watch on <a href="https://www.youtube.com/watch?v=QdBZY2fkU-0" target="_blank" rel="noopener noreferrer" className="text-gta-blue hover:underline">YouTube</a> for highest quality</p>
+                <p>Watch on <a href="https://www.youtube.com/watch?v=QdBZY2fkU-0" target="_blank" rel="noopener noreferrer" className="text-gta-pink hover:underline">YouTube</a> for highest quality</p>
               </div>
             </div>
           </div>
         </section>
         
         {/* Updates Section */}
-        <section className="min-h-screen flex items-center relative py-20">
+        <section className="flex items-center relative py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
-              <span className="text-white">Latest <span className="text-gta-green">Updates</span></span>
+              <span className="text-white">Latest <span className="text-gta-blue">Updates</span></span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto animate-fadeInUp">
@@ -302,7 +302,7 @@ export default function CountdownPage() {
                 </div>
               </div>
               
-              <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-pink transition-colors">
+              <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
                 <div className="h-48 relative overflow-hidden">
                   <Image 
                     src="/images/gta6-2.png" 
@@ -313,9 +313,9 @@ export default function CountdownPage() {
                 </div>
                 <div className="p-6">
                   <div className="text-xs text-gray-400 mb-2">February 28, 2024</div>
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-gta-pink transition-colors">Map Size Reportedly Largest in GTA History</h3>
+                  <h3 className="text-xl font-bold mb-3 group-hover:text-gta-blue transition-colors">Map Size Reportedly Largest in GTA History</h3>
                   <p className="text-gray-300 mb-4">Insiders claim the new Vice City map will be significantly larger than previous GTA worlds.</p>
-                  <Link href="/news" className="text-gta-pink hover:underline inline-flex items-center">
+                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center">
                     Read More
                     <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -324,7 +324,7 @@ export default function CountdownPage() {
                 </div>
               </div>
               
-              <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-green transition-colors">
+              <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
                 <div className="h-48 relative overflow-hidden">
                   <Image 
                     src="/images/gta6-3.png" 
@@ -335,9 +335,9 @@ export default function CountdownPage() {
                 </div>
                 <div className="p-6">
                   <div className="text-xs text-gray-400 mb-2">January 19, 2024</div>
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-gta-green transition-colors">New Game Mechanics Revealed</h3>
+                  <h3 className="text-xl font-bold mb-3 group-hover:text-gta-blue transition-colors">New Game Mechanics Revealed</h3>
                   <p className="text-gray-300 mb-4">Rockstar shares insights on new gameplay features including enhanced stealth and dynamic weather.</p>
-                  <Link href="/news" className="text-gta-green hover:underline inline-flex items-center">
+                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center">
                     Read More
                     <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -348,7 +348,7 @@ export default function CountdownPage() {
             </div>
             
             <div className="mt-12 text-center animate-fadeInUp">
-              <Link href="/news" className="px-8 py-3 bg-gradient-to-r from-gta-green to-gta-blue text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-green/20 transition-all hover:-translate-y-1">
+              <Link href="/news" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-green/20 transition-all hover:-translate-y-1">
                 View All News
               </Link>
             </div>
@@ -362,18 +362,18 @@ export default function CountdownPage() {
               <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink/10 via-gta-blue/10 to-gta-green/10 blur-[50px] animate-pulse"></div>
               
               <h2 className="text-3xl md:text-4xl font-bold mb-6 relative text-white">
-                Join The <span className="text-gta-blue">Vice City</span> Community
+                Join The <span className="text-gta-pink">vice.city</span> Community
               </h2>
               <p className="text-xl text-gray-300 mb-8 relative">Stay updated with the latest news, share your theories, and connect with other fans.</p>
               
               <div className="flex flex-col md:flex-row justify-center gap-4 relative">
-                <Link href="/wiki" className="px-6 py-3 bg-gradient-to-r from-gta-blue to-blue-600 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
+                <Link href="/wiki" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
                   Explore Wiki
                 </Link>
-                <Link href="/map" className="px-6 py-3 bg-gradient-to-r from-gta-pink to-pink-600 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
+                <Link href="/map" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
                   Interactive Map
                 </Link>
-                <Link href="/news" className="px-6 py-3 bg-gradient-to-r from-gta-green to-green-600 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
+                <Link href="/news" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
                   Latest News
                 </Link>
               </div>
