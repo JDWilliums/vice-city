@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // User document rules
+    match /users/{userId} {
+      // Allow read if user is authenticated
+      allow read: if isSignedIn();
+      
+      // Allow create if data is valid
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasAll([
+          'uid', 'email', 'displayName', 'photoURL', 
+          'provider', 'lastUpdated', 'createdAt', 
+          'isOnline', 'preferences'
+        ])
+        && request.resource.data.uid == userId
+        && request.resource.data.preferences.keys().hasAll([
+          'emailNotifications', 'theme'
+        ]);
+      
+      // Allow update with field validation
+      allow update: if isOwner(userId)
+        && request.resource.data.uid == userId
+        && (
+          // Don't allow changing creation date
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt'])
+        );
+    }
+  }
+} 

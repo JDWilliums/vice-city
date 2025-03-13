@@ -1,39 +1,75 @@
-import { useState } from 'react';
-import { User, updateProfile } from 'firebase/auth';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/AuthContext';
+import { updateProfile } from 'firebase/auth';
 import Image from 'next/image';
 import InputField from '@/components/auth/InputField';
 import AuthButton from '@/components/auth/AuthButton';
 import { PROFILE_PICTURES } from '@/constants/profilePictures';
+import { updateUserProfile, getUserData, updateUserPreferences } from '@/lib/userService';
 
-interface EditProfileFormProps {
-  user: User;
-  onClose: () => void;
-  onUpdate: () => void;
-}
-
-export default function EditProfileForm({ user, onClose, onUpdate }: EditProfileFormProps) {
-  const [displayName, setDisplayName] = useState(user.displayName || '');
-  const [selectedPhotoURL, setSelectedPhotoURL] = useState(user.photoURL || PROFILE_PICTURES[0].url);
+export default function EditProfileForm() {
+  const { user } = useAuth();
+  const [displayName, setDisplayName] = useState(user?.displayName || '');
+  const [selectedPicture, setSelectedPicture] = useState(user?.photoURL || '');
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Load user data from Firestore
+  useEffect(() => {
+    async function loadUserData() {
+      if (!user) return;
+      
+      try {
+        const userData = await getUserData(user.uid);
+        if (userData) {
+          setDisplayName(userData.displayName || '');
+          setSelectedPicture(userData.photoURL || '');
+          setEmailNotifications(userData.preferences.emailNotifications);
+          setTheme(userData.preferences.theme);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        setError('Failed to load user data. Please refresh the page.');
+      }
+    }
+
+    loadUserData();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (!user) return;
+
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
     try {
-      setIsLoading(true);
-      setErrorMessage('');
-      
+      // Update Firebase Auth profile
       await updateProfile(user, {
-        displayName: displayName.trim() || null,
-        photoURL: selectedPhotoURL,
+        displayName: displayName,
+        photoURL: selectedPicture
       });
-      
-      onUpdate();
-      onClose();
+
+      // Update Firestore user data
+      await updateUserProfile(user.uid, {
+        displayName: displayName,
+        photoURL: selectedPicture
+      });
+
+      // Update user preferences
+      await updateUserPreferences(user.uid, {
+        emailNotifications,
+        theme
+      });
+
+      setSuccess('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
-      setErrorMessage('Failed to update profile. Please try again.');
+      setError('Failed to update profile. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -41,9 +77,14 @@ export default function EditProfileForm({ user, onClose, onUpdate }: EditProfile
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {errorMessage && (
+      {error && (
         <div className="bg-red-900/40 border border-red-500 text-red-200 px-4 py-3 rounded-md">
-          {errorMessage}
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="bg-green-900/40 border border-green-500 text-green-200 px-4 py-3 rounded-md">
+          {success}
         </div>
       )}
       
@@ -66,9 +107,9 @@ export default function EditProfileForm({ user, onClose, onUpdate }: EditProfile
             <button
               key={picture.id}
               type="button"
-              onClick={() => setSelectedPhotoURL(picture.url)}
+              onClick={() => setSelectedPicture(picture.url)}
               className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                selectedPhotoURL === picture.url 
+                selectedPicture === picture.url 
                   ? 'border-gta-pink shadow-lg shadow-gta-pink/20' 
                   : 'border-gray-700 hover:border-gray-500'
               }`}
@@ -79,7 +120,7 @@ export default function EditProfileForm({ user, onClose, onUpdate }: EditProfile
                 fill
                 className="object-cover"
               />
-              {selectedPhotoURL === picture.url && (
+              {selectedPicture === picture.url && (
                 <div className="absolute inset-0 bg-gta-pink/20 flex items-center justify-center">
                   <div className="bg-gta-pink text-white text-xs px-2 py-1 rounded-full">
                     Selected
@@ -88,6 +129,39 @@ export default function EditProfileForm({ user, onClose, onUpdate }: EditProfile
               )}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-gray-200">Preferences</h3>
+        
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="emailNotifications"
+            checked={emailNotifications}
+            onChange={(e) => setEmailNotifications(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-700 bg-gray-800 text-gta-pink focus:ring-gta-pink"
+          />
+          <label htmlFor="emailNotifications" className="ml-2 text-sm text-gray-300">
+            Receive email notifications
+          </label>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="theme" className="block text-sm text-gray-300">
+            Theme Preference
+          </label>
+          <select
+            id="theme"
+            value={theme}
+            onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}
+            className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-gray-300 shadow-sm focus:border-gta-pink focus:ring-gta-pink sm:text-sm"
+          >
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="system">System (Auto)</option>
+          </select>
         </div>
       </div>
       
@@ -99,14 +173,6 @@ export default function EditProfileForm({ user, onClose, onUpdate }: EditProfile
           label="Save Changes"
           type="submit"
         />
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-          disabled={isLoading}
-        >
-          Cancel
-        </button>
       </div>
     </form>
   );

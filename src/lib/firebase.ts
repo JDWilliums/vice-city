@@ -2,6 +2,7 @@
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { Auth, getAuth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -17,19 +18,21 @@ const firebaseConfig = {
 // Initialize Firebase
 let firebaseApp: FirebaseApp;
 let auth: Auth;
+let db: Firestore;
 
 // Only initialize in the browser
 if (typeof window !== 'undefined') {
   firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
   auth = getAuth(firebaseApp);
+  db = getFirestore(firebaseApp);
   
   // Analytics
   try {
     const { getAnalytics } = require('firebase/analytics');
     getAnalytics(firebaseApp);
   } catch (error) {
-    console.log('Analytics not initialized:', error);
+    console.error('Analytics initialization error:', error);
   }
 }
 
-export { firebaseApp, auth }; 
+export { firebaseApp, auth, db }; 

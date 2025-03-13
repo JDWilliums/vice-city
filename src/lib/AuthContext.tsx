@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
+import { createOrUpdateUser, updateUserProfile, updateUserOnlineStatus, getUserData } from './userService';
 
 // Basic type for auth
 interface AuthContextType {
@@ -47,8 +48,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('Setting up auth state listener');
     
     // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed:', user ? `User logged in: ${user.uid}` : 'No user');
+      
+      if (user) {
+        try {
+          console.log('Attempting to create/update user document in Firestore');
+          const userData = await createOrUpdateUser(user);
+          console.log('Successfully created/updated user document:', userData);
+        } catch (error) {
+          console.error('Failed to create/update user document:', error);
+        }
+      }
+      
       setUser(user);
       setLoading(false);
     });
@@ -57,20 +69,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  // Update online status on window focus/blur
+  useEffect(() => {
+    if (typeof window === 'undefined' || !user) return;
+
+    const updateOnlineStatus = async (status: boolean) => {
+      try {
+        await updateUserOnlineStatus(user.uid, status);
+      } catch (error) {
+        console.error('Error updating online status:', error);
+      }
+    };
+
+    // Set user as online when window is focused
+    const handleFocus = () => updateOnlineStatus(true);
+    
+    // Set user as offline when window is blurred
+    const handleBlur = () => updateOnlineStatus(false);
+    
+    // Set user as offline when window is closed/refreshed
+    const handleBeforeUnload = () => updateOnlineStatus(false);
+
+    // Add event listeners
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Set initial online status
+    updateOnlineStatus(true);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      updateOnlineStatus(false);
+    };
+  }, [user]);
+
   // Google sign-in
   const signInWithGoogle = async () => {
     try {
+      console.log('Starting Google sign-in process');
       const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
       const { getRandomProfilePicture } = await import('@/constants/profilePictures');
       
       const googleProvider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, googleProvider);
+      console.log('Google sign-in successful:', result.user.uid);
       
       if (result.user) {
+        // Check if user already exists in Firestore
+        const userData = await getUserData(result.user.uid);
+        const photoURL = userData?.photoURL || getRandomProfilePicture();
+        
         const { updateProfile } = await import('firebase/auth');
         await updateProfile(result.user, {
-          photoURL: getRandomProfilePicture()
+          photoURL
         });
+        
+        console.log('Creating/updating user document in Firestore');
+        await createOrUpdateUser(result.user, {
+          photoURL
+        });
+        console.log('User document updated successfully');
       }
     } catch (error) {
       console.error('Google sign-in error:', error);
@@ -81,17 +143,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Discord sign-in
   const signInWithDiscord = async () => {
     try {
+      console.log('Starting Discord sign-in process');
       const { signInWithPopup, OAuthProvider } = await import('firebase/auth');
       const { getRandomProfilePicture } = await import('@/constants/profilePictures');
       
       const discordProvider = new OAuthProvider('discord');
       const result = await signInWithPopup(auth, discordProvider);
+      console.log('Discord sign-in successful:', result.user.uid);
       
       if (result.user) {
+        // Check if user already exists in Firestore
+        const userData = await getUserData(result.user.uid);
+        const photoURL = userData?.photoURL || getRandomProfilePicture();
+        
         const { updateProfile } = await import('firebase/auth');
         await updateProfile(result.user, {
-          photoURL: getRandomProfilePicture()
+          photoURL
         });
+        
+        console.log('Creating/updating user document in Firestore');
+        await createOrUpdateUser(result.user, {
+          photoURL
+        });
+        console.log('User document updated successfully');
       }
     } catch (error) {
       console.error('Discord sign-in error:', error);
@@ -113,16 +187,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Email sign-up
   const signUpWithEmail = async (email: string, password: string, displayName: string) => {
     try {
+      console.log('Starting email sign-up process');
       const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
       const { getRandomProfilePicture } = await import('@/constants/profilePictures');
       
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log('User created with Firebase Auth:', userCredential.user.uid);
       
       if (userCredential.user) {
+        const randomPicture = getRandomProfilePicture();
+        console.log('Updating user profile with:', { displayName, photoURL: randomPicture });
+        
         await updateProfile(userCredential.user, {
           displayName: displayName,
-          photoURL: getRandomProfilePicture()
+          photoURL: randomPicture
         });
+        
+        console.log('Creating user document in Firestore');
+        await createOrUpdateUser(userCredential.user, {
+          displayName,
+          photoURL: randomPicture
+        });
+        console.log('User document created successfully');
       }
     } catch (error) {
       console.error('Email sign-up error:', error);
