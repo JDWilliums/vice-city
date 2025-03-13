@@ -11,12 +11,27 @@ const RELEASE_DATE = new Date('2025-12-01T00:00:00');
 
 // Array of GTA 6 images to cycle through
 const GTA6_IMAGES = [
+  '/images/gta6-0.png',
   '/images/gta6-1.png',
   '/images/gta6-2.png',
   '/images/gta6-3.png',
   '/images/gta6-4.png',
   '/images/gta6-5.png',
   '/images/gta6-6.png',
+  '/images/gta6-7.png',
+  '/images/gta6-8.png',
+  '/images/gta6-9.png',
+  '/images/gta6-10.png',
+  '/images/gta6-11.png',
+  '/images/gta6-12.png',
+  '/images/gta6-13.png',
+  '/images/gta6-14.png',
+  '/images/gta6-15.png',
+  '/images/gta6-16.png',
+  '/images/gta6-17.png',
+  '/images/gta6-18.png',
+  '/images/gta6-19.png',
+  '/images/gta6-20.png',
 ];
 
 export default function HomePage() {
