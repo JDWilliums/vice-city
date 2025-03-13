@@ -1,6 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
-import { getAnalytics } from "firebase/analytics";
+import { getAuth } from 'firebase/auth';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -15,11 +14,13 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const analytics = getAnalytics(app);
-const auth = getAuth(app);
 
-// Set up providers
-const googleProvider = new GoogleAuthProvider();
-const discordProvider = new OAuthProvider('discord.com');
+// Only initialize analytics on the client side
+let analytics = null;
+if (typeof window !== 'undefined') {
+  const { getAnalytics } = require('firebase/analytics');
+  analytics = getAnalytics(app);
+}
 
-export { auth, googleProvider, discordProvider }; 
+export const auth = getAuth(app);
+export { app }; 

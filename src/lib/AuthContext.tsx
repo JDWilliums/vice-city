@@ -1,18 +1,27 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { 
+import type { 
   User, 
-  signInWithPopup, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged, 
-  sendPasswordResetEmail,
-  updateProfile
+  Auth,
+  GoogleAuthProvider,
+  OAuthProvider
 } from 'firebase/auth';
-import { auth, googleProvider, discordProvider } from './firebase';
-import { getRandomProfilePicture } from '@/constants/profilePictures';
+
+// Create a type for the auth instance
+let auth: Auth;
+let googleProvider: GoogleAuthProvider;
+let discordProvider: OAuthProvider;
+
+// Only initialize Firebase on the client side
+if (typeof window !== "undefined") {
+  const { getAuth, GoogleAuthProvider, OAuthProvider } = require('firebase/auth');
+  const { app } = require('./firebase');
+  
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
+  discordProvider = new OAuthProvider('discord');
+}
 
 interface AuthContextType {
   user: User | null;
@@ -41,17 +50,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Track auth state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
+    if (typeof window !== "undefined") {
+      const { onAuthStateChanged } = require('firebase/auth');
+      const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
+        setUser(user);
+        setLoading(false);
+      });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    }
   }, []);
 
   // Google sign-in
   const signInWithGoogle = async () => {
     try {
+      const { signInWithPopup, updateProfile } = await import('firebase/auth');
+      const { getRandomProfilePicture } = await import('@/constants/profilePictures');
+      
       const result = await signInWithPopup(auth, googleProvider);
       // Always assign a random profile picture, ignoring Google profile picture
       if (result.user) {
@@ -68,6 +83,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Discord sign-in
   const signInWithDiscord = async () => {
     try {
+      const { signInWithPopup, updateProfile } = await import('firebase/auth');
+      const { getRandomProfilePicture } = await import('@/constants/profilePictures');
+      
       const result = await signInWithPopup(auth, discordProvider);
       // Always assign a random profile picture, ignoring Discord profile picture
       if (result.user) {
@@ -84,6 +102,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Email sign-in
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       console.error('Email sign-in error:', error);
@@ -94,6 +113,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Email sign-up
   const signUpWithEmail = async (email: string, password: string, displayName: string) => {
     try {
+      const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
+      const { getRandomProfilePicture } = await import('@/constants/profilePictures');
+      
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
       // Add display name and random profile picture to the user profile
@@ -112,6 +134,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Sign out
   const logout = async () => {
     try {
+      const { signOut } = await import('firebase/auth');
       await signOut(auth);
     } catch (error) {
       console.error('Sign out error:', error);
@@ -122,6 +145,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Password reset
   const resetPassword = async (email: string) => {
     try {
+      const { sendPasswordResetEmail } = await import('firebase/auth');
       await sendPasswordResetEmail(auth, email);
     } catch (error) {
       console.error('Password reset error:', error);
