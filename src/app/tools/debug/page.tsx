@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ClientMakeAdmin from './make-admin';
 import FirestoreViewer from './firestore-viewer';
+import AdminFix from './admin-fix';
 
 export default function AdminDebugPage() {
   const { user, isAdmin } = useAuth();
@@ -465,6 +466,10 @@ export default function AdminDebugPage() {
             </div>
           </div>
         )}
+        
+        {/* Add the new Admin Fix Tool */}
+        <h2 className="text-2xl font-bold text-white mt-12 mb-4">Advanced Admin Fix Tool</h2>
+        <AdminFix />
       </main>
       
       <Footer />

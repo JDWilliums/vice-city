@@ -413,11 +413,13 @@ const clearSessionCookie = () => {
 };
 
 // Also add a function to bypass the cookie and use a direct API approach
-// Add this function after the imports at the top of the file
+// Add this function after the clearSessionCookie function
 async function sendTokenToServer(idToken: string, uid: string) {
   try {
     console.log('Sending token to server via API...');
-    const response = await fetch('/api/auth/session', {
+    
+    // First try the session endpoint
+    const sessionResponse = await fetch('/api/auth/session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -425,15 +427,80 @@ async function sendTokenToServer(idToken: string, uid: string) {
       body: JSON.stringify({ idToken, uid }),
     });
     
-    if (response.ok) {
-      console.log('Token sent to server successfully');
-      return true;
+    const sessionResult = await sessionResponse.json();
+    
+    if (sessionResponse.ok) {
+      console.log('Token sent to session API successfully');
+      
+      // Now verify the session was set properly by checking the token debug endpoint
+      try {
+        console.log('Verifying token was set correctly...');
+        const verifyResponse = await fetch('/api/admin/debug/token');
+        
+        if (verifyResponse.ok) {
+          const verifyResult = await verifyResponse.json();
+          console.log('Token verification result:', verifyResult.verified ? 'Success' : 'Failed');
+          
+          if (verifyResult.verified) {
+            console.log('Session verified successfully!');
+            return { success: true, message: 'Session set and verified' };
+          } else {
+            console.warn('Session set but verification failed:', verifyResult.error);
+            
+            // Check Firebase Admin initialization status
+            const adminStatusResponse = await fetch('/api/debug/firebase-admin');
+            if (adminStatusResponse.ok) {
+              const adminStatus = await adminStatusResponse.json();
+              console.error('Firebase Admin initialization status:', adminStatus);
+              
+              if (adminStatus?.initStatus?.hasError) {
+                console.error('Firebase Admin SDK has an error:', adminStatus.initStatus.errorMessage);
+                
+                // Try to fix the private key if that's the issue
+                if (adminStatus.initStatus.errorMessage?.includes('private key')) {
+                  console.log('Attempting to fix private key issue...');
+                  await fetch('/api/debug/fix-private-key');
+                  
+                  // Try verification again after fix attempt
+                  const retryResponse = await fetch('/api/admin/debug/token');
+                  const retryResult = await retryResponse.json();
+                  
+                  if (retryResponse.ok && retryResult.verified) {
+                    console.log('Session verified successfully after fix!');
+                    return { success: true, message: 'Session set and verified after fixing private key' };
+                  }
+                }
+              }
+            }
+            
+            return { 
+              success: false, 
+              message: 'Session set but not verifiable', 
+              error: verifyResult.error 
+            };
+          }
+        } else {
+          console.error('Failed to verify token:', await verifyResponse.text());
+          return { 
+            success: true, 
+            message: 'Session set but verification endpoint failed', 
+            sessionResult 
+          };
+        }
+      } catch (verifyError) {
+        console.error('Error verifying token:', verifyError);
+        return { 
+          success: true, 
+          message: 'Session set but verification check errored', 
+          sessionResult 
+        };
+      }
     } else {
-      console.error('Failed to send token to server:', await response.text());
-      return false;
+      console.error('Failed to send token to server:', sessionResult);
+      return { success: false, error: sessionResult.error || 'Unknown error' };
     }
   } catch (error) {
     console.error('Error sending token to server:', error);
-    return false;
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 } 
