@@ -3,12 +3,13 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
-import { createOrUpdateUser, updateUserProfile, updateUserOnlineStatus, getUserData } from './userService';
+import { createOrUpdateUser, updateUserProfile, updateUserOnlineStatus, getUserData, isUserAdmin } from './userService';
 
 // Basic type for auth
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isAdmin: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithDiscord: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
@@ -21,6 +22,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isAdmin: false,
   signInWithGoogle: async () => {},
   signInWithDiscord: async () => {},
   signInWithEmail: async () => {},
@@ -37,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // State
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Set up auth state listener
   useEffect(() => {
@@ -56,9 +59,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('Attempting to create/update user document in Firestore');
           const userData = await createOrUpdateUser(user);
           console.log('Successfully created/updated user document:', userData);
+          
+          // Get the ID token
+          const idToken = await user.getIdToken();
+          
+          // 1. First try client-side approach
+          console.log('Setting session cookie via client-side');
+          setSessionCookie(idToken);
+          
+          // 2. Also try server-side approach as a backup
+          console.log('Setting session cookie via server-side API');
+          await sendTokenToServer(idToken, user.uid);
+          
+          // Check admin status
+          const adminStatus = await isUserAdmin(user.uid);
+          setIsAdmin(adminStatus);
         } catch (error) {
           console.error('Failed to create/update user document:', error);
         }
+      } else {
+        // Clear the session cookie if user logs out
+        clearSessionCookie();
+        setIsAdmin(false);
       }
       
       setUser(user);
@@ -107,6 +129,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user]);
 
+  // Update token refresh logic
+  useEffect(() => {
+    if (!user || typeof window === 'undefined') return;
+
+    // Firebase tokens expire after 1 hour
+    // Let's refresh them every 55 minutes
+    const tokenRefreshInterval = setInterval(async () => {
+      try {
+        console.log('Refreshing Firebase ID token');
+        // Force token refresh
+        const idToken = await user.getIdToken(true);
+        
+        // Update cookie via both approaches
+        console.log('Refreshing session cookie via client-side');
+        setSessionCookie(idToken);
+        
+        console.log('Refreshing session cookie via server-side API');
+        await sendTokenToServer(idToken, user.uid);
+        
+        console.log('Updated session cookie with refreshed token');
+      } catch (error) {
+        console.error('Error refreshing token:', error);
+      }
+    }, 55 * 60 * 1000); // 55 minutes
+
+    return () => clearInterval(tokenRefreshInterval);
+  }, [user]);
+
   // Google sign-in
   const signInWithGoogle = async () => {
     try {
@@ -133,6 +183,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           photoURL
         });
         console.log('User document updated successfully');
+        
+        // Set session cookie
+        const idToken = await result.user.getIdToken();
+        setSessionCookie(idToken);
+        console.log('Set session cookie after Google sign-in');
       }
     } catch (error) {
       console.error('Google sign-in error:', error);
@@ -166,6 +221,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           photoURL
         });
         console.log('User document updated successfully');
+        
+        // Set session cookie
+        const idToken = await result.user.getIdToken();
+        setSessionCookie(idToken);
+        console.log('Set session cookie after Discord sign-in');
       }
     } catch (error) {
       console.error('Discord sign-in error:', error);
@@ -177,7 +237,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithEmail = async (email: string, password: string) => {
     try {
       const { signInWithEmailAndPassword } = await import('firebase/auth');
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Set session cookie
+      const idToken = await userCredential.user.getIdToken();
+      setSessionCookie(idToken);
+      console.log('Set session cookie after email sign-in');
     } catch (error) {
       console.error('Email sign-in error:', error);
       throw error;
@@ -209,6 +274,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           photoURL: randomPicture
         });
         console.log('User document created successfully');
+        
+        // Set session cookie
+        const idToken = await userCredential.user.getIdToken();
+        setSessionCookie(idToken);
+        console.log('Set session cookie after email sign-up');
       }
     } catch (error) {
       console.error('Email sign-up error:', error);
@@ -219,6 +289,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign out
   const logout = async () => {
     try {
+      // Clear the session cookie
+      clearSessionCookie();
+      console.log('Cleared session cookie on logout');
+      
       const { signOut } = await import('firebase/auth');
       await signOut(auth);
     } catch (error) {
@@ -242,6 +316,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     loading,
+    isAdmin,
     signInWithGoogle,
     signInWithDiscord,
     signInWithEmail,
@@ -265,4 +340,100 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       )}
     </AuthContext.Provider>
   );
+}
+
+// Helper function to set session cookie
+const setSessionCookie = (token: string) => {
+  if (typeof window === 'undefined') return;
+  
+  // Check if this is actually a Firebase token
+  // Firebase tokens are JWTs which should start with "ey" and have two dots
+  if (!token.startsWith('ey') || token.split('.').length !== 3) {
+    console.error('WARNING: Attempting to set an invalid Firebase ID token:', 
+      token.substring(0, 10) + '...' + token.substring(token.length - 10));
+    console.error('Token length:', token.length);
+    console.error('Token format check:', {
+      startsWithEy: token.startsWith('ey'),
+      hasTwoDots: token.split('.').length === 3
+    });
+    return; // Don't set an invalid token
+  }
+  
+  // Calculate an expiry date (1 hour from now)
+  const expiryDate = new Date();
+  expiryDate.setHours(expiryDate.getHours() + 1);
+  
+  // Set secure flag if on HTTPS
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  
+  // Debug: Check for any existing session cookie
+  const existingCookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('session='));
+  
+  if (existingCookie) {
+    console.log('Replacing existing session cookie:', 
+      existingCookie.substring(8, 18) + '...' + 
+      existingCookie.substring(existingCookie.length - 10));
+  }
+  
+  // Set the cookie
+  const cookieStr = `session=${token}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax${secure}`;
+  document.cookie = cookieStr;
+  
+  // Verify it was set correctly
+  setTimeout(() => {
+    const newCookie = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('session='));
+    
+    if (newCookie) {
+      const cookieValue = newCookie.substring(8);
+      if (cookieValue === token) {
+        console.log('Session cookie correctly set, expires:', expiryDate.toUTCString());
+      } else {
+        console.error('Session cookie was modified! Expected:', 
+          token.substring(0, 10) + '...' + token.substring(token.length - 10));
+        console.error('Actual:', 
+          cookieValue.substring(0, 10) + '...' + cookieValue.substring(cookieValue.length - 10));
+      }
+    } else {
+      console.error('Failed to set session cookie!');
+    }
+  }, 100);
+};
+
+// Helper function to clear session cookie
+const clearSessionCookie = () => {
+  if (typeof window === 'undefined') return;
+  
+  // Set cookie with expiry in the past to remove it
+  document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+  console.log('Session cookie cleared');
+};
+
+// Also add a function to bypass the cookie and use a direct API approach
+// Add this function after the imports at the top of the file
+async function sendTokenToServer(idToken: string, uid: string) {
+  try {
+    console.log('Sending token to server via API...');
+    const response = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ idToken, uid }),
+    });
+    
+    if (response.ok) {
+      console.log('Token sent to server successfully');
+      return true;
+    } else {
+      console.error('Failed to send token to server:', await response.text());
+      return false;
+    }
+  } catch (error) {
+    console.error('Error sending token to server:', error);
+    return false;
+  }
 } 

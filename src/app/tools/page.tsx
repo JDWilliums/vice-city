@@ -1,78 +1,137 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/lib/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-
-const TOOLS = [
-  {
-    id: 'wiki-generator',
-    title: 'Wiki Page Generator',
-    description: 'Create and format wiki pages with standardized templates for different categories',
-    icon: '📝',
-    color: 'bg-gta-blue',
-    route: '/tools/wiki-generator',
-  },
-  {
-    id: 'wiki-browser',
-    title: 'Wiki Page Browser',
-    description: 'View, search, and manage all wiki pages you have created',
-    icon: '🔍',
-    color: 'bg-gta-purple',
-    route: '/tools/wiki-browser',
-  },
-  // Future tools can be added here
-  {
-    id: 'map-marker',
-    title: 'Map Marker Creator',
-    description: 'Add custom markers to the interactive map with location details',
-    icon: '📍',
-    color: 'bg-gta-green',
-    route: '#', // Not implemented yet
-    disabled: true,
-  },
-  
-];
+import AdminBadge from '@/components/common/AdminBadge';
 
 export default function ToolsPage() {
-  return (
-    <div className="min-h-screen bg-black text-white bg-opacity-90 flex flex-col">
-      <Navbar />
-      <div className="h-24 w-full"></div>
+  const { user, isAdmin } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [serverVerified, setServerVerified] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  
+  // Verify admin status on the server-side as well
+  useEffect(() => {
+    async function verifyAdminServer() {
+      if (!user) return;
       
-      <main className="flex-grow container mx-auto p-4 md:p-8">
-        <div className="bg-gray-900 bg-opacity-80 backdrop-blur-sm rounded-lg shadow-2xl p-6 border border-gta-blue">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-gta-blue">Development Tools</h1>
-          
-          <p className="text-center mb-8 text-lg text-gray-300">
-            These tools help you create and manage content for the GTA VI Map & Wiki project.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {TOOLS.map(tool => (
-              <Link 
-                href={tool.route} 
-                key={tool.id}
-                className={`block p-6 rounded-lg border border-gray-800 transition-all hover:shadow-lg hover:border-opacity-80 ${
-                  tool.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-500 hover:-translate-y-1'
-                }`}
-                onClick={e => tool.disabled && e.preventDefault()}
-              >
-                <div className={`${tool.color} w-12 h-12 rounded-full flex items-center justify-center text-2xl mb-4`}>
-                  {tool.icon}
-                </div>
-                <h3 className="text-xl font-bold mb-2">{tool.title}</h3>
-                <p className="text-gray-400">
-                  {tool.description}
-                </p>
-                
-                {tool.disabled && (
-                  <span className="inline-block mt-4 text-sm bg-yellow-800 text-yellow-200 px-2 py-1 rounded">
-                    Coming Soon
-                  </span>
+      console.log('Client-side isAdmin status:', isAdmin);
+      
+      try {
+        console.log('Fetching /api/admin/check endpoint...');
+        const response = await fetch('/api/admin/check');
+        const data = await response.json();
+        
+        console.log('Server response:', data);
+        setDebugInfo(data);
+        
+        if (!data.isAdmin) {
+          // Not an admin according to server verification
+          console.log('Server verification failed, redirecting to home');
+          setError(`Server verification failed: ${data.error || 'Not an admin'}`);
+          // Wait 3 seconds to show error before redirecting
+          setTimeout(() => router.push('/'), 5000);
+          return;
+        }
+        
+        console.log('Server verified admin status successfully');
+        setServerVerified(true);
+      } catch (error: any) {
+        console.error('Error verifying admin status:', error);
+        setError(`API error: ${error?.message || 'Unknown error'}`);
+        // Wait 3 seconds to show error before redirecting
+        setTimeout(() => router.push('/'), 5000);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    if (user && isAdmin) {
+      verifyAdminServer();
+    } else if (!loading) {
+      router.push('/');
+    }
+  }, [user, isAdmin, router, loading]);
+
+  // Redirect if not authenticated or not admin
+  useEffect(() => {
+    if (!user && !loading) {
+      router.push('/login');
+    } else if (user && !isAdmin && !loading) {
+      router.push('/');
+    }
+  }, [user, isAdmin, router, loading]);
+
+  // Show loading while checking auth
+  if (loading || !user || !isAdmin || !serverVerified) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-white text-center">
+            <div className="inline-block w-16 h-16 border-4 border-gta-pink border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p>Verifying admin access...</p>
+            
+            {error && (
+              <div className="mt-4 text-red-400 max-w-lg mx-auto p-4 bg-gray-900/60 backdrop-blur-sm border border-red-800 rounded-lg">
+                <p className="font-bold mb-2">Error:</p>
+                <p>{error}</p>
+                {debugInfo && (
+                  <div className="mt-4 text-xs text-left bg-gray-800 p-3 rounded overflow-auto max-h-48">
+                    <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+                  </div>
                 )}
-              </Link>
-            ))}
+                <p className="mt-4 text-sm">Redirecting in a few seconds...</p>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <div className="flex items-center gap-2 mb-8">
+          <h1 className="text-4xl font-bold text-white">Admin Tools</h1>
+          <AdminBadge className="w-6 h-6" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Wiki Management */}
+          <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:border-gta-pink transition-colors">
+            <h2 className="text-xl font-bold text-white mb-4">Wiki Management</h2>
+            <p className="text-gray-400 mb-4">Create, edit, and manage wiki content.</p>
+            <Link href="/tools/wiki" className="px-4 py-2 bg-gta-pink text-white rounded hover:bg-pink-600 transition-colors inline-block">
+              Manage Wiki
+            </Link>
+          </div>
+          
+          {/* User Management */}
+          <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:border-gta-blue transition-colors">
+            <h2 className="text-xl font-bold text-white mb-4">User Management</h2>
+            <p className="text-gray-400 mb-4">Manage users, roles, and permissions.</p>
+            <Link href="/tools/users" className="px-4 py-2 bg-gta-blue text-white rounded hover:bg-blue-600 transition-colors inline-block">
+              Manage Users
+            </Link>
+          </div>
+          
+          {/* Content Moderation */}
+          <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:border-gta-green transition-colors">
+            <h2 className="text-xl font-bold text-white mb-4">Content Moderation</h2>
+            <p className="text-gray-400 mb-4">Review and moderate user-generated content.</p>
+            <Link href="/tools/moderation" className="px-4 py-2 bg-gta-green text-white rounded hover:bg-green-600 transition-colors inline-block">
+              Moderate Content
+            </Link>
           </div>
         </div>
       </main>

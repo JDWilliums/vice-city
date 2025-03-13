@@ -4,13 +4,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
+import AdminBadge from '@/components/common/AdminBadge';
 
 interface NavbarProps {
   transparent?: boolean;
 }
 
 const Navbar = ({ transparent = false }: NavbarProps) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -118,12 +119,15 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
             >
               NEWS
             </Link>
-            <Link 
-              href="/tools" 
-              className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
-            >
-              TOOLS
-            </Link>
+            {isAdmin && (
+              <Link 
+                href="/tools" 
+                className="text-gta-pink hover:text-pink-400 transition-colors flex items-center gap-1 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
+              >
+                TOOLS
+                <AdminBadge className="ml-1" />
+              </Link>
+            )}
             <Link 
               href="/about" 
               className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
@@ -153,8 +157,9 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
                       </span>
                     )}
                   </div>
-                  <span className="text-sm text-white">
+                  <span className="text-sm text-white flex items-center">
                     {user.displayName?.split(' ')[0] || 'User'}
+                    {isAdmin && <AdminBadge className="ml-1" />}
                   </span>
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -175,6 +180,16 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
                     >
                       Profile
                     </Link>
+                    {isAdmin && (
+                      <Link 
+                        href="/tools" 
+                        className="block w-full text-left px-4 py-2 text-sm text-gta-pink hover:bg-gray-700 hover:text-pink-400 transition-colors"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        Tools
+                        <AdminBadge className="ml-1" />
+                      </Link>
+                    )}
                     <button 
                       onClick={handleSignOut}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
@@ -313,6 +328,16 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
                     >
                       Profile
                     </Link>
+                    {isAdmin && (
+                      <Link 
+                        href="/tools" 
+                        className="text-white hover:text-pink-400 transition-colors px-4 py-2 border-l-2 border-transparent hover:border-pink-400 block w-full text-left mt-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Tools
+                        <AdminBadge className="ml-1" />
+                      </Link>
+                    )}
                     <button 
                       onClick={() => {
                         handleSignOut();

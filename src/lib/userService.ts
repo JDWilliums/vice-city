@@ -17,6 +17,7 @@ interface UserData {
   lastUpdated: Timestamp;
   createdAt: Timestamp;
   isOnline: boolean;
+  isAdmin: boolean;
   preferences: UserPreferences;
 }
 
@@ -29,6 +30,9 @@ export async function createOrUpdateUser(user: User, additionalData?: Partial<Us
     const userSnap = await getDoc(userRef);
     console.log('User document exists:', userSnap.exists());
     
+    // Get existing user data if it exists
+    const existingData = userSnap.exists() ? userSnap.data() as UserData : null;
+    
     // Base user data that's always set/updated
     const userData: Partial<UserData> = {
       uid: user.uid,
@@ -38,10 +42,15 @@ export async function createOrUpdateUser(user: User, additionalData?: Partial<Us
       provider: user.providerData[0]?.providerId || 'unknown',
       lastUpdated: serverTimestamp() as Timestamp,
       isOnline: true,
+      // Preserve existing admin status or set to false for new users
+      isAdmin: existingData?.isAdmin || false,
       ...additionalData
     };
 
-    console.log('Prepared user data:', userData);
+    console.log('Prepared user data:', {
+      ...userData,
+      isAdmin: userData.isAdmin ? 'true' : 'false'
+    });
 
     // If this is a new user, add createdAt and default preferences
     if (!userSnap.exists()) {
@@ -51,6 +60,8 @@ export async function createOrUpdateUser(user: User, additionalData?: Partial<Us
         emailNotifications: true,
         theme: 'system'
       };
+      // Ensure isAdmin is false for new users
+      userData.isAdmin = false;
     }
 
     console.log('Attempting to write to Firestore');
@@ -123,5 +134,30 @@ export async function updateUserPreferences(uid: string, preferences: Partial<Us
   } catch (error) {
     console.error('Error updating user preferences:', error);
     throw error;
+  }
+}
+
+export async function isUserAdmin(uid: string): Promise<boolean> {
+  try {
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    return userSnap.exists() ? (userSnap.data() as UserData).isAdmin || false : false;
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
+}
+
+export async function checkAdminStatus(uid: string): Promise<boolean> {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    if (!userDoc.exists()) {
+      return false;
+    }
+    const userData = userDoc.data() as UserData;
+    return userData.isAdmin || false;
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
   }
 } 
