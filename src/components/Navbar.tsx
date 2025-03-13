@@ -3,17 +3,24 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/AuthContext';
 
 interface NavbarProps {
   transparent?: boolean;
 }
 
 const Navbar = ({ transparent = false }: NavbarProps) => {
+  const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const toggleProfile = () => {
+    setIsProfileOpen(!isProfileOpen);
   };
 
   // Add scroll event listener
@@ -39,9 +46,34 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
     };
   }, [transparent, scrolled]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (isProfileOpen && !target.closest('.profile-dropdown')) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileOpen]);
+
   const navbarClasses = transparent && !isMenuOpen && !scrolled
     ? "navbar-fixed fixed w-full z-50 bg-gradient-to-b from-black/50 to-transparent backdrop-blur-sm transition-all duration-300"
     : "navbar-fixed bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 fixed w-full z-50 shadow-lg border-gta-blue/30 transition-all duration-300";
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      setIsProfileOpen(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <nav className={navbarClasses}>
@@ -98,6 +130,76 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
             >
               ABOUT
             </Link>
+            
+            {/* Authentication */}
+            {user ? (
+              <div className="relative profile-dropdown">
+                <button 
+                  onClick={toggleProfile}
+                  className="flex items-center space-x-2 bg-black/30 hover:bg-black/50 px-3 py-2 rounded-full transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gta-blue rounded-full flex items-center justify-center overflow-hidden">
+                    {user.photoURL ? (
+                      <Image 
+                        src={user.photoURL} 
+                        alt={user.displayName || 'User'} 
+                        width={32} 
+                        height={32}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-white font-bold text-sm">
+                        {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-sm text-white">
+                    {user.displayName?.split(' ')[0] || 'User'}
+                  </span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {/* Profile Dropdown */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-50 py-1 border border-gray-700 profile-dropdown">
+                    <div className="px-4 py-2 border-b border-gray-700">
+                      <p className="text-sm text-white font-medium">{user.displayName || 'User'}</p>
+                      <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                    </div>
+                    <Link 
+                      href="/profile" 
+                      className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button 
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link 
+                  href="/login" 
+                  className="text-white hover:text-gta-pink transition-colors"
+                >
+                  Login
+                </Link>
+                <Link 
+                  href="/register" 
+                  className="bg-gradient-to-b from-gta-pink to-pink-500 text-white px-4 py-2 rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -178,6 +280,68 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
               >
                 ABOUT
               </Link>
+              
+              {/* Mobile Auth Links */}
+              <div className="border-t border-gray-700 pt-4 mt-2">
+                {user ? (
+                  <>
+                    <div className="px-4 py-2 flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gta-blue rounded-full flex items-center justify-center overflow-hidden">
+                        {user.photoURL ? (
+                          <Image 
+                            src={user.photoURL} 
+                            alt={user.displayName || 'User'} 
+                            width={32} 
+                            height={32}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-white font-bold text-sm">
+                            {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm text-white font-medium">{user.displayName || 'User'}</p>
+                        <p className="text-xs text-gray-400 truncate max-w-[200px]">{user.email}</p>
+                      </div>
+                    </div>
+                    <Link 
+                      href="/profile" 
+                      className="text-white hover:text-gta-blue transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-blue block mt-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button 
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMenuOpen(false);
+                      }}
+                      className="text-white hover:text-red-500 transition-colors px-4 py-2 border-l-2 border-transparent hover:border-red-500 block w-full text-left mt-2"
+                    >
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link 
+                      href="/login" 
+                      className="text-white hover:text-gta-pink transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-pink block"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      LOGIN
+                    </Link>
+                    <Link 
+                      href="/register" 
+                      className="text-white hover:text-gta-blue transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-blue block"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      REGISTER
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}
