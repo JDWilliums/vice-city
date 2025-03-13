@@ -33,10 +33,8 @@ export default function ToolsPage() {
         
         if (!data.isAdmin) {
           // Not an admin according to server verification
-          console.log('Server verification failed, redirecting to home');
-          setError(`Server verification failed: ${data.error || 'Not an admin'}`);
-          // Wait 3 seconds to show error before redirecting
-          setTimeout(() => router.push('/'), 5000);
+          console.log('Server verification failed: not an admin');
+          setError(`Access denied: Your account does not have admin privileges.`);
           return;
         }
         
@@ -44,9 +42,7 @@ export default function ToolsPage() {
         setServerVerified(true);
       } catch (error: any) {
         console.error('Error verifying admin status:', error);
-        setError(`API error: ${error?.message || 'Unknown error'}`);
-        // Wait 3 seconds to show error before redirecting
-        setTimeout(() => router.push('/'), 5000);
+        setError(`Error verifying admin status: ${error?.message || 'Unknown error'}`);
       } finally {
         setLoading(false);
       }
@@ -54,22 +50,67 @@ export default function ToolsPage() {
     
     if (user && isAdmin) {
       verifyAdminServer();
-    } else if (!loading) {
-      router.push('/');
+    } else {
+      setLoading(false);
     }
-  }, [user, isAdmin, router, loading]);
+  }, [user, isAdmin]);
 
-  // Redirect if not authenticated or not admin
-  useEffect(() => {
-    if (!user && !loading) {
-      router.push('/login');
-    } else if (user && !isAdmin && !loading) {
-      router.push('/');
-    }
-  }, [user, isAdmin, router, loading]);
+  // Render the access denied page for non-admins
+  if (!loading && (!user || !isAdmin || error)) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="max-w-lg w-full p-8 bg-gray-900/80 backdrop-blur-md rounded-lg border border-gray-800 text-center">
+            <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-red-900/30 border-2 border-red-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            
+            <h1 className="text-2xl font-bold text-white mb-4">Access Denied</h1>
+            
+            {!user ? (
+              <>
+                <p className="text-gray-300 mb-6">Please log in to access this area.</p>
+                <Link href="/login" className="px-6 py-2 bg-gta-blue text-white rounded hover:bg-blue-600 transition-colors inline-block">
+                  Log In
+                </Link>
+              </>
+            ) : !isAdmin ? (
+              <>
+                <p className="text-gray-300 mb-6">This area is restricted to administrators only.</p>
+                <Link href="/" className="px-6 py-2 bg-gta-blue text-white rounded hover:bg-blue-600 transition-colors inline-block">
+                  Return to Home
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-300 mb-6">{error || "There was an error verifying your admin status."}</p>
+                <div className="flex gap-4 justify-center">
+                  <Link href="/" className="px-6 py-2 bg-gta-blue text-white rounded hover:bg-blue-600 transition-colors inline-block">
+                    Return to Home
+                  </Link>
+                  <Link href="/tools/debug" className="px-6 py-2 bg-gta-pink text-white rounded hover:bg-pink-600 transition-colors inline-block">
+                    Debug Admin Status
+                  </Link>
+                </div>
+                {debugInfo && (
+                  <div className="mt-6 text-xs text-left bg-gray-800 p-3 rounded overflow-auto max-h-48">
+                    <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   // Show loading while checking auth
-  if (loading || !user || !isAdmin || !serverVerified) {
+  if (loading || !serverVerified) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -77,19 +118,6 @@ export default function ToolsPage() {
           <div className="text-white text-center">
             <div className="inline-block w-16 h-16 border-4 border-gta-pink border-t-transparent rounded-full animate-spin mb-4"></div>
             <p>Verifying admin access...</p>
-            
-            {error && (
-              <div className="mt-4 text-red-400 max-w-lg mx-auto p-4 bg-gray-900/60 backdrop-blur-sm border border-red-800 rounded-lg">
-                <p className="font-bold mb-2">Error:</p>
-                <p>{error}</p>
-                {debugInfo && (
-                  <div className="mt-4 text-xs text-left bg-gray-800 p-3 rounded overflow-auto max-h-48">
-                    <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-                  </div>
-                )}
-                <p className="mt-4 text-sm">Redirecting in a few seconds...</p>
-              </div>
-            )}
           </div>
         </main>
       </div>
