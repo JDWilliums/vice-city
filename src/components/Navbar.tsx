@@ -63,6 +63,12 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-8 items-center">
             <Link 
+              href="/home" 
+              className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
+            >
+              HOME
+            </Link>
+            <Link 
               href="/map" 
               className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
             >
@@ -79,12 +85,6 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
               className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
             >
               NEWS
-            </Link>
-            <Link 
-              href="/countdown" 
-              className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
-            >
-              COUNTDOWN
             </Link>
             <Link 
               href="/tools" 
@@ -137,6 +137,13 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
           <div className="md:hidden pt-4 pb-4 bg-gradient-to-b from-gray-800 to-gray-900 mt-2 rounded-lg border border-gray-700">
             <div className="flex flex-col space-y-4">
               <Link 
+                href="/home" 
+                className="text-white hover:text-gta-blue transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-blue"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                HOME
+              </Link>
+              <Link 
                 href="/map" 
                 className="text-white hover:text-gta-blue transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-blue"
                 onClick={() => setIsMenuOpen(false)}
@@ -156,13 +163,6 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 NEWS
-              </Link>
-              <Link 
-                href="/countdown" 
-                className="text-white hover:text-gta-yellow transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-yellow"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                COUNTDOWN
               </Link>
               <Link 
                 href="/tools" 
