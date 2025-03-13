@@ -1,5 +1,7 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+'use client';
+
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { Auth, getAuth } from 'firebase/auth';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -13,14 +15,21 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+let firebaseApp: FirebaseApp;
+let auth: Auth;
 
-// Only initialize analytics on the client side
-let analytics = null;
+// Only initialize in the browser
 if (typeof window !== 'undefined') {
-  const { getAnalytics } = require('firebase/analytics');
-  analytics = getAnalytics(app);
+  firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  auth = getAuth(firebaseApp);
+  
+  // Analytics
+  try {
+    const { getAnalytics } = require('firebase/analytics');
+    getAnalytics(firebaseApp);
+  } catch (error) {
+    console.log('Analytics not initialized:', error);
+  }
 }
 
-export const auth = getAuth(app);
-export { app }; 
+export { firebaseApp, auth }; 
