@@ -216,7 +216,7 @@ export default function ProfilePage() {
         title="Edit Profile"
       >
         <EditProfileForm
-          user={user}
+          userData={user}
           onClose={() => setIsEditModalOpen(false)}
           onUpdate={handleProfileUpdate}
         />

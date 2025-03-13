@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
-import { updateProfile, User } from 'firebase/auth';
+import type { User } from 'firebase/auth';
+import { updateProfile } from 'firebase/auth';
 import Image from 'next/image';
 import InputField from '@/components/auth/InputField';
 import AuthButton from '@/components/auth/AuthButton';
 import { PROFILE_PICTURES } from '@/constants/profilePictures';
 import { updateUserProfile, getUserData, updateUserPreferences } from '@/lib/userService';
 
-interface EditProfileFormProps {
+type EditProfileFormProps = {
   userData: User;
   onClose: () => void;
   onUpdate: () => void;
-}
+};
 
-export default function EditProfileForm({ userData, onClose, onUpdate }: EditProfileFormProps) {
+const EditProfileForm: React.FC<EditProfileFormProps> = ({ userData, onClose, onUpdate }) => {
   const [displayName, setDisplayName] = useState(userData?.displayName || '');
   const [selectedPicture, setSelectedPicture] = useState(userData?.photoURL || '');
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -184,4 +185,6 @@ export default function EditProfileForm({ userData, onClose, onUpdate }: EditPro
       </div>
     </form>
   );
-} 
+};
+
+export default EditProfileForm; 
