@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { adminAuth } from '@/lib/firebase-admin';
-import { adminDb } from '@/lib/firebase-admin';
+
+// Dynamically import Firebase Admin to prevent build-time initialization
+let adminAuth: any;
+let adminDb: any;
+
+// This initialization will only happen at runtime, not build time
+async function initAdminSDK() {
+  if (!adminAuth || !adminDb) {
+    const { getAdminAuth, getAdminDb } = await import('@/lib/firebase-admin');
+    adminAuth = getAdminAuth();
+    adminDb = getAdminDb();
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,6 +35,9 @@ export async function GET(request: NextRequest) {
     if (queryUid) {
       uid = queryUid;
     } else {
+      // Initialize the admin SDK
+      await initAdminSDK();
+      
       // Verify the token to get the UID
       try {
         const decodedToken = await adminAuth.verifyIdToken(sessionCookie);
@@ -39,6 +53,9 @@ export async function GET(request: NextRequest) {
     
     // Fetch user data from Firestore
     try {
+      // Initialize the admin SDK if not already done
+      await initAdminSDK();
+      
       const userDoc = await adminDb.collection('users').doc(uid).get();
       
       if (!userDoc.exists) {

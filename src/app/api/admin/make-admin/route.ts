@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { adminAuth } from '@/lib/firebase-admin';
-import { adminDb } from '@/lib/firebase-admin';
+
+// Dynamically import Firebase Admin to prevent build-time initialization
+let adminAuth: any;
+let adminDb: any;
+
+// This initialization will only happen at runtime, not build time
+async function initAdminSDK() {
+  if (!adminAuth || !adminDb) {
+    const { getAdminAuth, getAdminDb } = await import('@/lib/firebase-admin');
+    adminAuth = getAdminAuth();
+    adminDb = getAdminDb();
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,6 +25,9 @@ export async function GET(request: NextRequest) {
         error: 'No session found' 
       }, { status: 401 });
     }
+    
+    // Initialize the admin SDK at runtime
+    await initAdminSDK();
     
     // Verify the token to get the UID
     let uid: string;

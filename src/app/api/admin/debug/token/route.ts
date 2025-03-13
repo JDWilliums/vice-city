@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { adminAuth } from '@/lib/firebase-admin';
+
+// Dynamically import Firebase Admin to prevent build-time initialization
+let adminAuth: any;
+
+// This initialization will only happen at runtime, not build time
+async function initAdminSDK() {
+  if (!adminAuth) {
+    const { getAdminAuth } = await import('@/lib/firebase-admin');
+    adminAuth = getAdminAuth();
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,6 +31,9 @@ export async function GET(request: NextRequest) {
     console.log('Session cookie found, length:', sessionCookie.length);
     
     try {
+      // Initialize the admin SDK at runtime
+      await initAdminSDK();
+      
       // Try to verify the token
       const decodedToken = await adminAuth.verifyIdToken(sessionCookie);
       

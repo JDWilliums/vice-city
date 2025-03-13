@@ -8,9 +8,9 @@ let isUserAdmin: any;
 // This initialization will only happen at runtime, not build time
 async function initAdminSDK() {
   if (!adminAuth) {
-    const { adminAuth: auth } = await import('@/lib/firebase-admin');
+    const { getAdminAuth } = await import('@/lib/firebase-admin');
     const { isUserAdmin: userAdmin } = await import('@/lib/userService');
-    adminAuth = auth;
+    adminAuth = getAdminAuth();
     isUserAdmin = userAdmin;
   }
 }
