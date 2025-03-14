@@ -97,8 +97,8 @@ export default function WikiHomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
             {WIKI_CATEGORIES.map((category) => (
               <div key={category.id} className="card backdrop-blur-sm bg-gray-800/70 hover:bg-gray-800/90 border border-gray-700 hover:border-opacity-100 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-lg group">
-                <div className={`mb-6 text-white text-4xl flex justify-center ${category.color} w-16 h-16 rounded-full mx-auto flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                  <span>{category.icon}</span>
+                <div className={`mb-6 text-white text-4xl flex justify-center w-24 h-24 rounded-full mx-auto flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  <span><img src={category.icon} alt={category.title}></img></span>
                 </div>
                 <h2 className={`text-2xl font-bold mb-3 text-center text-white group-hover:${category.textColor} transition-colors`}>
                   {category.title}
