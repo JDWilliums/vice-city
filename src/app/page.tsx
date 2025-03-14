@@ -158,7 +158,7 @@ export default function HomePage() {
             </p>
             
             {/* Countdown Timer */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-16">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-4">
               <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
                 <div className="text-4xl md:text-6xl font-bold text-white mb-1">{days}</div>
                 <div className="text-gray-400 uppercase tracking-wider text-sm">Days</div>
@@ -179,9 +179,13 @@ export default function HomePage() {
                 <div className="text-gray-400 uppercase tracking-wider text-sm">Seconds</div>
               </div>
             </div>
+
+            <p className="text-sm md:text-m text-gray-400 mb-16 max-w-3xl mx-auto">
+              (Countdown to the end of Fall, actual release date is currently unknown)
+            </p>
             
             {/* GTA 6 Logo */}
-            <div className="relative flex justify-center mb-20 animate-fadeInUp" style={{ animationDelay: '1s' }}>
+            <div className="relative flex justify-center mb-16 animate-fadeInUp" style={{ animationDelay: '1s' }}>
               <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[150px] opacity-5 animate-pulse"></div>
               <Image 
                 src="/images/gta6-logo.png" 
@@ -398,7 +402,6 @@ export default function HomePage() {
             </div>
             
             <div className="mt-16 text-gray-400 text-sm text-center animate-fadeInUp">
-              <p>Release date is estimated. Actual date may vary.</p>
               <p className="mt-2">This is a fan site and is not affiliated with Rockstar Games or Take-Two Interactive.</p>
             </div>
           </div>
