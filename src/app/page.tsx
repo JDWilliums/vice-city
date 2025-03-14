@@ -217,7 +217,7 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
-                <span className="text-white">What We Know <span className="text-gta-blue">So Far</span></span>
+                <span className="text-white">What We Know...</span>
               </h2>
               
               <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg p-8 mb-12 animate-fadeInUp">
@@ -233,16 +233,16 @@ export default function HomePage() {
                       <p className="text-gray-300">Return to a reimagined Vice City and surrounding areas in the fictional state of Leonida, inspired by Miami and Florida.</p>
                     </div>
                     
-                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-green">
-                      <h3 className="text-xl font-bold mb-2 text-gta-green">Modern Setting</h3>
+                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-blue">
+                      <h3 className="text-xl font-bold mb-2 text-gta-blue">Modern Setting</h3>
                       <p className="text-gray-300">Set in the modern day, not the 1980s of the original Vice City, with contemporary themes and technology.</p>
                     </div>
                   </div>
                   
                   <div className="space-y-6">
-                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-yellow">
-                      <h3 className="text-xl font-bold mb-2 text-gta-yellow">Enhanced Physics</h3>
-                      <p className="text-gray-300">Improved physics system with more realistic vehicle handling, enhanced weather effects, and dynamic environmental interactions.</p>
+                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-pink">
+                      <h3 className="text-xl font-bold mb-2 text-gta-pink">Improved Online</h3>
+                      <p className="text-gray-300">GTA Online is set to be bigger in scale, built for longevity, and more integrated with modern online gaming trends.</p>
                     </div>
                     
                     <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-blue">
@@ -271,7 +271,7 @@ export default function HomePage() {
         <section className="flex items-center relative py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
-              <span className="text-white">Official <span className="text-gta-pink">Trailer</span></span>
+              <span className="text-white">Official Trailer</span>
             </h2>
             
             <div className="max-w-4xl mx-auto animate-fadeInUp">
@@ -298,7 +298,7 @@ export default function HomePage() {
         <section className="flex items-center relative py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
-              <span className="text-white">Latest <span className="text-gta-blue">Updates</span></span>
+              <span className="text-white">Latest Updates</span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto animate-fadeInUp">
