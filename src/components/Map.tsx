@@ -27,12 +27,12 @@ const MAP_BOUNDS: L.LatLngBoundsLiteral = [
 
 // Define map categories with their icons and info
 const MAP_CATEGORIES = [
-  { id: 'missions', name: 'Missions', icon: '🎯', color: '#FF00B7' },
-  { id: 'collectibles', name: 'Collectibles', icon: '💎', color: '#0051FF' },
-  { id: 'stores', name: 'Stores', icon: '🛒', color: '#00FF85' },
-  { id: 'properties', name: 'Properties', icon: '🏠', color: '#FFF500' },
-  { id: 'activities', name: 'Activities', icon: '🎮', color: '#8C00FF' },
-  { id: 'landmarks', name: 'Landmarks', icon: '🗿', color: '#FF5100' },
+  { id: 'missions', name: 'Missions', icon: '/images/icons/bullseye.svg', color: '#FF00B7' },
+  { id: 'collectibles', name: 'Collectibles', icon: '/images/icons/trophy.svg', color: '#0051FF' },
+  { id: 'stores', name: 'Stores', icon: '/images/icons/cart.svg', color: '#00B930' },
+  { id: 'properties', name: 'Properties', icon: '/images/icons/house.svg', color: '#FF0000' },
+  { id: 'activities', name: 'Activities', icon: '/images/icons/gamepad.svg', color: '#8C00FF' },
+  { id: 'landmarks', name: 'Landmarks', icon: '/images/icons/pin.svg', color: '#FF5100' },
 ];
 
 // Example points of interest (adjusted for GTA 5 map)
@@ -52,7 +52,9 @@ const createMapIcon = (category: string) => {
   const categoryInfo = MAP_CATEGORIES.find(c => c.id === category);
   
   return L.divIcon({
-    html: `<div style="background-color: ${categoryInfo?.color || '#FFF'}; color: white; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 16px;">${categoryInfo?.icon || '📍'}</div>`,
+    html: `<div style="background-color: ${categoryInfo?.color || '#FFF'}; color: white; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 16px;">
+            <img src="${categoryInfo?.icon || '/assets/icons/default-icon.png'}" alt="icon" style="width: 20px; height: 20px;" />
+         </div>`,
     className: 'map-marker',
     iconSize: [30, 30],
     iconAnchor: [15, 15],
