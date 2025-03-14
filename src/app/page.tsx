@@ -195,14 +195,14 @@ export default function HomePage() {
             
             {/* Call to Action */}
             <div className="flex flex-col md:flex-row gap-4 justify-center mb-16 animate-fadeInUp" style={{ animationDelay: '1.2s' }}>
-              <Link href="/home" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
-                Visit Home
+              <Link href="/news" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
+                Latest News
               </Link>
               <Link href="https://discord.gg/rGqyNP4AC6" className="px-8 py-3 bg-gradient-to-b from-indigo-400 to-indigo-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-indigo-400/20 transition-all hover:-translate-y-1">
                 Join our Discord
               </Link>
-              <Link href="/map" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
-                View the Map
+              <Link href="/wiki" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
+                Explore the Wiki
               </Link>
             </div>
           </div>
