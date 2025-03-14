@@ -167,7 +167,7 @@ Luciana is pragmatic, resourceful, and often the voice of reason. She's calculat
 - "Family Ties" - Mission involving her sister Sarah
 - "Velocity" - Showcases her elite driving skills in a high-stakes chase
     `,
-    imageUrl: '/images/characters/luciana-porter.jpg',
+    imageUrl: '/images/characters/luciana-porter.png',
     tags: ['Protagonist', 'Criminal', 'Driver'],
     createdAt: '2023-12-10T14:30:00Z',
     updatedAt: '2023-12-15T16:45:00Z',

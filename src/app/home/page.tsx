@@ -37,7 +37,7 @@ export default function Home() {
           {/* Hero content */}
           <div className="relative z-20 text-center px-4">
             <Image 
-              src="/images/logo-tw.png"
+              src="/images/logo-wp.png"
               alt="GTA 6 Logo"
               width={600}
               height={300}

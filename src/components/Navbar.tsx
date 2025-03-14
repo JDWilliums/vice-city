@@ -84,7 +84,7 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
           <Link href="/" className="font-heading font-bold relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-gta-pink/20 to-gta-blue/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
             <Image 
-              src="/logo-wp.png" 
+              src="/images/logo-tw.png" 
               alt="GTA 6 Wiki" 
               width={150} 
               height={50} 

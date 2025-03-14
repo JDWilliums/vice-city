@@ -55,7 +55,7 @@ export default function ArticlePage() {
       
       <main className="flex-grow">
         {/* Article Header */}
-        <div className="relative aspect-[21/9] w-full bg-gray-900">
+        <div className="relative aspect-[5/1] w-full bg-gray-900">
           <Image 
             src={article.imageUrl}
             alt={article.title}
@@ -69,12 +69,11 @@ export default function ArticlePage() {
           
           {/* Animated Accent Lines */}
           <div className="absolute inset-0 z-10 overflow-hidden">
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-gta-pink via-gta-blue to-transparent"></div>
-            <div className="absolute top-0 right-0 h-full w-1 bg-gradient-to-b from-gta-blue via-gta-pink to-transparent"></div>
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-gta-pink to-gta-blue"></div>
           </div>
           
           {/* VCNEWS Watermark */}
-          <div className="absolute top-6 right-6 w-48 h-auto z-20 opacity-80">
+          <div className="absolute bottom-6 right-6 w-32 h-auto z-20 opacity-50">
             <Image
               src="/vcnews.png"
               alt="Vice City News Network"
