@@ -153,10 +153,6 @@ export default function HomePage() {
               GTA VI Countdown
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
-              Experience the next chapter in the Grand Theft Auto series. <br /> Return to Vice City, coming Fall 2025.
-            </p>
-            
             {/* Countdown Timer */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-4">
               <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>

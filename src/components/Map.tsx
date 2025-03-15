@@ -28,7 +28,7 @@ const MAP_BOUNDS: L.LatLngBoundsLiteral = [
 // Define map categories with their icons and info
 const MAP_CATEGORIES = [
   { id: 'missions', name: 'Missions', icon: '/images/icons/bullseye.svg', color: '#FF00B7' },
-  { id: 'collectibles', name: 'Collectibles', icon: '/images/icons/trophy.svg', color: '#0051FF' },
+  { id: 'collectibles', name: 'Collectibles', icon: '/images/icons/trophy.svg', color: '#00B1FF' },
   { id: 'stores', name: 'Stores', icon: '/images/icons/cart.svg', color: '#00B930' },
   { id: 'properties', name: 'Properties', icon: '/images/icons/house.svg', color: '#FF0000' },
   { id: 'activities', name: 'Activities', icon: '/images/icons/gamepad.svg', color: '#8C00FF' },
