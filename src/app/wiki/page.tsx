@@ -1,204 +1,597 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { getAllWikiPages } from '@/lib/wikiFirestoreService';
+import { WIKI_CATEGORIES } from '@/data/wikiData';
+import { getLocalImageUrl } from '@/lib/localImageService';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { WIKI_CATEGORIES } from '@/data/wikiData';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-// Main wiki categories moved to data/wikiData.ts
 
 export default function WikiHomePage() {
-  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
-
+  const [loading, setLoading] = useState(true);
+  const [featuredPages, setFeaturedPages] = useState<any[]>([]);
+  const [recentPages, setRecentPages] = useState<any[]>([]);
+  const [allPages, setAllPages] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  useEffect(() => {
+    const fetchWikiPages = async () => {
+      try {
+        setLoading(true);
+        const pages = await getAllWikiPages(false); // Exclude archived pages
+        
+        // Process the pages to ensure they have image URLs
+        const processedPages = pages.map(page => {
+          // If the page doesn't have an image URL, assign a category-specific one
+          if (!page.imageUrl) {
+            return {
+              ...page,
+              imageUrl: getLocalImageUrl(page.category)
+            };
+          }
+          return page;
+        });
+        
+        setAllPages(processedPages);
+        
+        // Filter featured pages
+        const featured = processedPages
+          .filter(page => page.featured && page.status === 'published')
+          .slice(0, 6); // Limit to 6 featured pages
+        
+        // Get recent pages
+        const recent = processedPages
+          .filter(page => page.status === 'published')
+          .sort((a, b) => {
+            // Handle different timestamp formats (Firestore Timestamp or regular date)
+            let aTime: number, bTime: number;
+            
+            if (a.updatedAt?.toDate) {
+              aTime = a.updatedAt.toDate().getTime();
+            } else if (typeof a.updatedAt === 'object' && a.updatedAt !== null) {
+              aTime = new Date(a.updatedAt.seconds * 1000).getTime();
+            } else {
+              aTime = new Date().getTime();
+            }
+            
+            if (b.updatedAt?.toDate) {
+              bTime = b.updatedAt.toDate().getTime();
+            } else if (typeof b.updatedAt === 'object' && b.updatedAt !== null) {
+              bTime = new Date(b.updatedAt.seconds * 1000).getTime();
+            } else {
+              bTime = new Date().getTime();
+            }
+            
+            return bTime - aTime;
+          })
+          .slice(0, 8); // Limit to 8 recent pages
+        
+        setFeaturedPages(featured);
+        setRecentPages(recent);
+      } catch (error) {
+        console.error('Error fetching wiki pages:', error);
+        setError('Failed to load wiki content. Please try again later.');
+        
+        // If there's an error (like Firestore not available), create placeholder content
+        const placeholders = createPlaceholderPages(6, true);
+        const recentPlaceholders = createPlaceholderPages(8, false);
+        setFeaturedPages(placeholders);
+        setRecentPages(recentPlaceholders);
+        setAllPages([...placeholders, ...recentPlaceholders]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchWikiPages();
+  }, []);
+  
+  // Function to search through all pages
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    
+    setIsSearching(true);
+    const query = searchQuery.toLowerCase();
+    
+    const results = allPages.filter(page => 
+      page.title.toLowerCase().includes(query) || 
+      page.description.toLowerCase().includes(query) ||
+      (page.tags && page.tags.some((tag: string) => tag.toLowerCase().includes(query))) ||
+      (page.content && page.content.toLowerCase().includes(query))
+    ).slice(0, 8); // Limit to 8 results
+    
+    setSearchResults(results);
+  }, [searchQuery, allPages]);
+  
+  // Function to navigate to specific page when clicking a search result
+  const handleSearchResultClick = (page: any) => {
+    setSearchQuery('');
+    setIsSearching(false);
+    router.push(`/wiki/${page.category}/${page.slug}`);
+  };
+  
+  // Function to navigate to search results page for advanced search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/tools/wiki-browser?search=${encodeURIComponent(searchQuery)}`);
+      router.push(`/wiki/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
-
+  
+  // Focus search input on page load
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, []);
+  
+  // Function to create placeholder pages when real data can't be loaded
+  const createPlaceholderPages = (count: number, featured: boolean) => {
+    const placeholders = [];
+    
+    for (let i = 0; i < count; i++) {
+      const category = WIKI_CATEGORIES[i % WIKI_CATEGORIES.length].id;
+      
+      placeholders.push({
+        id: `placeholder-${i}`,
+        title: featured 
+          ? `Featured ${WIKI_CATEGORIES.find(cat => cat.id === category)?.title} Page ${i + 1}`
+          : `${WIKI_CATEGORIES.find(cat => cat.id === category)?.title} Article ${i + 1}`,
+        description: featured
+          ? 'This is a placeholder for a featured wiki page. Real content will appear once connected to the database.'
+          : 'This is a placeholder wiki article. Real content will appear once connected to the database.',
+        slug: `placeholder-${category}-${i}`,
+        category,
+        imageUrl: getLocalImageUrl(category),
+        updatedAt: { toDate: () => new Date() }
+      });
+    }
+    
+    return placeholders;
+  };
+  
+  const formatDate = (timestamp: any): string => {
+    if (timestamp?.toDate) {
+      return timestamp.toDate().toLocaleDateString();
+    } else if (typeof timestamp === 'object' && timestamp !== null && timestamp.seconds) {
+      return new Date(timestamp.seconds * 1000).toLocaleDateString();
+    } else if (timestamp) {
+      return new Date(timestamp).toLocaleDateString();
+    }
+    return 'Unknown date';
+  };
+  
   return (
-    <>
-      <Navbar />
-      <div className="h-24 w-full"></div> {/* Fixed height spacer */}
-      <main className="min-h-screen relative">
-        {/* Background image */}
+    <div className="min-h-screen flex flex-col bg-gray-900">
+      <Navbar transparent={true} />
+      
+      {/* Hero Section with Search */}
+      <div className="relative min-h-[500px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <Image 
-            src="/gta6-background.jpg" 
-            alt="GTA 6 Background" 
-            fill
-            className="object-cover object-center opacity-15"
+            src="/images/gta6-3.png" 
+            alt="Vice City" 
+            fill 
+            className="object-cover object-center opacity-30"
+            priority
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-900/70 to-transparent"></div>
         </div>
         
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-dark-bg/95 via-gray-900/95 to-dark-bg/95 z-0"></div>
+        {/* Animated Gradients */}
+        <div className="absolute inset-0 z-5 opacity-40">
+          <div className="absolute top-0 -left-1/3 w-2/3 h-2/3 bg-gta-pink opacity-20 rounded-full blur-[150px] animate-pulse"></div>
+          <div className="absolute bottom-0 -right-1/3 w-2/3 h-2/3 bg-gta-blue opacity-20 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
         
-        <div className="container-custom py-12 relative z-10">
-          {/* Decorative elements */}
-          <div className="absolute -top-40 -left-40 w-80 h-80 bg-gta-pink/5 rounded-full blur-[150px]"></div>
-          <div className="absolute top-1/2 right-0 w-80 h-80 bg-gta-blue/5 rounded-full blur-[150px]"></div>
-          
-          <header className="text-center mb-16 relative z-10">
-            <div className="flex justify-center mb-4">
-              <div className="relative group p-8">
-                <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[200px] opacity-100 group-hover:opacity-70 transition duration-10000 animate-pulse"></div>
-                <Image 
-                  src="/logo-wp.png" 
-                  alt="GTA 6 Wiki" 
-                  width={300} 
-                  height={100} 
-                  className="w-auto h-16 md:h-20 relative z-10" 
-                />
-              </div>
-            </div>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-              Your comprehensive guide to all things Grand Theft Auto VI. Browse through detailed information about characters, missions, locations, and more.
+        <div className="container mx-auto px-6 z-10 text-center relative">
+          <div className="animate-fadeIn">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
+              GTA 6 <span className="text-gta-pink">Wiki</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto mb-10 drop-shadow-md">
+              Your comprehensive guide to Vice City, characters, vehicles, missions, and everything else in Grand Theft Auto VI.
             </p>
             
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto mb-12">
-              <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-gta-pink to-gta-blue rounded-lg blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-                <form onSubmit={handleSearch} className="relative flex items-center bg-gray-900/90 backdrop-blur-md rounded-lg border border-gray-700">
-                  <input
-                    type="text"
-                    placeholder="Search the Vice City Wiki..."
-                    className="w-full px-6 py-4 bg-transparent text-white outline-none placeholder-gray-500"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <button 
-                    type="submit"
-                    className="mr-2 px-4 py-2 bg-gradient-to-b from-gta-pink to-pink-500 text-white rounded-md hover:from-pink-500 hover:to-gta-pink transition-all duration-300"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </button>
-                </form>
-              </div>
-              <div className="flex justify-center mt-3 space-x-3 text-sm text-gray-400">
-                <span>Popular:</span>
-                <a href="/wiki/characters/lucia" className="hover:text-gta-pink">Lucia</a>
-                <a href="/wiki/characters/jason" className="hover:text-gta-pink">Jason</a>
-                <a href="/wiki/locations/vice-beach" className="hover:text-gta-blue">Vice Beach</a>
-                <a href="/wiki/missions/heists" className="hover:text-gta-green">Heists</a>
-              </div>
-            </div>
-          </header>
-
-          {/* Wiki Categories Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
-            {WIKI_CATEGORIES.map((category) => (
-              <div key={category.id} className="card backdrop-blur-sm bg-gray-800/70 hover:bg-gray-800/90 border border-gray-700 hover:border-opacity-100 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-lg group">
-                <div className={`mb-6 text-white text-4xl flex justify-center ${category.color} w-16 h-16 rounded-full mx-auto flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                  <span>{category.icon}</span>
-                </div>
-                <h2 className={`text-2xl font-bold mb-3 text-center text-white group-hover:${category.textColor} transition-colors`}>
-                  {category.title}
-                </h2>
-                <p className="text-gray-300 mb-6 text-center">
-                  {category.description}
-                </p>
-                
-                {/* Subcategories */}
-                <div className="border-t border-gray-700 pt-4">
-                  <h3 className="text-sm font-medium text-gray-400 mb-3">Categories:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {category.subcategories.map((subcategory) => (
-                      <Link 
-                        key={subcategory} 
-                        href={`/wiki/${category.id}/${subcategory.toLowerCase().replace(/\s+/g, '-')}`}
-                        className={`px-3 py-1 bg-gray-700/50 rounded-full text-sm hover:bg-gray-600 transition-colors hover:${category.borderColor} border border-transparent hover:border-opacity-100`}
-                      >
-                        {subcategory}
-                      </Link>
+            {/* Search Form */}
+            <div className="relative max-w-2xl mx-auto bg-gray-800/60 backdrop-blur-md rounded-lg p-1 border border-gray-700/50 shadow-xl mb-8 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
+              <form onSubmit={handleSearch} className="flex items-center">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search the GTA 6 Wiki..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full bg-transparent px-5 py-4 text-white focus:outline-none text-lg"
+                />
+                <button 
+                  type="submit" 
+                  className="px-6 py-4 bg-gta-pink text-white rounded-r-md hover:bg-pink-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              </form>
+              
+              {/* Search Results Dropdown */}
+              {isSearching && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl z-50 max-h-96 overflow-y-auto">
+                  <ul className="divide-y divide-gray-700">
+                    {searchResults.map(page => (
+                      <li key={page.id} className="hover:bg-gray-700/50 transition-colors">
+                        <button 
+                          onClick={() => handleSearchResultClick(page)}
+                          className="w-full text-left p-4 flex items-start space-x-4"
+                        >
+                          {page.imageUrl && (
+                            <div className="relative flex-shrink-0 w-16 h-16 rounded overflow-hidden">
+                              <Image 
+                                src={page.imageUrl} 
+                                alt={page.title} 
+                                fill 
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-white font-medium truncate">{page.title}</h4>
+                            <p className="text-gray-400 text-sm truncate">{page.description}</p>
+                            <span className="inline-block px-2 py-0.5 mt-1 text-xs rounded bg-gray-700 text-gray-300">
+                              {WIKI_CATEGORIES.find(cat => cat.id === page.category)?.title || page.category}
+                            </span>
+                          </div>
+                        </button>
+                      </li>
                     ))}
-                  </div>
+                    <li className="p-3 text-center">
+                      <Link 
+                        href={`/wiki/search?q=${encodeURIComponent(searchQuery)}`}
+                        className="text-gta-blue hover:text-gta-pink text-sm"
+                      >
+                        View all search results
+                      </Link>
+                    </li>
+                  </ul>
                 </div>
-                
-                {/* View All Link */}
-                <div className="mt-6 text-center">
-                  <Link 
-                    href={`/wiki/${category.id}`}
-                    className={`${category.textColor} hover:opacity-80 transition-colors font-medium inline-flex items-center`}
-                  >
-                    View All {category.title}
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
+              )}
+            </div>
+            
+            {error && (
+              <div className="mt-4 bg-red-900/50 border border-red-500 text-red-100 px-4 py-3 rounded mx-auto max-w-2xl">
+                <p>{error}</p>
+                <p className="text-sm mt-2">Using placeholder content and local images.</p>
               </div>
-            ))}
+            )}
+          </div>
+        </div>
+        
+        {/* Scroll indicator */}
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center animate-bounce">
+          <svg className="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </div>
+      </div>
+      
+      <main className="flex-grow container mx-auto px-4 py-16">
+        {/* Categories */}
+        <section className="mb-20 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-white border-l-4 border-gta-pink pl-4">
+              Browse by Category
+            </h2>
+            <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-pink to-transparent"></div>
           </div>
           
-          {/* Recent Updates */}
-          <section className="mt-20">
-            <h2 className="text-3xl font-bold mb-12 text-center relative inline-block mx-auto">
-              <span className="bg-clip-text text-white">
-                Recently Updated
-              </span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* This would be dynamically generated in a real app */}
-              {[1, 2, 3].map((i) => (
-                <article key={i} className="card bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm border border-gray-700 hover:border-gray-500 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
-                  <div className="mb-3 flex items-center">
-                    <span className="text-xs font-medium text-gray-400">Updated 2 days ago</span>
-                    <span className="ml-auto px-2 py-1 bg-gray-700/70 rounded-full text-xs">
-                      {['Characters', 'Missions', 'Locations'][i-1]}
-                    </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {WIKI_CATEGORIES.map((category, index) => (
+              <Link 
+                key={category.id} 
+                href={`/wiki/${category.id}`}
+                className="relative group bg-gray-800/80 backdrop-blur-sm p-6 rounded-lg border border-gray-700 overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl animate-fadeInUp"
+                style={{ animationDelay: `${0.6 + index * 0.1}s` }}
+              >
+                {/* Color accent - make sure it's always visible */}
+                <div 
+                  className={`absolute top-0 left-0 w-2 h-full transition-all duration-500 group-hover:w-full group-hover:opacity-90 opacity-100`}
+                  style={{
+                    backgroundColor: 
+                      category.id === 'characters' ? '#F152FF' : 
+                      category.id === 'missions' ? '#52FDFF' : 
+                      category.id === 'locations' ? '#56FF52' : 
+                      category.id === 'vehicles' ? '#FFE552' : 
+                      category.id === 'weapons' ? '#FF5252' : 
+                      category.id === 'activities' ? '#AC52FF' : '#F152FF'
+                  }}
+                ></div>
+                
+                {/* Card gradient background - now with hover transparency */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-800/95 to-gray-900 transition-opacity duration-300 group-hover:opacity-40"></div>
+                
+                {/* Animated background - increased opacity on hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300">
+                  <Image 
+                    src={getLocalImageUrl(category.id)} 
+                    alt={category.title} 
+                    fill 
+                    className="object-cover blur-sm"
+                  />
+                </div>
+                
+                {/* Dark overlay that appears on hover to ensure text readability */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300"></div>
+                
+                <div className="relative z-10">
+                  <div className="flex items-center">
+                    {/* Color circle - use inline style to ensure color is applied */}
+                    <div 
+                      className={`w-14 h-14 rounded-full flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-all duration-300`}
+                      style={{
+                        backgroundColor: 
+                          category.id === 'characters' ? '#F152FF' : 
+                          category.id === 'missions' ? '#52FDFF' : 
+                          category.id === 'locations' ? '#56FF52' : 
+                          category.id === 'vehicles' ? '#FFE552' : 
+                          category.id === 'weapons' ? '#FF5252' : 
+                          category.id === 'activities' ? '#AC52FF' : '#F152FF'
+                      }}
+                    >
+                      <span className="text-2xl">{category.icon}</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-white group-hover:text-gta-pink transition-colors">{category.title}</h3>
+                      <p className="text-sm text-gray-300 mt-1 line-clamp-2">{category.description}</p>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold mb-2 text-white hover:text-gta-blue transition-colors">Wiki Article Title {i}</h3>
-                  <p className="text-gray-300 mb-4 line-clamp-3">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.
-                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+        
+        {/* Featured Pages */}
+        {featuredPages.length > 0 && (
+          <section className="mb-20 animate-fadeInUp" style={{ animationDelay: '0.8s' }}>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-white border-l-4 border-gta-blue pl-4">
+                Featured Pages
+              </h2>
+              <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-blue to-transparent"></div>
+            </div>
+            
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gta-blue"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {featuredPages.map((page, index) => (
                   <Link 
-                    href={`/wiki/article/${i}`}
-                    className="text-gta-blue hover:text-blue-400 transition-colors font-medium inline-flex items-center"
+                    key={page.id} 
+                    href={`/wiki/${page.category}/${page.slug}`}
+                    className="group bg-gray-800/70 backdrop-blur-sm rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-gray-700/50 animate-fadeInUp"
+                    style={{ animationDelay: `${1 + index * 0.1}s` }}
                   >
-                    Read More
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7" />
+                    {page.imageUrl && (
+                      <div className="relative h-56 overflow-hidden">
+                        <Image
+                          src={page.imageUrl}
+                          alt={page.title}
+                          fill
+                          className="object-cover transform group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                          <span className="px-2 py-1 rounded-md text-xs bg-gray-900/80 backdrop-blur-sm text-gray-300 border border-gray-700/50">
+                            {WIKI_CATEGORIES.find(cat => cat.id === page.category)?.title || page.category}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="p-5">
+                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-gta-pink transition-colors">{page.title}</h3>
+                      <p className="text-gray-300 text-sm line-clamp-2 mb-4">{page.description}</p>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-400">{formatDate(page.updatedAt)}</span>
+                        <span className="text-gta-pink group-hover:translate-x-1 transition-transform duration-200 inline-flex items-center">
+                          Read more
+                          <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+        
+        {/* Recent Pages & Quick Links */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16 animate-fadeInUp" style={{ animationDelay: '1.1s' }}>
+          {/* Recent Pages */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white border-l-4 border-gta-green pl-4">
+                Recently Updated
+              </h2>
+              <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-green to-transparent"></div>
+            </div>
+            
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gta-green"></div>
+              </div>
+            ) : (
+              <div className="bg-gray-800/70 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-700/50">
+                <ul className="divide-y divide-gray-700/70">
+                  {recentPages.map((page, index) => (
+                    <li 
+                      key={page.id}
+                      className="animate-fadeInUp"
+                      style={{ animationDelay: `${1.2 + index * 0.05}s` }}
+                    >
+                      <Link 
+                        href={`/wiki/${page.category}/${page.slug}`}
+                        className="flex items-center p-4 hover:bg-gray-700/50 transition-colors group"
+                      >
+                        {page.imageUrl && (
+                          <div className="relative w-16 h-16 rounded-lg overflow-hidden mr-4 flex-shrink-0">
+                            <Image
+                              src={page.imageUrl}
+                              alt={page.title}
+                              fill
+                              className="object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-grow">
+                          <h3 className="text-white font-medium group-hover:text-gta-green transition-colors">{page.title}</h3>
+                          <p className="text-gray-400 text-sm line-clamp-1">{page.description}</p>
+                          <span className="inline-block text-xs text-gray-500 mt-1 mr-2">
+                            {WIKI_CATEGORIES.find(cat => cat.id === page.category)?.title || page.category}
+                          </span>
+                        </div>
+                        <div className="flex-shrink-0 text-xs text-gray-500">
+                          {formatDate(page.updatedAt)}
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <div className="p-4 text-center border-t border-gray-700/70">
+                  <Link 
+                    href="/wiki/recent"
+                    className="text-gta-green hover:text-gta-blue transition-colors inline-flex items-center"
+                  >
+                    View all recent updates
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                     </svg>
                   </Link>
-                </article>
-              ))}
-            </div>
-          </section>
+                </div>
+              </div>
+            )}
+          </div>
           
-          {/* How to Contribute */}
-          <section className="mt-20 text-center relative overflow-hidden">
-            <div className="absolute -inset-px bg-gradient-to-r from-gta-pink/5 via-gta-blue/10 to-gta-green/5 rounded-xl"></div>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-gray-800/20 to-transparent"></div>
-            <div className="absolute -top-20 -left-20 w-60 h-60 bg-gta-pink/5 rounded-full blur-[100px]"></div>
-            <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-gta-blue/5 rounded-full blur-[100px]"></div>
+          {/* Quick Links & Stats */}
+          <div className="animate-fadeInUp" style={{ animationDelay: '1.3s' }}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white border-l-4 border-gta-yellow pl-4">
+                Stats
+              </h2>
+              <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-yellow to-transparent"></div>
+            </div>
             
-            <div className="relative z-10 bg-gray-900/50 backdrop-blur-sm p-10 rounded-xl border border-gray-800">
-              <h2 className="text-3xl font-bold mb-4 bg-clip-text text-white">Contribute to the Wiki</h2>
-              <p className="text-gray-300 max-w-3xl mx-auto mb-8">
-                Help us build the most comprehensive resource for GTA VI by contributing your knowledge and discoveries. Join our community of contributors!
-              </p>
-              <div className="space-x-4">
-                <Link href="/contribute" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
-                  How to Contribute
-                </Link>
-                <Link href="/tools/wiki-generator" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
-                  Use Wiki Generator
-                </Link>
+            <div className="bg-gray-800/70 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-700/50 mb-6">
+              <div className="p-5">
+                <h3 className="text-lg font-bold text-white mb-4">Wiki Stats</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Total Pages</span>
+                    <span className="text-gta-pink font-bold">{allPages.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Categories</span>
+                    <span className="text-gta-blue font-bold">{WIKI_CATEGORIES.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Featured Pages</span>
+                    <span className="text-gta-green font-bold">{featuredPages.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Last Updated</span>
+                    <span className="text-gta-yellow font-bold">{recentPages[0] ? formatDate(recentPages[0].updatedAt) : "N/A"}</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </section>
+          </div>
         </div>
+        
+        {/* Call to Action */}
+        <section className="relative overflow-hidden rounded-xl p-1 animate-fadeInUp" style={{ animationDelay: '1.5s' }}>
+          <div className="absolute inset-0 bg-gradient-to-r from-gta-pink via-gta-blue to-gta-green animate-gradient"></div>
+          <div className="relative bg-gray-900/95 rounded-lg p-10 text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">Contribute to the Wiki</h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Help build the most comprehensive resource for GTA 6 by contributing your knowledge and insights.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link 
+                href="/admin/wiki"
+                className="px-8 py-4 bg-gradient-to-r from-gta-pink to-pink-600 text-white font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1"
+              >
+                Start Contributing
+              </Link>
+              <Link 
+                href="/wiki/guide"
+                className="px-8 py-4 bg-gradient-to-r from-gta-blue to-blue-600 text-white font-bold rounded-md hover:shadow-lg hover:shadow-gta-blue/20 transition-all hover:-translate-y-1"
+              >
+                Wiki Guide
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
+      
       <Footer />
-    </>
+      
+      {/* Add required CSS animations */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+          0% { opacity: 0.3; }
+          50% { opacity: 0.6; }
+          100% { opacity: 0.3; }
+        }
+        
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        
+        .animate-fadeIn {
+          opacity: 0;
+          animation: fadeIn 1s ease-out forwards;
+        }
+        
+        .animate-fadeInUp {
+          opacity: 0;
+          animation: fadeIn 1s ease-out forwards;
+        }
+        
+        .animate-pulse {
+          animation: pulse 8s infinite;
+        }
+        
+        .animate-gradient {
+          background-size: 400% 400%;
+          animation: gradient 8s ease infinite;
+        }
+      `}</style>
+    </div>
   );
 } 
