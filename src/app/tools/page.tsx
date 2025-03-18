@@ -139,7 +139,7 @@ export default function ToolsPage() {
           <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:border-gta-pink transition-colors">
             <h2 className="text-xl font-bold text-white mb-4">Wiki Management</h2>
             <p className="text-gray-400 mb-4">Create, edit, and manage wiki content.</p>
-            <Link href="/tools/wiki" className="px-4 py-2 bg-gta-pink text-white rounded hover:bg-pink-600 transition-colors inline-block">
+            <Link href="/admin/wiki" className="px-4 py-2 bg-gta-pink text-white rounded hover:bg-pink-600 transition-colors inline-block">
               Manage Wiki
             </Link>
           </div>

@@ -54,33 +54,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('Auth state changed:', user ? `User logged in: ${user.uid}` : 'No user');
       
-      if (user) {
-        try {
-          console.log('Attempting to create/update user document in Firestore');
-          const userData = await createOrUpdateUser(user);
-          console.log('Successfully created/updated user document:', userData);
-          
-          // Get the ID token
-          const idToken = await user.getIdToken();
-          
-          // 1. First try client-side approach
-          console.log('Setting session cookie via client-side');
-          setSessionCookie(idToken);
-          
-          // 2. Also try server-side approach as a backup
-          console.log('Setting session cookie via server-side API');
-          await sendTokenToServer(idToken, user.uid);
-          
-          // Check admin status
-          const adminStatus = await isUserAdmin(user.uid);
-          setIsAdmin(adminStatus);
-        } catch (error) {
-          console.error('Failed to create/update user document:', error);
-        }
-      } else {
-        // Clear the session cookie if user logs out
-        clearSessionCookie();
+      // Fast path for no user - avoid unnecessary API calls
+      if (!user) {
+        // Set state immediately without waiting for async operations
+        setUser(null);
         setIsAdmin(false);
+        setLoading(false);
+        
+        // Only clear cookies if they exist to avoid unnecessary operations
+        clearSessionCookies();
+        return;
+      }
+      
+      // User is logged in - proceed with normal flow
+      try {
+        console.log('Attempting to create/update user document in Firestore');
+        const userData = await createOrUpdateUser(user);
+        console.log('Successfully created/updated user document:', userData);
+        
+        // Get the ID token
+        const idToken = await user.getIdToken();
+        
+        // 1. First try client-side approach
+        console.log('Setting session cookie via client-side');
+        setSessionCookie(idToken);
+        
+        // 2. Also try server-side approach as a backup
+        console.log('Setting session cookie via server-side API');
+        await sendTokenToServer(idToken, user.uid);
+        
+        // 3. Check admin status and set admin-session cookie if needed
+        await checkAndSetAdminStatus();
+        
+        // Check admin status
+        const adminStatus = await isUserAdmin(user.uid);
+        setIsAdmin(adminStatus);
+      } catch (error) {
+        console.error('Failed to create/update user document:', error);
       }
       
       setUser(user);
@@ -148,6 +158,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('Refreshing session cookie via server-side API');
         await sendTokenToServer(idToken, user.uid);
         
+        // Check and update admin status and cookies
+        await checkAndSetAdminStatus();
+        
         console.log('Updated session cookie with refreshed token');
       } catch (error) {
         console.error('Error refreshing token:', error);
@@ -188,6 +201,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const idToken = await result.user.getIdToken();
         setSessionCookie(idToken);
         console.log('Set session cookie after Google sign-in');
+        
+        // Check and set admin session if needed
+        await checkAndSetAdminStatus();
       }
     } catch (error) {
       console.error('Google sign-in error:', error);
@@ -226,6 +242,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const idToken = await result.user.getIdToken();
         setSessionCookie(idToken);
         console.log('Set session cookie after Discord sign-in');
+        
+        // Check and set admin session if needed
+        await checkAndSetAdminStatus();
       }
     } catch (error) {
       console.error('Discord sign-in error:', error);
@@ -243,6 +262,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const idToken = await userCredential.user.getIdToken();
       setSessionCookie(idToken);
       console.log('Set session cookie after email sign-in');
+      
+      // Check and set admin session if needed
+      await checkAndSetAdminStatus();
     } catch (error) {
       console.error('Email sign-in error:', error);
       throw error;
@@ -279,6 +301,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const idToken = await userCredential.user.getIdToken();
         setSessionCookie(idToken);
         console.log('Set session cookie after email sign-up');
+        
+        // Check and set admin session if needed
+        await checkAndSetAdminStatus();
       }
     } catch (error) {
       console.error('Email sign-up error:', error);
@@ -289,9 +314,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign out
   const logout = async () => {
     try {
-      // Clear the session cookie
-      clearSessionCookie();
-      console.log('Cleared session cookie on logout');
+      // Clear the session cookies
+      clearSessionCookies();
+      console.log('Cleared session cookies on logout');
       
       const { signOut } = await import('firebase/auth');
       await signOut(auth);
@@ -309,6 +334,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Password reset error:', error);
       throw error;
+    }
+  };
+
+  // After successful login or token refresh, check admin status and set admin-session cookie
+  const checkAndSetAdminStatus = async () => {
+    try {
+      console.log('Checking admin status and setting admin-session cookie if needed');
+      const response = await fetch('/api/admin/check');
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Admin check result:', result);
+        setIsAdmin(result.isAdmin);
+      } else {
+        console.error('Failed to check admin status:', await response.text());
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
     }
   };
 
@@ -403,13 +445,25 @@ const setSessionCookie = (token: string) => {
   }, 100);
 };
 
-// Helper function to clear session cookie
-const clearSessionCookie = () => {
+// Helper function to clear session cookies
+const clearSessionCookies = () => {
   if (typeof window === 'undefined') return;
   
-  // Set cookie with expiry in the past to remove it
-  document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-  console.log('Session cookie cleared');
+  // Check if cookies actually exist before trying to clear them
+  // This avoids unnecessary DOM operations when no cookies exist
+  const hasCookies = document.cookie.includes('session=') || document.cookie.includes('admin-session=');
+  
+  if (hasCookies) {
+    // Clear regular session cookie
+    document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    
+    // Clear admin session cookie
+    document.cookie = 'admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    
+    console.log('Session cookies cleared');
+  } else {
+    console.log('No session cookies to clear');
+  }
 };
 
 // Also add a function to bypass the cookie and use a direct API approach
