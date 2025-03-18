@@ -1,55 +1,62 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// This function can be marked `async` if using `await` inside
-export async function middleware(request: NextRequest) {
-  // Get the pathname of the request
+// Admin routes that require authentication and admin privileges
+const ADMIN_ROUTES = [
+  '/admin/wiki',
+  '/admin/wiki/create',
+  '/admin/wiki/edit',
+  '/admin/wiki/revisions',
+];
+
+// Function to check if a route matches any of the protected patterns
+function isProtectedRoute(path: string, protectedPatterns: string[]): boolean {
+  return protectedPatterns.some(pattern => {
+    // Exact match
+    if (pattern === path) return true;
+    
+    // Pattern with trailing slash
+    if (pattern.endsWith('/') && path.startsWith(pattern)) return true;
+    
+    // Path starting with pattern followed by slash or additional segments
+    return path.startsWith(pattern + '/');
+  });
+}
+
+// This function runs on every request
+export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   
-  // Define protected routes that require admin access
-  const protectedRoutes = ['/tools'];
-  
-  // Check if the current path is a protected route or starts with a protected route
-  const isProtectedRoute = protectedRoutes.some(route => 
-    path === route || path.startsWith(`${route}/`)
-  );
-  
-  // If not a protected route, proceed normally
-  if (!isProtectedRoute) {
-    return NextResponse.next();
+  // Only check for protection on admin routes for better performance
+  if (isProtectedRoute(path, ADMIN_ROUTES)) {
+    const session = request.cookies.get('session')?.value;
+    const adminSession = request.cookies.get('admin-session')?.value;
+    
+    // Quick check for both required cookies, no additional verification
+    if (!session || !adminSession) {
+      // Redirect to login page with return URL
+      // Use a response object to avoid edge function timeouts
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      
+      // Add a marker to indicate this was a middleware redirect
+      // This helps the login page avoid unnecessary operations
+      response.cookies.set('middleware_redirect', 'true', { 
+        maxAge: 60, // Short-lived cookie (1 minute)
+        path: '/'
+      });
+      
+      return response;
+    }
   }
   
-  // Get the session cookie
-  const sessionCookie = request.cookies.get('session')?.value;
-  
-  // If no session cookie, redirect to login
-  if (!sessionCookie) {
-    return redirectToLogin(request);
-  }
-  
-  // Instead of trying to verify admin status in middleware (which would be complex),
-  // we'll let the page handle the verification but provide a clean fallback
-  // Add a custom header to indicate we've checked the route protection
-  const response = NextResponse.next();
-  response.headers.set('x-middleware-cache', 'no-cache');
-  
-  return response;
+  return NextResponse.next();
 }
 
-// Helper function to redirect to login
-function redirectToLogin(request: NextRequest) {
-  const loginUrl = new URL('/login', request.url);
-  loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
-  return NextResponse.redirect(loginUrl);
-}
-
-// Configure which paths this middleware will run on
+// Configure the middleware to run on specific routes
 export const config = {
   matcher: [
-    // Required for protected routes
-    '/tools/:path*',
-    
-    // Exclude all static paths
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    // Protected routes
+    '/admin/:path*',
+    // Add other protected routes here
   ],
 }; 

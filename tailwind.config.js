@@ -13,6 +13,7 @@ module.exports = {
         'gta-green': '#56FF52',
         'gta-purple': '#AC52FF',
         'gta-yellow': '#FFE552',
+        'gta-red': '#FF5252',
         'dark-bg': '#121212',
         'map-bg': '#0fa8d2'
       },

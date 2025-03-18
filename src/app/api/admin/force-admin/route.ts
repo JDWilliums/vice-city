@@ -42,54 +42,78 @@ export async function GET(request: NextRequest) {
     const userDoc = await userRef.get();
     
     if (!userDoc.exists) {
-      console.log('❓ User document does not exist, creating it...');
+      console.log('❌ User document not found in Firestore');
       
-      // Create the user document with admin status
+      // Create a new user document with admin set to true
+      console.log('📝 Creating new user document with admin privileges...');
       await userRef.set({
-        uid,
+        uid: uid,
         isAdmin: true,
+        email: decodedToken.email || 'unknown@email.com',
+        displayName: decodedToken.name || 'Unknown User',
         createdAt: new Date(),
         lastUpdated: new Date()
       });
       
-      console.log('✅ Created user document with admin status');
+      console.log('✅ New user document created with admin privileges');
     } else {
-      console.log('📄 User document exists');
-      const userData = userDoc.data();
-      console.log('📊 Current admin status:', userData?.isAdmin === true ? 'TRUE' : 'FALSE');
+      // Update the existing document if needed
+      const userData = userDoc.data() || {};
       
-      // Update the user document with admin status
-      console.log('✏️ Setting admin status to TRUE...');
-      await userRef.update({
-        isAdmin: true,
-        lastUpdated: new Date()
-      });
-      
-      console.log('✅ Updated user document with admin status');
+      if (userData.isAdmin !== true) {
+        console.log('📝 Updating user document to grant admin privileges...');
+        await userRef.update({
+          isAdmin: true,
+          lastUpdated: new Date()
+        });
+        
+        console.log('✅ User document updated with admin privileges');
+      } else {
+        console.log('✓ User already has admin privileges');
+      }
     }
     
-    // Verify the update
-    console.log('🔍 Verifying update...');
-    const updatedDoc = await userRef.get();
-    const updatedData = updatedDoc.data();
-    const adminStatus = updatedData?.isAdmin === true;
+    // Calculate expiry (1 hour from now)
+    const expiryDate = new Date();
+    expiryDate.setHours(expiryDate.getHours() + 1);
     
-    console.log('📊 Updated admin status:', adminStatus ? 'TRUE' : 'FALSE');
+    // Set the admin-session cookie
+    console.log('🔑 Setting admin-session cookie...');
+    cookies().set({
+      name: 'admin-session',
+      value: 'true',
+      expires: expiryDate,
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    });
+    
+    // Also refresh the session cookie
+    console.log('🔄 Refreshing session cookie...');
+    cookies().set({
+      name: 'session',
+      value: sessionCookie,
+      expires: expiryDate,
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    });
     
     return NextResponse.json({
       success: true,
-      message: `User ${uid} admin status set to ${adminStatus}`,
-      previousStatus: userDoc.exists ? userDoc.data()?.isAdmin === true : null,
-      currentStatus: adminStatus,
-      uid
+      message: 'Admin privileges confirmed and session cookies updated',
+      isAdmin: true,
+      expires: expiryDate.toISOString()
     });
   } catch (error: any) {
     console.error('❌ Error in force-admin API:', error);
     
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to set admin status',
-      errorDetails: error?.message || 'Unknown error'
+    return NextResponse.json({
+      success: false,
+      error: 'Server error',
+      message: error?.message || 'Unknown error'
     }, { status: 500 });
   }
 } 

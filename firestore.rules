@@ -1,39 +1,29 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
+    // During initial development, you can use these test rules
+    // WARNING: These rules are very permissive - only use during development
+    match /{document=**} {
+      allow read, write: if true;
     }
     
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
+    // Once everything is working, replace with these more secure rules:
+    // match /users/{userId} {
+    //   allow read, write: if request.auth != null && request.auth.uid == userId;
+    // }
     
-    // User document rules
-    match /users/{userId} {
-      // Allow read if user is authenticated
-      allow read: if isSignedIn();
-      
-      // Allow create if data is valid
-      allow create: if isOwner(userId)
-        && request.resource.data.keys().hasAll([
-          'uid', 'email', 'displayName', 'photoURL', 
-          'provider', 'lastUpdated', 'createdAt', 
-          'isOnline', 'preferences'
-        ])
-        && request.resource.data.uid == userId
-        && request.resource.data.preferences.keys().hasAll([
-          'emailNotifications', 'theme'
-        ]);
-      
-      // Allow update with field validation
-      allow update: if isOwner(userId)
-        && request.resource.data.uid == userId
-        && (
-          // Don't allow changing creation date
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt'])
-        );
-    }
+    // match /wiki-pages/{pageId} {
+    //   allow read: if true;
+    //   allow write: if request.auth != null && 
+    //     exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+    //     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    // }
+    
+    // match /wiki-revisions/{revisionId} {
+    //   allow read: if true;
+    //   allow write: if request.auth != null && 
+    //     exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+    //     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    // }
   }
 } 
