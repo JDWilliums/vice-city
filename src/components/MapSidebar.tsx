@@ -93,7 +93,7 @@ export default function MapSidebar({
                   }`}
                 >
                   <span className="mr-2" style={{ color: category.color }}>
-                    {category.icon}
+                  <img src={category.icon} alt={category.name} className="w-5 h-5" />
                   </span>
                   <span className="text-sm">{category.name}</span>
                 </button>
@@ -108,10 +108,10 @@ export default function MapSidebar({
               {categories.map((category) => (
                 <div key={category.id} className="flex items-center text-sm">
                   <span 
-                    className="w-4 h-4 mr-2 rounded-full flex items-center justify-center text-xs"
+                    className="w-8 h-8 mr-2 rounded-full flex items-center justify-center text-xs"
                     style={{ backgroundColor: category.color }}
                   >
-                    {category.icon}
+                    <img src={category.icon} alt={category.name} className="w-4 h-4" />
                   </span>
                   <span>{category.name}</span>
                 </div>
@@ -136,7 +136,7 @@ export default function MapSidebar({
               style={{ backgroundColor: category.color }}
               title={category.name}
             >
-              <span>{category.icon}</span>
+              <span><img src={category.icon} alt={category.name} className="w-5 h-5" /></span>
             </button>
           ))}
         </div>

@@ -153,12 +153,8 @@ export default function HomePage() {
               GTA VI Countdown
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
-              Experience the next chapter in the Grand Theft Auto series. <br /> Return to Vice City, coming Fall 2025.
-            </p>
-            
             {/* Countdown Timer */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-16">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-4">
               <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
                 <div className="text-4xl md:text-6xl font-bold text-white mb-1">{days}</div>
                 <div className="text-gray-400 uppercase tracking-wider text-sm">Days</div>
@@ -179,9 +175,13 @@ export default function HomePage() {
                 <div className="text-gray-400 uppercase tracking-wider text-sm">Seconds</div>
               </div>
             </div>
+
+            <p className="text-sm md:text-m text-gray-400 mb-16 max-w-3xl mx-auto">
+              (Countdown to the end of Fall, actual release date is currently unknown)
+            </p>
             
             {/* GTA 6 Logo */}
-            <div className="relative flex justify-center mb-20 animate-fadeInUp" style={{ animationDelay: '1s' }}>
+            <div className="relative flex justify-center mb-16 animate-fadeInUp" style={{ animationDelay: '1s' }}>
               <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[150px] opacity-5 animate-pulse"></div>
               <Image 
                 src="/images/gta6-logo.png" 
@@ -195,11 +195,14 @@ export default function HomePage() {
             
             {/* Call to Action */}
             <div className="flex flex-col md:flex-row gap-4 justify-center mb-16 animate-fadeInUp" style={{ animationDelay: '1.2s' }}>
-              <Link href="/home" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
-                Visit Home
+              <Link href="/news" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
+                Latest News
               </Link>
-              <Link href="/map" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
-                View the Map
+              <Link href="https://discord.gg/rGqyNP4AC6" className="px-8 py-3 bg-gradient-to-b from-indigo-400 to-indigo-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-indigo-400/20 transition-all hover:-translate-y-1">
+                Join our Discord
+              </Link>
+              <Link href="/wiki" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
+                Explore the Wiki
               </Link>
             </div>
           </div>
@@ -210,7 +213,7 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
-                <span className="text-white">What We Know <span className="text-gta-blue">So Far</span></span>
+                <span className="text-white">What We Know...</span>
               </h2>
               
               <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg p-8 mb-12 animate-fadeInUp">
@@ -226,16 +229,16 @@ export default function HomePage() {
                       <p className="text-gray-300">Return to a reimagined Vice City and surrounding areas in the fictional state of Leonida, inspired by Miami and Florida.</p>
                     </div>
                     
-                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-green">
-                      <h3 className="text-xl font-bold mb-2 text-gta-green">Modern Setting</h3>
+                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-blue">
+                      <h3 className="text-xl font-bold mb-2 text-gta-blue">Modern Setting</h3>
                       <p className="text-gray-300">Set in the modern day, not the 1980s of the original Vice City, with contemporary themes and technology.</p>
                     </div>
                   </div>
                   
                   <div className="space-y-6">
-                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-yellow">
-                      <h3 className="text-xl font-bold mb-2 text-gta-yellow">Enhanced Physics</h3>
-                      <p className="text-gray-300">Improved physics system with more realistic vehicle handling, enhanced weather effects, and dynamic environmental interactions.</p>
+                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-pink">
+                      <h3 className="text-xl font-bold mb-2 text-gta-pink">Improved Online</h3>
+                      <p className="text-gray-300">GTA Online is set to be bigger in scale, built for longevity, and more integrated with modern online gaming trends.</p>
                     </div>
                     
                     <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-blue">
@@ -264,7 +267,7 @@ export default function HomePage() {
         <section className="flex items-center relative py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
-              <span className="text-white">Official <span className="text-gta-pink">Trailer</span></span>
+              <span className="text-white">Official Trailer</span>
             </h2>
             
             <div className="max-w-4xl mx-auto animate-fadeInUp">
@@ -291,7 +294,7 @@ export default function HomePage() {
         <section className="flex items-center relative py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
-              <span className="text-white">Latest <span className="text-gta-blue">Updates</span></span>
+              <span className="text-white">Latest Updates</span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto animate-fadeInUp">
@@ -395,7 +398,6 @@ export default function HomePage() {
             </div>
             
             <div className="mt-16 text-gray-400 text-sm text-center animate-fadeInUp">
-              <p>Release date is estimated. Actual date may vary.</p>
               <p className="mt-2">This is a fan site and is not affiliated with Rockstar Games or Take-Two Interactive.</p>
             </div>
           </div>
