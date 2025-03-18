@@ -524,6 +524,7 @@ function getWikiPage(slug) {
           </div>
           
           <main className="flex-grow container mx-auto px-4 py-8 relative z-10">
+            {/* Main Content and Sidebars */}
             <div className="flex flex-col lg:flex-row gap-8 max-w-[1920px] mx-auto relative z-10">
               {/* Table of Contents - Desktop */}
               {tableOfContents.length > 0 && (
@@ -813,57 +814,59 @@ function getWikiPage(slug) {
                 </div>
               )}
             </div>
-              
-            {/* Related Pages */}
-            <section className="py-20 bg-gray-800/30 relative">
-              <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-5"></div>
-              <div className="container mx-auto px-4 relative z-10">
-                <div className="flex items-center justify-between mb-12">
-                  <h2 className="text-2xl font-bold text-white border-l-4 border-gta-green pl-4 flex items-center">
-                    <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Related Pages
-                  </h2>
-                  <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-green to-transparent"></div>
+            
+            {/* Related Pages - Outside the flex container */}
+            <div className="mt-16">
+              <section className="py-20 bg-gray-800/30 relative">
+                <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-5"></div>
+                <div className="container mx-auto px-4 relative z-10">
+                  <div className="flex items-center justify-between mb-12">
+                    <h2 className="text-2xl font-bold text-white border-l-4 border-gta-green pl-4 flex items-center">
+                      <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Related Pages
+                    </h2>
+                    <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-green to-transparent"></div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fadeIn">
+                    {[1, 2, 3].map((i) => (
+                      <Link 
+                        key={i}
+                        href={`/wiki/${category}/${slug}-related-${i}`}
+                        className="group bg-gray-800/80 backdrop-blur-md rounded-xl overflow-hidden border border-gray-700/50 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fadeInUp"
+                        style={{ animationDelay: `${0.1 * i}s` }}
+                      >
+                        <div className="relative h-52 overflow-hidden">
+                          <Image
+                            src={getLocalImageUrl(category)}
+                            alt={`Related Page ${i}`}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-700"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"></div>
+                        </div>
+                        <div className="p-6">
+                          <h3 className="text-xl font-bold text-white mb-3 group-hover:text-gta-green transition-colors">
+                            Related {categoryInfo?.title ? categoryInfo.title.slice(0, -1) : ''} {i}
+                          </h3>
+                          <p className="text-gray-300 text-sm line-clamp-2 mb-4">
+                            Discover more about this related content from the GTA 6 universe.
+                          </p>
+                          <span className="text-gta-green group-hover:translate-x-1 transition-transform duration-200 inline-flex items-center font-medium">
+                            Explore
+                            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fadeIn">
-                  {[1, 2, 3].map((i) => (
-                    <Link 
-                      key={i}
-                      href={`/wiki/${category}/${slug}-related-${i}`}
-                      className="group bg-gray-800/80 backdrop-blur-md rounded-xl overflow-hidden border border-gray-700/50 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fadeInUp"
-                      style={{ animationDelay: `${0.1 * i}s` }}
-                    >
-                      <div className="relative h-52 overflow-hidden">
-                        <Image
-                          src={getLocalImageUrl(category)}
-                          alt={`Related Page ${i}`}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-700"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"></div>
-                      </div>
-                      <div className="p-6">
-                        <h3 className="text-xl font-bold text-white mb-3 group-hover:text-gta-green transition-colors">
-                          Related {categoryInfo?.title ? categoryInfo.title.slice(0, -1) : ''} {i}
-                        </h3>
-                        <p className="text-gray-300 text-sm line-clamp-2 mb-4">
-                          Discover more about this related content from the GTA 6 universe.
-                        </p>
-                        <span className="text-gta-green group-hover:translate-x-1 transition-transform duration-200 inline-flex items-center font-medium">
-                          Explore
-                          <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </section>
+              </section>
+            </div>
           </main>
           
           <Footer />

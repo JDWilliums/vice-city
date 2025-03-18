@@ -423,7 +423,7 @@ export default function WikiHomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {WIKI_CATEGORIES.map((category, index) => (
               <Link 
-                key={category.id} 
+                key={category.id}
                 href={`/wiki/${category.id}`}
                 className="relative group bg-gray-800/80 backdrop-blur-sm p-6 rounded-lg border border-gray-700 overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl animate-fadeInUp"
                 style={{ animationDelay: `${0.6 + index * 0.1}s` }}
@@ -460,23 +460,12 @@ export default function WikiHomePage() {
                 
                 <div className="relative z-10">
                   <div className="flex items-center">
-                    {/* Color circle - use inline style to ensure color is applied */}
                     <div 
-                      className={`w-14 h-14 rounded-full flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-all duration-300`}
-                      style={{
-                        backgroundColor: 
-                          category.id === 'characters' ? '#F152FF' : 
-                          category.id === 'missions' ? '#52FDFF' : 
-                          category.id === 'locations' ? '#56FF52' : 
-                          category.id === 'vehicles' ? '#FFE552' : 
-                          category.id === 'weapons' ? '#FF5252' : 
-                          category.id === 'activities' ? '#AC52FF' : '#F152FF'
-                      }}
-                    >
-                      <span className="text-2xl">{category.icon}</span>
+                      className={`max-w-20 flex items-center justify-center mr-4 group-hover:scale-110 transition-all duration-300`}>
+                      <span className="text-2xl"><img src={category.icon} alt={category.title}></img></span>
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg text-white group-hover:text-gta-pink transition-colors">{category.title}</h3>
+                      <h3 className="font-bold text-lg text-white transition-colors">{category.title}</h3>
                       <p className="text-sm text-gray-300 mt-1 line-clamp-2">{category.description}</p>
                     </div>
                   </div>
