@@ -396,15 +396,63 @@ export default function WikiHomePage() {
                 </li>
               </ul>
             </div>
-
-          </header>
-
-          {/* Wiki Categories Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
-            {WIKI_CATEGORIES.map((category) => (
-              <div key={category.id} className="card backdrop-blur-sm bg-gray-800/70 hover:bg-gray-800/90 border border-gray-700 hover:border-opacity-100 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-lg group">
-                <div className={`mb-6 text-white text-4xl flex justify-center w-24 h-24 rounded-full mx-auto flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                  <span><img src={category.icon} alt={category.title}></img></span>
+          </div>
+        </div>
+      )}
+      
+      <main className="flex-grow container mx-auto px-4 py-16">
+        {/* Always show diagnostic component for troubleshooting */}
+        <FirestoreDiagnostic />
+        
+        {/* Categories */}
+        <section className="mb-20 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-white border-l-4 border-gta-pink pl-4">
+              Browse by Category
+            </h2>
+            <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-pink to-transparent"></div>
+          </div>
+          
+          {/* Show wiki page count for debugging */}
+          <div className="mb-4 text-gray-400 text-sm">
+            Total Wiki Pages: {allPages.length} | 
+            Featured: {featuredPages.length} | 
+            Recent: {recentPages.length}
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {WIKI_CATEGORIES.map((category, index) => (
+              <Link 
+                key={category.id} 
+                href={`/wiki/${category.id}`}
+                className="relative group bg-gray-800/80 backdrop-blur-sm p-6 rounded-lg border border-gray-700 overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl animate-fadeInUp"
+                style={{ animationDelay: `${0.6 + index * 0.1}s` }}
+              >
+                {/* Color accent - make sure it's always visible */}
+                <div 
+                  className={`absolute top-0 left-0 w-2 h-full transition-all duration-500 group-hover:w-full group-hover:opacity-90 opacity-100`}
+                  style={{
+                    backgroundColor: 
+                      category.id === 'characters' ? '#F152FF' : 
+                      category.id === 'missions' ? '#52FDFF' : 
+                      category.id === 'locations' ? '#56FF52' : 
+                      category.id === 'vehicles' ? '#FFE552' : 
+                      category.id === 'weapons' ? '#FF5252' : 
+                      category.id === 'activities' ? '#AC52FF' : '#F152FF'
+                  }}
+                ></div>
+                
+                {/* Card gradient background - now with hover transparency */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-800/95 to-gray-900 transition-opacity duration-300 group-hover:opacity-40"></div>
+                
+                {/* Animated background - increased opacity on hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300">
+                  <Image 
+                    src={getLocalImageUrl(category.id)} 
+                    alt={category.title} 
+                    fill 
+                    className="object-cover blur-sm"
+                  />
                 </div>
                 
                 {/* Dark overlay that appears on hover to ensure text readability */}
