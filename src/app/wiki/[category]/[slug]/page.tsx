@@ -752,7 +752,7 @@ function getWikiPage(slug) {
           bottom: 0.25rem;
           width: 4px;
           border-radius: 4px;
-          background: linear-gradient(to bottom, #ff6b81, #ff4757);
+          background: #f152ff;
         }
         
         .markdown-content h3 {
@@ -771,19 +771,19 @@ function getWikiPage(slug) {
         }
         
         .markdown-content a {
-          color: #63b3ed;
+          color: #f152ff;
           text-decoration: none;
           transition: all 0.2s;
           border-bottom: 1px solid transparent;
         }
         
         .markdown-content a:hover {
-          color: #ff6b81;
-          border-bottom-color: #ff6b81;
+          color: #f152ff;
+          border-bottom-color: #f152ff;
         }
         
         .markdown-content blockquote {
-          border-left: 4px solid #ff6b81;
+          border-left: 4px solid #f152ff;
           padding: 1.5rem;
           margin: 2rem 0;
           font-style: italic;
@@ -860,7 +860,7 @@ function getWikiPage(slug) {
         
         .markdown-content ul li::before {
           content: "•";
-          color: #ff6b81;
+          color: #f152ff;
           position: absolute;
           left: 0;
           font-weight: bold;

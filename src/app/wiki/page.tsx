@@ -465,7 +465,7 @@ export default function WikiHomePage() {
                       <span className="text-2xl"><img src={category.icon} alt={category.title}></img></span>
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg text-white group-hover:text-gta-pink transition-colors">{category.title}</h3>
+                      <h3 className="font-bold text-lg text-white transition-colors">{category.title}</h3>
                       <p className="text-sm text-gray-300 mt-1 line-clamp-2">{category.description}</p>
                     </div>
                   </div>
