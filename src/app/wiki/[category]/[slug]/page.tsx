@@ -897,40 +897,6 @@ function getWikiPage(slug) {
               animation: pulse-slow 5s ease-in-out infinite;
             }
             
-            @keyframes fadeInTable {
-              from {
-                opacity: 0;
-                transform: translateY(5px);
-              }
-              to {
-                opacity: 1;
-                transform: translateY(0);
-              }
-            }
-            
-            @keyframes slideIn {
-              from {
-                opacity: 0;
-                transform: translateX(-10px);
-              }
-              to {
-                opacity: 1;
-                transform: translateX(0);
-              }
-            }
-            
-            @keyframes pulseGlow {
-              0% {
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-              }
-              70% {
-                box-shadow: 0 0 0 5px rgba(59, 130, 246, 0);
-              }
-              100% {
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-              }
-            }
-            
             /* Add smooth scrolling */
             html {
               scroll-behavior: smooth;
