@@ -798,7 +798,7 @@ function getWikiPage(slug) {
           top: -0.5rem;
           left: -0.5rem;
           font-size: 4rem;
-          color: #ff6b81;
+          color: #f152ff;
           opacity: 0.2;
         }
         
@@ -828,7 +828,7 @@ function getWikiPage(slug) {
           left: 0;
           right: 0;
           height: 4px;
-          background: linear-gradient(to right, #ff6b81, #ff4757);
+          background: #f152ff;
           border-radius: 0.75rem 0.75rem 0 0;
         }
         
