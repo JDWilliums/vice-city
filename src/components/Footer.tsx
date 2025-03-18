@@ -111,7 +111,7 @@ const Footer = () => {
 
         <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            &copy; {currentYear} Kairu Media. Fan-made content not affiliated with Rockstar Games.
+            &copy; {currentYear} vice.city - this is an independent fan site not affiliated with Rockstar Games, Take-Two Interactive, or their subsidiaries. All trademarks and content belong to their respective owners.
           </p>
           <div className="mt-4 md:mt-0 flex space-x-6">
             <a href="https://x.com/vicedotcity" className="text-gray-400 hover:text-white transition-colors hover:scale-110 transform duration-200">
