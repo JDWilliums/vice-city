@@ -461,8 +461,7 @@ export default function WikiHomePage() {
                 <div className="relative z-10">
                   <div className="flex items-center">
                     <div 
-                      className={`w-20 h-20 rounded-full flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-all duration-300`}
-                    >
+                      className={`max-w-20 flex items-center justify-center mr-4 group-hover:scale-110 transition-all duration-300`}>
                       <span className="text-2xl"><img src={category.icon} alt={category.title}></img></span>
                     </div>
                     <div>
