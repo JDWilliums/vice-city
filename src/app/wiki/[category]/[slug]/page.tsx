@@ -72,10 +72,31 @@ export default function WikiPage() {
       const headings: {id: string, text: string, level: number}[] = [];
       const renderer = new marked.Renderer();
       
+      // Track used IDs to avoid duplicates
+      const usedIds = new Set<string>();
+      
       renderer.heading = (text, level) => {
         if (level <= 3) { // Only include h1, h2, and h3
-          const headingId = text.toLowerCase().replace(/[^\w]+/g, '-');
+          // Generate base ID
+          let headingId = text.toLowerCase().replace(/[^\w]+/g, '-');
+          
+          // Ensure unique ID
+          if (usedIds.has(headingId)) {
+            // Find a unique ID by adding a numeric suffix
+            let counter = 1;
+            let newId = `${headingId}-${counter}`;
+            while (usedIds.has(newId)) {
+              counter++;
+              newId = `${headingId}-${counter}`;
+            }
+            headingId = newId;
+          }
+          
+          // Add to used IDs set
+          usedIds.add(headingId);
+          
           headings.push({ id: headingId, text, level });
+          return `<h${level} id="${headingId}">${text}</h${level}>`;
         }
         return `<h${level} id="${text.toLowerCase().replace(/[^\w]+/g, '-')}">${text}</h${level}>`;
       };
@@ -89,15 +110,30 @@ export default function WikiPage() {
   // Track active heading while scrolling
   useEffect(() => {
     if (contentRef.current && tableOfContents.length > 0) {
+      // Get the navbar height to adjust the intersection observer
+      // Typical navbar height is around 80px, but we'll add a buffer
+      const navbarHeight = 90; // Adjust this value to match your navbar height
+      
       const observer = new IntersectionObserver(
         (entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              setActiveHeading(entry.target.id);
-            }
-          });
+          // Filter for elements that are intersecting
+          const intersecting = entries.filter(entry => entry.isIntersecting);
+          
+          if (intersecting.length) {
+            // Get the one that's highest up (closest to the top of the viewport)
+            const topMostEntry = intersecting.reduce((prev, current) => {
+              return prev.boundingClientRect.top < current.boundingClientRect.top ? prev : current;
+            });
+            
+            setActiveHeading(topMostEntry.target.id);
+          }
         },
-        { rootMargin: '-100px 0px -80% 0px' }
+        { 
+          // Adjust the top margin to account for the navbar
+          // We want to consider a heading "visible" when it's below the navbar
+          rootMargin: `-${navbarHeight}px 0px -70% 0px`,
+          threshold: 0.1 // Detect when at least 10% of the element is visible
+        }
       );
       
       tableOfContents.forEach(({ id }) => {
@@ -184,6 +220,36 @@ function getWikiPage(slug) {
       }
     });
     
+    // Create a new renderer that uses the same ID generation logic
+    const renderer = new marked.Renderer();
+    
+    // Track used IDs to avoid duplicates
+    const usedIds = new Set<string>();
+    
+    renderer.heading = (text, level) => {
+      // Generate base ID
+      let headingId = text.toLowerCase().replace(/[^\w]+/g, '-');
+      
+      // Ensure unique ID
+      if (usedIds.has(headingId)) {
+        // Find a unique ID by adding a numeric suffix
+        let counter = 1;
+        let newId = `${headingId}-${counter}`;
+        while (usedIds.has(newId)) {
+          counter++;
+          newId = `${headingId}-${counter}`;
+        }
+        headingId = newId;
+      }
+      
+      // Add to used IDs set
+      usedIds.add(headingId);
+      
+      return `<h${level} id="${headingId}">${text}</h${level}>`;
+    };
+    
+    marked.setOptions({ renderer });
+    
     const rawHtml = marked.parse(content) as string;
     return DOMPurify.sanitize(rawHtml);
   };
@@ -204,6 +270,44 @@ function getWikiPage(slug) {
   const handleImageClick = (imageUrl: string) => {
     // Could implement a lightbox here
     window.open(imageUrl, '_blank');
+  };
+  
+  // Function to handle clicking on table of contents links
+  const handleTocLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, headingId: string) => {
+    e.preventDefault();
+    
+    const element = document.getElementById(headingId);
+    if (element) {
+      // Get the navbar height to adjust scroll position
+      const navbarHeight = 90; // Adjust this value to match your navbar height
+      
+      // Calculate the element's position
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      
+      // Scroll to the element accounting for the navbar height
+      window.scrollTo({
+        top: elementPosition - navbarHeight,
+        behavior: 'smooth'
+      });
+      
+      // Update the URL hash without causing a scroll (for bookmark purposes)
+      window.history.pushState(null, '', `#${headingId}`);
+      
+      // Set active heading
+      setActiveHeading(headingId);
+    }
+  };
+  
+  // Function to scroll to top
+  const scrollToTop = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+    // Clear the URL hash
+    window.history.pushState(null, '', window.location.pathname + window.location.search);
+    setActiveHeading(null);
   };
   
   return (
@@ -318,6 +422,7 @@ function getWikiPage(slug) {
                           >
                             <a 
                               href={`#${heading.id}`}
+                              onClick={(e) => handleTocLinkClick(e, heading.id)}
                               className={`block py-1 text-sm transition-colors ${
                                 activeHeading === heading.id 
                                   ? 'text-gta-pink font-medium' 
@@ -360,6 +465,7 @@ function getWikiPage(slug) {
                             >
                               <a 
                                 href={`#${heading.id}`}
+                                onClick={(e) => handleTocLinkClick(e, heading.id)}
                                 className={`block py-1 text-sm transition-colors ${
                                   activeHeading === heading.id 
                                     ? 'text-gta-pink font-medium' 
@@ -430,7 +536,8 @@ function getWikiPage(slug) {
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <a 
-                      href={`#top`}
+                      href="#top"
+                      onClick={scrollToTop}
                       className="inline-flex items-center px-4 py-2 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
                     >
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -521,9 +628,24 @@ function getWikiPage(slug) {
           animation: fadeIn 1s ease-out forwards;
         }
         
+        /* Add smooth scrolling */
+        html {
+          scroll-behavior: smooth;
+        }
+        
         /* Enhanced Markdown Styling */
         .markdown-content {
           color: #e2e8f0;
+        }
+        
+        /* Add scroll margin to headings */
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+          scroll-margin-top: 100px; /* Adjust this value to match your navbar height + some extra padding */
         }
         
         .markdown-content h1 {

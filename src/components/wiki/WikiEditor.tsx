@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import { User } from 'firebase/auth';
 import { WikiCategory } from '@/lib/wikiHelpers';
 import { WikiPageFirestore, createWikiPage, updateWikiPage, getWikiPage, generateSlug } from '@/lib/wikiFirestoreService';
-import ImageUploader, { MultipleImageUploader } from './ImageUploader';
 import MarkdownEditor from './MarkdownEditor';
 import { WIKI_CATEGORIES } from '@/data/wikiData';
-import { TagIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { TagIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 interface WikiEditorProps {
   pageId?: string; // If provided, we're editing an existing page
@@ -28,6 +28,7 @@ export default function WikiEditor({
   const [saving, setSaving] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   
   // Form data state
   const [formData, setFormData] = useState<{
@@ -35,9 +36,9 @@ export default function WikiEditor({
     slug: string;
     description: string;
     category: WikiCategory;
-    subcategory?: string;
+    subcategory: string;
     content: string;
-    imageUrl?: string;
+    imageUrl: string;
     galleryImages: string[];
     tags: string[];
     status: 'published' | 'draft' | 'archived';
@@ -47,7 +48,9 @@ export default function WikiEditor({
     slug: '',
     description: '',
     category: 'locations',
+    subcategory: '',
     content: '',
+    imageUrl: '',
     galleryImages: [],
     tags: [],
     status: 'draft',
@@ -56,6 +59,9 @@ export default function WikiEditor({
   
   // Current tag input
   const [currentTag, setCurrentTag] = useState<string>('');
+  
+  // New state for gallery image input
+  const [newGalleryImage, setNewGalleryImage] = useState<string>('');
   
   // Load existing page data if editing
   useEffect(() => {
@@ -69,16 +75,16 @@ export default function WikiEditor({
         const pageData = await getWikiPage(pageId);
         if (pageData) {
           setFormData({
-            title: pageData.title,
-            slug: pageData.slug,
-            description: pageData.description,
-            category: pageData.category,
-            subcategory: pageData.subcategory,
-            content: pageData.content,
-            imageUrl: pageData.imageUrl,
+            title: pageData.title || '',
+            slug: pageData.slug || '',
+            description: pageData.description || '',
+            category: pageData.category || 'locations',
+            subcategory: pageData.subcategory || '',
+            content: pageData.content || '',
+            imageUrl: pageData.imageUrl || '',
             galleryImages: pageData.galleryImages || [],
             tags: pageData.tags || [],
-            status: pageData.status,
+            status: pageData.status || 'draft',
             featured: pageData.featured || false
           });
         }
@@ -97,6 +103,42 @@ export default function WikiEditor({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Mark field as touched
+    setTouched(prev => ({ ...prev, [name]: true }));
+  };
+  
+  // Handle fields being marked as touched
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+  };
+  
+  // Check if all required fields are filled
+  const isFormComplete = () => {
+    return (
+      formData.title.trim() !== '' &&
+      formData.description.trim() !== '' &&
+      formData.content.trim() !== '' &&
+      formData.imageUrl.trim() !== ''
+    );
+  };
+  
+  // Get field error state
+  const getFieldError = (fieldName: string) => {
+    if (!touched[fieldName]) return false;
+    
+    switch (fieldName) {
+      case 'title':
+        return formData.title.trim() === '';
+      case 'description':
+        return formData.description.trim() === '';
+      case 'content':
+        return formData.content.trim() === '';
+      case 'imageUrl':
+        return formData.imageUrl.trim() === '';
+      default:
+        return false;
+    }
   };
   
   // Handle checkbox changes
@@ -105,14 +147,29 @@ export default function WikiEditor({
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
   
-  // Handle featured image upload
-  const handleFeaturedImageUploaded = (imageUrl: string) => {
-    setFormData(prev => ({ ...prev, imageUrl }));
+  // Handle content changes
+  const handleContentChange = (content: string) => {
+    setFormData(prev => ({ ...prev, content }));
+    setTouched(prev => ({ ...prev, content: true }));
   };
   
-  // Handle gallery images upload
-  const handleGalleryImagesUploaded = (imageUrls: string[]) => {
-    setFormData(prev => ({ ...prev, galleryImages: imageUrls }));
+  // Handle adding gallery image
+  const handleAddGalleryImage = () => {
+    if (newGalleryImage.trim() && !formData.galleryImages.includes(newGalleryImage.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        galleryImages: [...prev.galleryImages, newGalleryImage.trim()]
+      }));
+      setNewGalleryImage('');
+    }
+  };
+  
+  // Handle removing gallery image
+  const handleRemoveGalleryImage = (imageToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      galleryImages: prev.galleryImages.filter(image => image !== imageToRemove)
+    }));
   };
   
   // Handle tag addition
@@ -142,6 +199,14 @@ export default function WikiEditor({
     }
   };
   
+  // Handle gallery image input keypress (add image on Enter)
+  const handleGalleryImageKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddGalleryImage();
+    }
+  };
+  
   // Handle form submission
   const handleSubmit = async (publishStatus: 'draft' | 'published' = 'published') => {
     setSaving(true);
@@ -149,17 +214,29 @@ export default function WikiEditor({
     setSuccessMessage('');
     
     try {
-      // Validate required fields
+      // Enhanced validation for required fields
+      const validationErrors = [];
+      
       if (!formData.title.trim()) {
-        throw new Error('Title is required');
+        validationErrors.push('Title is required');
       }
       
       if (!formData.description.trim()) {
-        throw new Error('Description is required');
+        validationErrors.push('Description is required');
       }
       
       if (!formData.content.trim()) {
-        throw new Error('Content is required');
+        validationErrors.push('Content is required');
+      }
+      
+      // Validate featured image if publishing
+      if (publishStatus === 'published' && !formData.imageUrl.trim()) {
+        validationErrors.push('Featured image URL is required for published pages');
+      }
+      
+      // Check if user is trying to publish without required fields
+      if (validationErrors.length > 0) {
+        throw new Error(`Please fix the following issues before ${publishStatus === 'published' ? 'publishing' : 'saving'}:\n• ${validationErrors.join('\n• ')}`);
       }
       
       // Generate slug if not editing
@@ -172,11 +249,11 @@ export default function WikiEditor({
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        subcategory: formData.subcategory,
+        subcategory: formData.subcategory || '',
         content: formData.content,
-        imageUrl: formData.imageUrl,
-        galleryImages: formData.galleryImages.length > 0 ? formData.galleryImages : undefined,
-        tags: formData.tags.length > 0 ? formData.tags : undefined,
+        imageUrl: formData.imageUrl.trim(),
+        galleryImages: formData.galleryImages || [],
+        tags: formData.tags || [],
         createdBy: {
           uid: user.uid,
           displayName: user.displayName || 'Unknown User',
@@ -225,7 +302,18 @@ export default function WikiEditor({
       
       {errorMessage && (
         <div className="bg-red-900/50 border border-red-500 text-red-100 px-4 py-3 rounded mb-4">
-          <p>{errorMessage}</p>
+          {errorMessage.includes('\n') ? (
+            <div>
+              <p className="font-medium mb-2">Please fix the following issues:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                {errorMessage.split('\n').filter(msg => msg.trim().startsWith('•')).map((msg, idx) => (
+                  <li key={idx}>{msg.trim().substring(2)}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p>{errorMessage}</p>
+          )}
         </div>
       )}
       
@@ -239,7 +327,7 @@ export default function WikiEditor({
         {/* Title */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-300">
-            Title
+            Title <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -247,25 +335,35 @@ export default function WikiEditor({
             name="title"
             value={formData.title}
             onChange={handleInputChange}
-            className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue"
+            onBlur={handleBlur}
+            className={`mt-1 block w-full bg-gray-800 border ${getFieldError('title') ? 'border-red-500' : 'border-gray-700'} rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue`}
             placeholder="Enter page title"
+            required
           />
+          {getFieldError('title') && (
+            <p className="mt-1 text-sm text-red-500">Title is required</p>
+          )}
         </div>
         
         {/* Description */}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-300">
-            Description
+            Description <span className="text-red-500">*</span>
           </label>
           <textarea
             id="description"
             name="description"
             value={formData.description}
             onChange={handleInputChange}
+            onBlur={handleBlur}
             rows={2}
-            className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue"
+            className={`mt-1 block w-full bg-gray-800 border ${getFieldError('description') ? 'border-red-500' : 'border-gray-700'} rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue`}
             placeholder="Brief description of this page"
+            required
           />
+          {getFieldError('description') && (
+            <p className="mt-1 text-sm text-red-500">Description is required</p>
+          )}
         </div>
         
         {/* Category and Subcategory */}
@@ -279,6 +377,7 @@ export default function WikiEditor({
               name="category"
               value={formData.category}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue"
             >
               {WIKI_CATEGORIES.map(category => (
@@ -297,8 +396,9 @@ export default function WikiEditor({
               type="text"
               id="subcategory"
               name="subcategory"
-              value={formData.subcategory || ''}
+              value={formData.subcategory}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue"
               placeholder="E.g., Downtown, Main Character, Sports Car"
             />
@@ -307,27 +407,99 @@ export default function WikiEditor({
         
         {/* Featured Image */}
         <div className="mt-8">
-          <ImageUploader
-            initialImageUrl={formData.imageUrl}
-            onImageUploaded={handleFeaturedImageUploaded}
-            onError={setErrorMessage}
-            label="Featured Image"
-            user={user}
-            category={formData.category}
+          <div className="flex items-center">
+            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-300 mb-2">
+              Featured Image URL <span className="text-red-500">*</span>
+            </label>
+            {!formData.imageUrl && <span className="ml-2 text-sm text-gray-500">(Required for publishing)</span>}
+          </div>
+          <input
+            type="text"
+            id="imageUrl"
+            name="imageUrl"
+            value={formData.imageUrl}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            className={`mt-1 block w-full bg-gray-800 border ${getFieldError('imageUrl') ? 'border-red-500' : 'border-gray-700'} rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue`}
+            placeholder="images/character-1.png or any URL to an image"
+            required
           />
+          {getFieldError('imageUrl') && (
+            <p className="mt-1 text-sm text-red-500">Featured image URL is required for publishing</p>
+          )}
+          
+          {/* Preview of the featured image */}
+          {formData.imageUrl && (
+            <div className="mt-2 relative rounded-md overflow-hidden">
+              <div className="aspect-w-16 aspect-h-9 max-h-64 relative">
+                <Image 
+                  src={formData.imageUrl} 
+                  alt="Featured image preview" 
+                  fill 
+                  style={{ objectFit: 'contain' }}
+                  className="rounded-md" 
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/placeholder.png';
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Gallery Images */}
         <div className="mt-8">
-          <MultipleImageUploader
-            initialImageUrls={formData.galleryImages}
-            onImagesUploaded={handleGalleryImagesUploaded}
-            onError={setErrorMessage}
-            label="Gallery Images"
-            maxImages={20}
-            user={user}
-            category={formData.category}
-          />
+          <label htmlFor="galleryImages" className="block text-sm font-medium text-gray-300 mb-2">
+            Gallery Images (Optional)
+          </label>
+          <div className="flex">
+            <input
+              type="text"
+              id="galleryImages"
+              value={newGalleryImage}
+              onChange={(e) => setNewGalleryImage(e.target.value)}
+              onKeyPress={handleGalleryImageKeyPress}
+              className="block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue"
+              placeholder="images/gallery-1.png or any URL to an image"
+            />
+            <button
+              type="button"
+              onClick={handleAddGalleryImage}
+              className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gta-blue hover:bg-gta-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gta-blue"
+            >
+              <PlusIcon className="h-5 w-5 mr-1" />
+              Add
+            </button>
+          </div>
+          
+          {/* Display gallery images */}
+          {formData.galleryImages.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+              {formData.galleryImages.map((url, index) => (
+                <div key={index} className="relative rounded-md overflow-hidden group">
+                  <div className="aspect-w-16 aspect-h-9 relative">
+                    <Image 
+                      src={url} 
+                      alt={`Gallery image ${index + 1}`} 
+                      fill 
+                      style={{ objectFit: 'cover' }}
+                      className="rounded-md" 
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/placeholder.png';
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveGalleryImage(url)}
+                    className="absolute top-2 right-2 inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* Tags */}
@@ -346,6 +518,7 @@ export default function WikiEditor({
                 value={currentTag}
                 onChange={(e) => setCurrentTag(e.target.value)}
                 onKeyPress={handleTagKeyPress}
+                onBlur={handleBlur}
                 className="block w-full pl-10 bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue"
                 placeholder="Add tags..."
               />
@@ -382,13 +555,21 @@ export default function WikiEditor({
         
         {/* Content */}
         <div className="mt-8">
+          <div className="flex items-center mb-2">
+            <span className="block text-sm font-medium text-gray-300">
+              Content <span className="text-red-500">*</span>
+            </span>
+          </div>
           <MarkdownEditor
             initialValue={formData.content || ''}
-            onChange={(content) => setFormData(prev => ({ ...prev, content }))}
-            label="Content"
+            onChange={handleContentChange}
+            label=""
             height="500px"
             placeholder="Write your wiki content here using Markdown..."
           />
+          {getFieldError('content') && (
+            <p className="mt-1 text-sm text-red-500">Content is required</p>
+          )}
         </div>
         
         {/* Featured Checkbox */}
@@ -420,7 +601,8 @@ export default function WikiEditor({
             type="button"
             onClick={() => handleSubmit('published')}
             disabled={saving}
-            className="px-4 py-2 bg-gta-blue text-white rounded-md hover:bg-gta-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gta-blue flex items-center"
+            className={`px-4 py-2 ${(!isFormComplete()) ? 'bg-gray-700 cursor-not-allowed' : 'bg-gta-blue hover:bg-gta-blue-dark'} text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gta-blue flex items-center`}
+            title={(!isFormComplete()) ? 'Fill out all required fields to publish' : ''}
           >
             {saving ? (
               <>

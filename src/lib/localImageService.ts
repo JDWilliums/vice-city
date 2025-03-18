@@ -16,16 +16,16 @@ const SAMPLE_WIKI_IMAGES = [
 // Category-specific images
 const CATEGORY_IMAGES = {
   locations: [
-    '/images/wiki/location1.jpg',
-    '/images/wiki/location2.jpg',
-    '/images/wiki/location3.jpg',
+    '/images/wiki/location1.png',
+    '/images/wiki/location2.png',
+    '/images/wiki/location3.png',
     '/images/gta6-1.png',
     '/images/gta6-3.png'
   ],
   characters: [
-    '/images/wiki/character1.jpg',
-    '/images/wiki/character2.jpg',
-    '/images/wiki/character3.jpg',
+    '/images/wiki/character1.png',
+    '/images/wiki/character2.png',
+    '/images/wiki/character3.png',
     '/images/gta6-2.png'
   ],
   vehicles: [

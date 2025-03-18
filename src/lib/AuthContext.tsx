@@ -54,36 +54,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('Auth state changed:', user ? `User logged in: ${user.uid}` : 'No user');
       
-      if (user) {
-        try {
-          console.log('Attempting to create/update user document in Firestore');
-          const userData = await createOrUpdateUser(user);
-          console.log('Successfully created/updated user document:', userData);
-          
-          // Get the ID token
-          const idToken = await user.getIdToken();
-          
-          // 1. First try client-side approach
-          console.log('Setting session cookie via client-side');
-          setSessionCookie(idToken);
-          
-          // 2. Also try server-side approach as a backup
-          console.log('Setting session cookie via server-side API');
-          await sendTokenToServer(idToken, user.uid);
-          
-          // 3. Check admin status and set admin-session cookie if needed
-          await checkAndSetAdminStatus();
-          
-          // Check admin status
-          const adminStatus = await isUserAdmin(user.uid);
-          setIsAdmin(adminStatus);
-        } catch (error) {
-          console.error('Failed to create/update user document:', error);
-        }
-      } else {
-        // Clear the session cookie if user logs out
-        clearSessionCookies();
+      // Fast path for no user - avoid unnecessary API calls
+      if (!user) {
+        // Set state immediately without waiting for async operations
+        setUser(null);
         setIsAdmin(false);
+        setLoading(false);
+        
+        // Only clear cookies if they exist to avoid unnecessary operations
+        clearSessionCookies();
+        return;
+      }
+      
+      // User is logged in - proceed with normal flow
+      try {
+        console.log('Attempting to create/update user document in Firestore');
+        const userData = await createOrUpdateUser(user);
+        console.log('Successfully created/updated user document:', userData);
+        
+        // Get the ID token
+        const idToken = await user.getIdToken();
+        
+        // 1. First try client-side approach
+        console.log('Setting session cookie via client-side');
+        setSessionCookie(idToken);
+        
+        // 2. Also try server-side approach as a backup
+        console.log('Setting session cookie via server-side API');
+        await sendTokenToServer(idToken, user.uid);
+        
+        // 3. Check admin status and set admin-session cookie if needed
+        await checkAndSetAdminStatus();
+        
+        // Check admin status
+        const adminStatus = await isUserAdmin(user.uid);
+        setIsAdmin(adminStatus);
+      } catch (error) {
+        console.error('Failed to create/update user document:', error);
       }
       
       setUser(user);
@@ -442,13 +449,21 @@ const setSessionCookie = (token: string) => {
 const clearSessionCookies = () => {
   if (typeof window === 'undefined') return;
   
-  // Clear regular session cookie
-  document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+  // Check if cookies actually exist before trying to clear them
+  // This avoids unnecessary DOM operations when no cookies exist
+  const hasCookies = document.cookie.includes('session=') || document.cookie.includes('admin-session=');
   
-  // Clear admin session cookie
-  document.cookie = 'admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-  
-  console.log('Session cookies cleared');
+  if (hasCookies) {
+    // Clear regular session cookie
+    document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    
+    // Clear admin session cookie
+    document.cookie = 'admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    
+    console.log('Session cookies cleared');
+  } else {
+    console.log('No session cookies to clear');
+  }
 };
 
 // Also add a function to bypass the cookie and use a direct API approach

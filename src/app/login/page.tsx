@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -18,6 +18,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirected, setIsRedirected] = useState(false);
+
+  // Check if we were redirected here by middleware due to auth issues
+  // This helps us optimize behavior for redirected users
+  useEffect(() => {
+    const checkRedirectCookie = () => {
+      if (typeof document === 'undefined') return;
+      
+      // Get all cookies
+      const cookies = document.cookie.split('; ');
+      const redirectCookie = cookies.find(cookie => cookie.startsWith('middleware_redirect='));
+      
+      if (redirectCookie) {
+        setIsRedirected(true);
+        
+        // Optional: Show a specific message for redirected users
+        setErrorMessage('Please sign in to access the admin area');
+        
+        // Clear the cookie (it's short-lived anyway, but good practice)
+        document.cookie = 'middleware_redirect=; path=/; max-age=0';
+      }
+    };
+    
+    checkRedirectCookie();
+  }, []);
 
   // Handle Google sign in
   const handleGoogleSignIn = async () => {
@@ -25,7 +50,13 @@ export default function LoginPage() {
       setIsLoading(true);
       setErrorMessage('');
       await signInWithGoogle();
-      router.push('/'); // Redirect to home page after successful login
+      
+      // If user was redirected from another page, try to go back there
+      if (isRedirected) {
+        router.back();
+      } else {
+        router.push('/');
+      }
     } catch (error) {
       handleAuthError(error);
     } finally {
@@ -39,7 +70,13 @@ export default function LoginPage() {
       setIsLoading(true);
       setErrorMessage('');
       await signInWithDiscord();
-      router.push('/'); // Redirect to home page after successful login
+      
+      // If user was redirected from another page, try to go back there
+      if (isRedirected) {
+        router.back();
+      } else {
+        router.push('/');
+      }
     } catch (error) {
       handleAuthError(error);
     } finally {
@@ -59,7 +96,13 @@ export default function LoginPage() {
       setIsLoading(true);
       setErrorMessage('');
       await signInWithEmail(email, password);
-      router.push('/'); // Redirect to home page after successful login
+      
+      // If user was redirected from another page, try to go back there
+      if (isRedirected) {
+        router.back();
+      } else {
+        router.push('/');
+      }
     } catch (error) {
       handleAuthError(error);
     } finally {

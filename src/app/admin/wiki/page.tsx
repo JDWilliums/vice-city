@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/AuthContext';
-import { getAllWikiPages, deleteWikiPage, WikiPageFirestore } from '@/lib/wikiFirestoreService';
+import { getAllWikiPages, deleteWikiPage, WikiPageFirestore, checkFirestoreConnectivity } from '@/lib/wikiFirestoreService';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { WIKI_CATEGORIES } from '@/data/wikiData';
+import FirestoreDiagnostic from '@/components/wiki/FirestoreDiagnostic';
 
 export default function AdminWikiDashboard() {
   const { user, isAdmin } = useAuth();
@@ -21,18 +22,25 @@ export default function AdminWikiDashboard() {
   const [pageToDelete, setPageToDelete] = useState<WikiPageFirestore | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [firestoreStatus, setFirestoreStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
   
   // Load all pages
   useEffect(() => {
     const loadPages = async () => {
       try {
         setLoading(true);
+        
+        // Check Firestore connectivity first
+        const connectivityResult = await checkFirestoreConnectivity();
+        setFirestoreStatus(connectivityResult.available ? 'connected' : 'error');
+        
         const pages = await getAllWikiPages(true);
         setWikiPages(pages);
         setFilteredPages(pages);
       } catch (error) {
         console.error('Error loading wiki pages:', error);
         setErrorMessage('Failed to load wiki pages');
+        setFirestoreStatus('error');
       } finally {
         setLoading(false);
       }
@@ -65,7 +73,7 @@ export default function AdminWikiDashboard() {
       result = result.filter(page => 
         page.title.toLowerCase().includes(query) ||
         page.description.toLowerCase().includes(query) ||
-        (page.tags && page.tags.some(tag => tag.toLowerCase().includes(query)))
+        (page.tags && Array.isArray(page.tags) && page.tags.some(tag => tag.toLowerCase().includes(query)))
       );
     }
     
@@ -173,6 +181,9 @@ export default function AdminWikiDashboard() {
             Create New Page
           </Link>
         </div>
+        
+        {/* Firestore Diagnostic */}
+        <FirestoreDiagnostic />
         
         {/* Success and error messages */}
         {successMessage && (

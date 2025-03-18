@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp, addDoc, DocumentReference } from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp, addDoc, DocumentReference, limit } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { WikiCategory } from './wikiHelpers';
 
@@ -51,7 +51,7 @@ export interface WikiRevision {
 const LOCAL_WIKI_PAGES_KEY = 'local_wiki_pages';
 const LOCAL_WIKI_REVISIONS_KEY = 'local_wiki_revisions';
 
-// Error flag to track if Firestore fails
+// Error flag to track if Firestore fails - set to true by default (optimistic)
 let isFirestoreAvailable = true;
 
 // Helper function to generate a random ID (similar to Firestore's auto-ID)
@@ -64,9 +64,44 @@ function createTimestamp(date?: Date): Timestamp {
   return Timestamp.fromDate(date || new Date());
 }
 
+/**
+ * Diagnostic function to check Firestore connectivity
+ * This can be called to test if Firestore is available and reset the flag if it is
+ */
+export async function checkFirestoreConnectivity(): Promise<{ available: boolean, error?: string }> {
+  try {
+    if (typeof window === 'undefined') {
+      return { available: false, error: 'Running in server context' };
+    }
+
+    // Check if Firebase is initialized
+    if (!db) {
+      return { available: false, error: 'Firestore not initialized' };
+    }
+
+    // Try to access a Firestore collection
+    const testQuery = query(collection(db, 'wiki-pages'), limit(1));
+    await getDocs(testQuery);
+    
+    // If we got here, Firestore is available
+    isFirestoreAvailable = true;
+    console.log('Firestore connectivity check passed');
+    return { available: true };
+  } catch (error) {
+    console.error('Firestore connectivity check failed:', error);
+    isFirestoreAvailable = false;
+    return { 
+      available: false, 
+      error: error instanceof Error ? error.message : 'Unknown error checking Firestore'
+    };
+  }
+}
+
 // Helper to get wiki pages from localStorage
 function getLocalWikiPages(): WikiPageFirestore[] {
   try {
+    if (typeof window === 'undefined') return [];
+    
     const pagesJson = localStorage.getItem(LOCAL_WIKI_PAGES_KEY);
     if (!pagesJson) return [];
     
@@ -91,6 +126,8 @@ function getLocalWikiPages(): WikiPageFirestore[] {
 // Helper to save wiki pages to localStorage
 function saveLocalWikiPages(pages: WikiPageFirestore[]): void {
   try {
+    if (typeof window === 'undefined') return;
+    
     localStorage.setItem(LOCAL_WIKI_PAGES_KEY, JSON.stringify(pages));
   } catch (error) {
     console.error('Error saving wiki pages to localStorage:', error);
@@ -100,6 +137,8 @@ function saveLocalWikiPages(pages: WikiPageFirestore[]): void {
 // Helper to get wiki revisions from localStorage
 function getLocalWikiRevisions(): WikiRevision[] {
   try {
+    if (typeof window === 'undefined') return [];
+    
     const revisionsJson = localStorage.getItem(LOCAL_WIKI_REVISIONS_KEY);
     if (!revisionsJson) return [];
     
@@ -121,6 +160,8 @@ function getLocalWikiRevisions(): WikiRevision[] {
 // Helper to save wiki revisions to localStorage
 function saveLocalWikiRevisions(revisions: WikiRevision[]): void {
   try {
+    if (typeof window === 'undefined') return;
+    
     localStorage.setItem(LOCAL_WIKI_REVISIONS_KEY, JSON.stringify(revisions));
   } catch (error) {
     console.error('Error saving wiki revisions to localStorage:', error);
@@ -132,7 +173,12 @@ function saveLocalWikiRevisions(revisions: WikiRevision[]): void {
  */
 export async function createWikiPage(pageData: Omit<WikiPageFirestore, 'createdAt' | 'updatedAt'>, user: User): Promise<string> {
   try {
+    // First check if Firestore is available
     if (!isFirestoreAvailable) {
+      await checkFirestoreConnectivity();
+    }
+    
+    if (!isFirestoreAvailable || !db) {
       throw new Error('Using localStorage fallback');
     }
     
@@ -160,6 +206,17 @@ export async function createWikiPage(pageData: Omit<WikiPageFirestore, 'createdA
     
     // Set the document data
     await setDoc(pageRef, finalPageData);
+    
+    // Also save to localStorage for redundancy
+    try {
+      const existingPages = getLocalWikiPages();
+      saveLocalWikiPages([...existingPages, {...finalPageData, 
+        createdAt: createTimestamp(),
+        updatedAt: createTimestamp()
+      }]);
+    } catch (localError) {
+      console.warn('Failed to save page to localStorage (minor issue):', localError);
+    }
     
     // Create the initial revision
     await createRevision(finalPageData, user, 'Initial creation');
@@ -479,31 +536,107 @@ export async function getWikiPageBySlug(slug: string): Promise<WikiPageFirestore
 }
 
 /**
- * Gets all wiki pages
+ * Gets all wiki pages - this is a key function for displaying pages in both wiki and admin views
  */
 export async function getAllWikiPages(includeArchived: boolean = false): Promise<WikiPageFirestore[]> {
   try {
+    // First check if Firestore is available
+    console.log("getAllWikiPages called, checking Firestore connectivity...");
     if (!isFirestoreAvailable) {
+      console.log("Firestore flag marked as unavailable, attempting connectivity check...");
+      const connectivityCheck = await checkFirestoreConnectivity();
+      console.log(`Firestore connectivity check result: ${connectivityCheck.available}`);
+      
+      if (!connectivityCheck.available) {
+        console.warn("Firestore still unavailable after check:", connectivityCheck.error);
+      } else {
+        console.log("Firestore connectivity restored");
+        isFirestoreAvailable = true;
+      }
+    }
+    
+    if (!isFirestoreAvailable || !db) {
+      console.warn("Using localStorage fallback due to Firestore unavailability");
       throw new Error('Using localStorage fallback');
     }
     
+    console.log("Attempting to fetch pages from Firestore...");
     const pagesRef = collection(db, 'wiki-pages');
     
     let q;
     if (includeArchived) {
+      console.log("Including archived pages in query");
       q = query(pagesRef, orderBy('updatedAt', 'desc'));
     } else {
+      console.log("Excluding archived pages from query");
       q = query(pagesRef, where('status', '!=', 'archived'), orderBy('status'), orderBy('updatedAt', 'desc'));
     }
     
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => doc.data() as WikiPageFirestore);
+    try {
+      console.log("Executing Firestore query...");
+      const querySnapshot = await getDocs(q);
+      console.log(`Firestore query returned ${querySnapshot.docs.length} documents`);
+      
+      const firestorePages = querySnapshot.docs.map(doc => {
+        // Ensure we're getting the data correctly
+        const data = doc.data();
+        if (!data.id) {
+          data.id = doc.id; // Use the document ID if the id field is missing
+        }
+        return data as WikiPageFirestore;
+      });
+      
+      console.log(`Processed ${firestorePages.length} pages from Firestore`);
+      
+      // Get local pages too and merge them together
+      const localPages = getLocalWikiPages();
+      console.log(`Retrieved ${localPages.length} pages from localStorage`);
+      
+      // Combine pages, preferring Firestore versions when IDs match
+      const firestoreIds = new Set(firestorePages.map(p => p.id));
+      const uniqueLocalPages = localPages.filter(p => !firestoreIds.has(p.id));
+      
+      // Apply filtering to local pages too
+      const filteredLocalPages = !includeArchived 
+        ? uniqueLocalPages.filter(page => page.status !== 'archived')
+        : uniqueLocalPages;
+      
+      const allPages = [...firestorePages, ...filteredLocalPages];
+      
+      // Additional logging for debugging
+      console.log("Page sources breakdown:");
+      console.log(`- Firestore pages: ${firestorePages.length}`);
+      console.log(`- Local-only pages: ${filteredLocalPages.length}`);
+      console.log(`- Total pages: ${allPages.length}`);
+      
+      if (firestorePages.length > 0) {
+        console.log("Sample Firestore page:", {
+          id: firestorePages[0].id,
+          title: firestorePages[0].title,
+          category: firestorePages[0].category,
+          status: firestorePages[0].status
+        });
+      }
+      
+      // Sort by updatedAt (newest first)
+      return allPages.sort((a, b) => {
+        const aTime = a.updatedAt.toDate ? a.updatedAt.toDate().getTime() : 
+          new Date(a.updatedAt.seconds * 1000).getTime();
+        const bTime = b.updatedAt.toDate ? b.updatedAt.toDate().getTime() : 
+          new Date(b.updatedAt.seconds * 1000).getTime();
+        return bTime - aTime;
+      });
+    } catch (firestoreError) {
+      console.error("Error during Firestore query execution:", firestoreError);
+      throw firestoreError;
+    }
   } catch (error) {
     console.error('Firestore error, using localStorage fallback:', error);
     isFirestoreAvailable = false;
     
     // Get pages from localStorage
     const pages = getLocalWikiPages();
+    console.log(`Fallback: Retrieved ${pages.length} pages from localStorage only`);
     
     // Filter and sort pages
     let filteredPages = pages;
@@ -513,8 +646,10 @@ export async function getAllWikiPages(includeArchived: boolean = false): Promise
     
     // Sort by updatedAt (newest first)
     return filteredPages.sort((a, b) => {
-      const aTime = a.updatedAt.toDate().getTime();
-      const bTime = b.updatedAt.toDate().getTime();
+      const aTime = a.updatedAt.toDate ? a.updatedAt.toDate().getTime() : 
+        new Date(a.updatedAt.seconds * 1000).getTime();
+      const bTime = b.updatedAt.toDate ? b.updatedAt.toDate().getTime() : 
+        new Date(b.updatedAt.seconds * 1000).getTime();
       return bTime - aTime;
     });
   }
@@ -639,7 +774,7 @@ export async function searchWikiPages(searchTerm: string): Promise<WikiPageFires
     return allPages.filter(page => 
       page.title.toLowerCase().includes(normalizedTerm) ||
       page.description.toLowerCase().includes(normalizedTerm) ||
-      (page.tags && page.tags.some(tag => tag.toLowerCase().includes(normalizedTerm))) ||
+      (page.tags && Array.isArray(page.tags) && page.tags.some(tag => tag.toLowerCase().includes(normalizedTerm))) ||
       page.content.toLowerCase().includes(normalizedTerm)
     );
   } catch (error) {

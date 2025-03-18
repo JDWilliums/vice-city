@@ -26,17 +26,26 @@ function isProtectedRoute(path: string, protectedPatterns: string[]): boolean {
 // This function runs on every request
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const session = request.cookies.get('session')?.value;
-  const adminSession = request.cookies.get('admin-session')?.value;
   
-  // Only redirect for admin routes
+  // Only check for protection on admin routes for better performance
   if (isProtectedRoute(path, ADMIN_ROUTES)) {
-    // Check for admin session
+    const session = request.cookies.get('session')?.value;
+    const adminSession = request.cookies.get('admin-session')?.value;
+    
+    // Quick check for both required cookies, no additional verification
     if (!session || !adminSession) {
       // Redirect to login page with return URL
-      const url = new URL('/login', request.url);
-      url.searchParams.set('returnUrl', request.nextUrl.pathname);
-      return NextResponse.redirect(url);
+      // Use a response object to avoid edge function timeouts
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      
+      // Add a marker to indicate this was a middleware redirect
+      // This helps the login page avoid unnecessary operations
+      response.cookies.set('middleware_redirect', 'true', { 
+        maxAge: 60, // Short-lived cookie (1 minute)
+        path: '/'
+      });
+      
+      return response;
     }
   }
   

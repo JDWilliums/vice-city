@@ -96,7 +96,7 @@ export default function WikiCategoryPage() {
     const filtered = pages.filter(page => 
       page.title.toLowerCase().includes(query) || 
       page.description.toLowerCase().includes(query) ||
-      (page.tags && page.tags.some((tag: string) => tag.toLowerCase().includes(query)))
+      (page.tags && Array.isArray(page.tags) && page.tags.some((tag: string) => tag.toLowerCase().includes(query)))
     );
     
     setFilteredPages(filtered);

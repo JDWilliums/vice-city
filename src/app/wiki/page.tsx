@@ -4,11 +4,17 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { getAllWikiPages } from '@/lib/wikiFirestoreService';
+import { getAllWikiPages, checkFirestoreConnectivity } from '@/lib/wikiFirestoreService';
 import { WIKI_CATEGORIES } from '@/data/wikiData';
 import { getLocalImageUrl } from '@/lib/localImageService';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import FirestoreDiagnostic from '@/components/wiki/FirestoreDiagnostic';
+
+// Helper function to generate a random ID similar to Firestore's auto-ID
+function generateId(): string {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
 
 export default function WikiHomePage() {
   const router = useRouter();
@@ -21,31 +27,84 @@ export default function WikiHomePage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [firestoreStatus, setFirestoreStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
   
   useEffect(() => {
     const fetchWikiPages = async () => {
       try {
         setLoading(true);
+        
+        // Check Firestore connectivity first
+        const connectivityResult = await checkFirestoreConnectivity();
+        setFirestoreStatus(connectivityResult.available ? 'connected' : 'error');
+        
+        console.log("Fetching wiki pages for homepage...");
         const pages = await getAllWikiPages(false); // Exclude archived pages
+        console.log(`Received ${pages.length} wiki pages from getAllWikiPages`);
+        
+        // Log raw data to help with debugging
+        if (pages.length > 0) {
+          console.log("Sample wiki page data:", {
+            id: pages[0].id,
+            title: pages[0].title,
+            status: pages[0].status,
+            category: pages[0].category
+          });
+          
+          // Add detailed logging for diagnostic purposes
+          console.log("All page IDs:", pages.map(page => page.id));
+          console.log("All page titles:", pages.map(page => page.title));
+          
+          // Debug which pages come from where
+          const localStorageKey = 'local_wiki_pages';
+          let localPages = [];
+          try {
+            if (typeof window !== 'undefined') {
+              const localData = localStorage.getItem(localStorageKey);
+              if (localData) {
+                localPages = JSON.parse(localData);
+                console.log(`Found ${localPages.length} pages in localStorage`);
+              }
+            }
+          } catch (e) {
+            console.error("Error reading localStorage:", e);
+          }
+          
+          // Compare local vs fetched
+          if (localPages.length > 0) {
+            const localIds = new Set(localPages.map((p: any) => p.id));
+            const firestoreIds = new Set(pages.filter(p => !localIds.has(p.id)).map(p => p.id));
+            console.log(`Pages breakdown - Local: ${localIds.size}, Firestore: ${firestoreIds.size}`);
+          }
+        } else {
+          console.log("No wiki pages received");
+        }
         
         // Process the pages to ensure they have image URLs
         const processedPages = pages.map(page => {
-          // If the page doesn't have an image URL, assign a category-specific one
-          if (!page.imageUrl) {
-            return {
-              ...page,
-              imageUrl: getLocalImageUrl(page.category)
-            };
-          }
-          return page;
+          // Ensure page has necessary fields
+          const processedPage = {
+            ...page,
+            // If the page doesn't have an image URL, assign a category-specific one
+            imageUrl: page.imageUrl || getLocalImageUrl(page.category),
+            // Ensure status is set to a valid value (default to published)
+            status: page.status || 'published',
+            // Ensure id is set
+            id: page.id || generateId()
+          };
+          
+          return processedPage;
         });
         
         setAllPages(processedPages);
+        console.log(`Set ${processedPages.length} processed pages to allPages state`);
         
         // Filter featured pages
         const featured = processedPages
           .filter(page => page.featured && page.status === 'published')
           .slice(0, 6); // Limit to 6 featured pages
+        
+        console.log(`Found ${featured.length} featured pages`);
         
         // Get recent pages
         const recent = processedPages
@@ -73,9 +132,22 @@ export default function WikiHomePage() {
             return bTime - aTime;
           })
           .slice(0, 8); // Limit to 8 recent pages
+          
+        console.log(`Found ${recent.length} recent pages`);
         
         setFeaturedPages(featured);
         setRecentPages(recent);
+        
+        if (featured.length === 0 && recent.length === 0) {
+          // If we have pages but no featured or recent ones, let's make some placeholders
+          if (processedPages.length > 0) {
+            console.log("No featured or recent pages - creating featured from existing pages");
+            // Use some of the existing pages as featured and recent
+            const tempFeatured = processedPages.slice(0, Math.min(6, processedPages.length));
+            setFeaturedPages(tempFeatured);
+            setRecentPages(processedPages.slice(0, Math.min(8, processedPages.length)));
+          }
+        }
       } catch (error) {
         console.error('Error fetching wiki pages:', error);
         setError('Failed to load wiki content. Please try again later.');
@@ -94,6 +166,21 @@ export default function WikiHomePage() {
     fetchWikiPages();
   }, []);
   
+  useEffect(() => {
+    // Check Firestore connectivity on component mount
+    const checkConnectivity = async () => {
+      try {
+        const result = await checkFirestoreConnectivity();
+        setFirestoreStatus(result.available ? 'connected' : 'error');
+      } catch (error) {
+        console.error('Error checking Firestore connectivity:', error);
+        setFirestoreStatus('error');
+      }
+    };
+    
+    checkConnectivity();
+  }, []);
+  
   // Function to search through all pages
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -105,12 +192,17 @@ export default function WikiHomePage() {
     setIsSearching(true);
     const query = searchQuery.toLowerCase();
     
+    console.log(`Searching ${allPages.length} pages for "${query}"`);
+    
     const results = allPages.filter(page => 
       page.title.toLowerCase().includes(query) || 
       page.description.toLowerCase().includes(query) ||
-      (page.tags && page.tags.some((tag: string) => tag.toLowerCase().includes(query))) ||
+      (page.tags && Array.isArray(page.tags) && page.tags.some((tag: string) => tag.toLowerCase().includes(query))) ||
       (page.content && page.content.toLowerCase().includes(query))
     ).slice(0, 8); // Limit to 8 results
+    
+    console.log(`Found ${results.length} search results`, 
+      results.length > 0 ? results.map(r => r.title) : '');
     
     setSearchResults(results);
   }, [searchQuery, allPages]);
@@ -129,6 +221,20 @@ export default function WikiHomePage() {
       router.push(`/wiki/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
+  
+  // Handle click outside dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (isSearching && searchInputRef.current && !searchInputRef.current.contains(e.target as Node)) {
+        setIsSearching(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSearching]);
   
   // Focus search input on page load
   useEffect(() => {
@@ -208,67 +314,27 @@ export default function WikiHomePage() {
             </p>
             
             {/* Search Form */}
-            <div className="relative max-w-2xl mx-auto bg-gray-800/60 backdrop-blur-md rounded-lg p-1 border border-gray-700/50 shadow-xl mb-8 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
-              <form onSubmit={handleSearch} className="flex items-center">
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search the GTA 6 Wiki..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent px-5 py-4 text-white focus:outline-none text-lg"
-                />
-                <button 
-                  type="submit" 
-                  className="px-6 py-4 bg-gta-pink text-white rounded-r-md hover:bg-pink-600 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
-              </form>
-              
-              {/* Search Results Dropdown */}
-              {isSearching && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl z-50 max-h-96 overflow-y-auto">
-                  <ul className="divide-y divide-gray-700">
-                    {searchResults.map(page => (
-                      <li key={page.id} className="hover:bg-gray-700/50 transition-colors">
-                        <button 
-                          onClick={() => handleSearchResultClick(page)}
-                          className="w-full text-left p-4 flex items-start space-x-4"
-                        >
-                          {page.imageUrl && (
-                            <div className="relative flex-shrink-0 w-16 h-16 rounded overflow-hidden">
-                              <Image 
-                                src={page.imageUrl} 
-                                alt={page.title} 
-                                fill 
-                                className="object-cover"
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-white font-medium truncate">{page.title}</h4>
-                            <p className="text-gray-400 text-sm truncate">{page.description}</p>
-                            <span className="inline-block px-2 py-0.5 mt-1 text-xs rounded bg-gray-700 text-gray-300">
-                              {WIKI_CATEGORIES.find(cat => cat.id === page.category)?.title || page.category}
-                            </span>
-                          </div>
-                        </button>
-                      </li>
-                    ))}
-                    <li className="p-3 text-center">
-                      <Link 
-                        href={`/wiki/search?q=${encodeURIComponent(searchQuery)}`}
-                        className="text-gta-blue hover:text-gta-pink text-sm"
-                      >
-                        View all search results
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-              )}
+            <div className="max-w-2xl mx-auto mb-8 animate-fadeInUp relative z-[1000]" style={{ animationDelay: '0.3s' }}>
+              <div className="relative bg-gray-800/60 backdrop-blur-md rounded-lg p-1 border border-gray-700/50 shadow-xl">
+                <form onSubmit={handleSearch} className="flex items-center">
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search the GTA 6 Wiki..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full bg-transparent px-5 py-4 text-white focus:outline-none text-lg"
+                  />
+                  <button 
+                    type="submit" 
+                    className="px-6 py-4 bg-gta-pink text-white rounded-r-md hover:bg-pink-600 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                </form>
+              </div>
             </div>
             
             {error && (
@@ -288,7 +354,56 @@ export default function WikiHomePage() {
         </div>
       </div>
       
+      {/* Full-screen Search Results Overlay */}
+      {isSearching && searchResults.length > 0 && (
+        <div className="fixed inset-0 z-[900] bg-black/60 backdrop-blur-sm flex items-start justify-center pt-[230px]">
+          <div className="container mx-auto px-4">
+            <div className="max-w-2xl mx-auto bg-gray-800 border border-gray-700 rounded-lg shadow-2xl max-h-[60vh] overflow-y-auto">
+              <ul className="divide-y divide-gray-700">
+                {searchResults.map(page => (
+                  <li key={page.id} className="hover:bg-gray-700/50 transition-colors">
+                    <button 
+                      onClick={() => handleSearchResultClick(page)}
+                      className="w-full text-left p-4 flex items-start space-x-4"
+                    >
+                      {page.imageUrl && (
+                        <div className="relative flex-shrink-0 w-16 h-16 rounded overflow-hidden">
+                          <Image 
+                            src={page.imageUrl} 
+                            alt={page.title} 
+                            fill 
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-medium truncate">{page.title}</h4>
+                        <p className="text-gray-400 text-sm truncate">{page.description}</p>
+                        <span className="inline-block px-2 py-0.5 mt-1 text-xs rounded bg-gray-700 text-gray-300">
+                          {WIKI_CATEGORIES.find(cat => cat.id === page.category)?.title || page.category}
+                        </span>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+                <li className="p-3 text-center">
+                  <Link 
+                    href={`/wiki/search?q=${encodeURIComponent(searchQuery)}`}
+                    className="text-gta-blue hover:text-gta-pink text-sm"
+                  >
+                    View all search results
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <main className="flex-grow container mx-auto px-4 py-16">
+        {/* Always show diagnostic component for troubleshooting */}
+        <FirestoreDiagnostic />
+        
         {/* Categories */}
         <section className="mb-20 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
           <div className="flex items-center justify-between mb-8">
@@ -296,6 +411,13 @@ export default function WikiHomePage() {
               Browse by Category
             </h2>
             <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-pink to-transparent"></div>
+          </div>
+          
+          {/* Show wiki page count for debugging */}
+          <div className="mb-4 text-gray-400 text-sm">
+            Total Wiki Pages: {allPages.length} | 
+            Featured: {featuredPages.length} | 
+            Recent: {recentPages.length}
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

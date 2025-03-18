@@ -46,7 +46,7 @@ export default function WikiSearchPage() {
           const results = processedPages.filter(page => 
             page.title.toLowerCase().includes(lowerQuery) || 
             page.description.toLowerCase().includes(lowerQuery) ||
-            (page.tags && page.tags.some((tag: string) => tag.toLowerCase().includes(lowerQuery))) ||
+            (page.tags && Array.isArray(page.tags) && page.tags.some((tag: string) => tag.toLowerCase().includes(lowerQuery))) ||
             (page.content && page.content.toLowerCase().includes(lowerQuery))
           );
           
@@ -191,7 +191,7 @@ export default function WikiSearchPage() {
           <div className="absolute bottom-0 -right-1/3 w-2/3 h-2/3 bg-gta-blue opacity-20 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
         
-        <div className="container mx-auto px-6 z-10 relative">
+        <div className="container p-6 mx-auto px-6 z-10 relative">
           <div className="animate-fadeIn max-w-4xl mx-auto">
             {/* Breadcrumb */}
             <div className="mb-6 flex items-center text-sm text-white/80">
@@ -333,22 +333,24 @@ export default function WikiSearchPage() {
                     className="bg-gray-800/70 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-700/50 hover:shadow-xl transition-all animate-fadeInUp"
                     style={{ animationDelay: `${0.1 * index}s` }}
                   >
-                    <Link href={`/wiki/${page.category}/${page.slug}`} className="flex flex-col md:flex-row">
+                    <div className="flex flex-col md:flex-row">
                       {page.imageUrl && (
-                        <div className="relative w-full md:w-64 h-48 md:h-auto flex-shrink-0">
+                        <Link href={`/wiki/${page.category}/${page.slug}`} className="relative w-full md:w-64 h-48 md:h-auto flex-shrink-0">
                           <Image
                             src={page.imageUrl}
                             alt={page.title}
                             fill
                             className="object-cover"
                           />
-                        </div>
+                        </Link>
                       )}
                       <div className="p-6 flex-grow">
                         <div className="flex items-start justify-between">
                           <div>
                             <h3 className="text-xl font-bold text-white mb-2">
-                              {highlightSearchTerms(page.title, query)}
+                              <Link href={`/wiki/${page.category}/${page.slug}`} className="hover:text-gta-pink">
+                                {highlightSearchTerms(page.title, query)}
+                              </Link>
                             </h3>
                             <p className="text-gray-300 mb-4">
                               {highlightSearchTerms(page.description, query)}
@@ -368,7 +370,7 @@ export default function WikiSearchPage() {
                         )}
                         
                         <div className="flex flex-wrap items-center justify-between mt-4">
-                          {page.tags && page.tags.length > 0 && (
+                          {page.tags && Array.isArray(page.tags) && page.tags.length > 0 && (
                             <div className="flex flex-wrap gap-2 mr-4">
                               {page.tags.map((tag: string) => (
                                 <Link
@@ -387,7 +389,7 @@ export default function WikiSearchPage() {
                           </span>
                         </div>
                       </div>
-                    </Link>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -51,6 +51,22 @@ export default function RevisionHistory({
   
   const canCompare = selectedRevisions.length === 2;
   
+  // Helper to find previous revision index
+  const findPreviousRevisionIndex = (currentIndex: number) => {
+    if (currentIndex < revisions.length - 1) {
+      return currentIndex + 1;
+    }
+    return -1;
+  };
+  
+  // Quick compare with previous revision
+  const compareWithPrevious = (currentIndex: number) => {
+    const prevIndex = findPreviousRevisionIndex(currentIndex);
+    if (prevIndex !== -1) {
+      onCompareRevisions(revisions[currentIndex].id, revisions[prevIndex].id);
+    }
+  };
+  
   return (
     <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
       <div className="bg-gray-800 px-4 py-3 border-b border-gray-700 flex justify-between items-center">
@@ -117,12 +133,26 @@ export default function RevisionHistory({
                   </div>
                 </div>
                 
-                <button
-                  onClick={() => onViewRevision(revision.id)}
-                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded-md"
-                >
-                  View
-                </button>
+                <div className="flex space-x-2">
+                  {index < revisions.length - 1 && (
+                    <button
+                      onClick={() => compareWithPrevious(index)}
+                      className="px-3 py-1 bg-gta-blue/70 hover:bg-gta-blue text-xs text-white rounded-md flex items-center"
+                      title="Compare with previous revision"
+                    >
+                      <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                      </svg>
+                      Compare
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onViewRevision(revision.id)}
+                    className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded-md"
+                  >
+                    View
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -160,12 +190,19 @@ export function RevisionCompare({
     }).format(date);
   };
   
-  // Simple diff function highlighting changes
+  // Improved diff function for better highlighting
   const diffTexts = (oldText: string, newText: string) => {
     const oldLines = oldText.split('\n');
     const newLines = newText.split('\n');
     
     const result = [];
+    
+    // Track summary stats
+    const summaryStats = {
+      linesAdded: 0,
+      linesRemoved: 0,
+      linesChanged: 0
+    };
     
     for (let i = 0; i < Math.max(oldLines.length, newLines.length); i++) {
       const oldLine = i < oldLines.length ? oldLines[i] : '';
@@ -173,18 +210,73 @@ export function RevisionCompare({
       
       const isDifferent = oldLine !== newLine;
       
+      if (isDifferent) {
+        if (!oldLine || oldLine.trim() === '') {
+          summaryStats.linesAdded++;
+        } else if (!newLine || newLine.trim() === '') {
+          summaryStats.linesRemoved++;
+        } else {
+          summaryStats.linesChanged++;
+        }
+      }
+      
+      // Word-level highlighting (simplified approach)
+      let highlightedOldLine = oldLine;
+      let highlightedNewLine = newLine;
+      
+      if (isDifferent && oldLine && newLine) {
+        // Split lines into words
+        const oldWords = oldLine.split(' ');
+        const newWords = newLine.split(' ');
+        
+        // Build highlighted versions
+        const oldHighlighted = oldWords.map(word => {
+          if (!newLine.includes(word)) {
+            return `<span class="bg-red-900/50 text-red-300">${word}</span>`;
+          }
+          return word;
+        });
+        
+        const newHighlighted = newWords.map(word => {
+          if (!oldLine.includes(word)) {
+            return `<span class="bg-green-900/50 text-green-300">${word}</span>`;
+          }
+          return word;
+        });
+        
+        highlightedOldLine = oldHighlighted.join(' ');
+        highlightedNewLine = newHighlighted.join(' ');
+      }
+      
       result.push({
         line: i + 1,
         oldLine,
         newLine,
+        highlightedOldLine,
+        highlightedNewLine,
         isDifferent
       });
     }
     
-    return result;
+    return { diffLines: result, summaryStats };
   };
   
-  const diffLines = diffTexts(originalRevision.content, newRevision.content);
+  const { diffLines, summaryStats } = diffTexts(originalRevision.content, newRevision.content);
+  
+  // Check for field differences outside of content
+  const fieldChanges = [];
+  if (originalRevision.title !== newRevision.title) {
+    fieldChanges.push('Title changed');
+  }
+  if (originalRevision.description !== newRevision.description) {
+    fieldChanges.push('Description changed');
+  }
+  if (originalRevision.category !== newRevision.category) {
+    fieldChanges.push('Category changed');
+  }
+  if (originalRevision.subcategory !== newRevision.subcategory) {
+    fieldChanges.push('Subcategory changed');
+  }
   
   return (
     <div className="bg-gray-900/90 backdrop-blur border border-gray-800 rounded-lg overflow-hidden">
@@ -202,6 +294,42 @@ export function RevisionCompare({
       </div>
       
       <div className="p-4">
+        {/* Summary of Changes */}
+        <div className="bg-gray-800/70 p-4 rounded-lg mb-4">
+          <h4 className="text-white font-medium mb-2">Summary of Changes</h4>
+          <div className="flex flex-wrap gap-3">
+            {summaryStats.linesAdded > 0 && (
+              <div className="flex items-center px-3 py-1 bg-green-900/30 rounded-full text-green-400 text-sm">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                {summaryStats.linesAdded} line{summaryStats.linesAdded !== 1 ? 's' : ''} added
+              </div>
+            )}
+            {summaryStats.linesRemoved > 0 && (
+              <div className="flex items-center px-3 py-1 bg-red-900/30 rounded-full text-red-400 text-sm">
+                <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                {summaryStats.linesRemoved} line{summaryStats.linesRemoved !== 1 ? 's' : ''} removed
+              </div>
+            )}
+            {summaryStats.linesChanged > 0 && (
+              <div className="flex items-center px-3 py-1 bg-yellow-900/30 rounded-full text-yellow-400 text-sm">
+                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                {summaryStats.linesChanged} line{summaryStats.linesChanged !== 1 ? 's' : ''} modified
+              </div>
+            )}
+            {fieldChanges.map((change, index) => (
+              <div key={index} className="flex items-center px-3 py-1 bg-blue-900/30 rounded-full text-blue-400 text-sm">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                {change}
+              </div>
+            ))}
+          </div>
+          {newRevision.changeDescription && (
+            <div className="mt-3 text-gray-300 text-sm border-t border-gray-700 pt-3">
+              <span className="font-medium">Edit comment:</span> {newRevision.changeDescription}
+            </div>
+          )}
+        </div>
+        
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-gray-800/50 p-3 rounded-lg">
             <div className="text-sm text-gray-400 mb-2">
@@ -233,7 +361,11 @@ export function RevisionCompare({
                     <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></span>
                   )}
                   <span className="text-gray-500 inline-block w-8">{line.line}</span>
-                  {line.oldLine || '\u00A0'}
+                  {line.isDifferent ? (
+                    <span dangerouslySetInnerHTML={{ __html: line.highlightedOldLine || '\u00A0' }} />
+                  ) : (
+                    line.oldLine || '\u00A0'
+                  )}
                 </div>
                 
                 <div className={`p-2 font-mono text-xs relative ${line.isDifferent ? 'text-green-400' : 'text-gray-300'}`}>
@@ -241,7 +373,11 @@ export function RevisionCompare({
                     <span className="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></span>
                   )}
                   <span className="text-gray-500 inline-block w-8">{line.line}</span>
-                  {line.newLine || '\u00A0'}
+                  {line.isDifferent ? (
+                    <span dangerouslySetInnerHTML={{ __html: line.highlightedNewLine || '\u00A0' }} />
+                  ) : (
+                    line.newLine || '\u00A0'
+                  )}
                 </div>
               </div>
             ))}
