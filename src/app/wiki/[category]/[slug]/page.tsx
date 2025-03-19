@@ -29,7 +29,8 @@ interface WikiPageData {
   content: string;
   category: string;
   imageUrl: string;
-  galleryImages: string[];
+  galleryImages?: string[];
+  slug: string;
   tags: string[];
   updatedAt: any;
   details?: WikiPageDetail[];
@@ -42,6 +43,7 @@ interface WikiPageFirestore {
   description: string;
   content: string;
   category: string;
+  slug: string;
   imageUrl?: string;  // Optional in Firestore
   galleryImages?: string[];  // Optional in Firestore
   tags: string[];
@@ -62,6 +64,7 @@ export default function WikiPage() {
   const [tableOfContents, setTableOfContents] = useState<{id: string, text: string, level: number}[]>([]);
   const [activeHeading, setActiveHeading] = useState<string | null>(null);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [relatedPages, setRelatedPages] = useState<WikiPageData[]>([]);
   
   useEffect(() => {
     const fetchWikiPage = async () => {
@@ -250,6 +253,7 @@ function getWikiPage(slug) {
       category,
       imageUrl: getLocalImageUrl(category),
       galleryImages: getMultipleLocalImageUrls(4, category),
+      slug,
       tags: ['Placeholder', 'Coming Soon', categoryInfo?.title || 'Category'],
       updatedAt: { toDate: () => new Date() },
       // Example detailed information - this would come from Firestore
@@ -437,6 +441,72 @@ function getWikiPage(slug) {
     setActiveHeading(null);
   };
   
+  // Fetch related pages when page data is loaded
+  useEffect(() => {
+    const fetchRelatedPages = async () => {
+      if (pageData && category) {
+        try {
+          // Import the function to get wiki pages by category
+          const { getWikiPagesByCategory } = await import('@/lib/wikiFirestoreService');
+          
+          // Fetch pages from the same category
+          const categoryPages = await getWikiPagesByCategory(category as WikiCategory);
+          
+          // Filter out the current page and get up to 3 random pages
+          const filteredPages = categoryPages
+            .filter(page => page.id !== pageData.id)
+            .sort(() => 0.5 - Math.random()) // Random sort
+            .slice(0, 3); // Take up to 3
+          
+          if (filteredPages.length > 0) {
+            // Process pages to ensure they have image URLs
+            const processedPages = filteredPages.map(page => ({
+              ...page,
+              imageUrl: page.imageUrl || getLocalImageUrl(category)
+            }));
+            
+            setRelatedPages(processedPages);
+          } else {
+            // If no related pages, create placeholders
+            const placeholders = Array.from({ length: 3 }, (_, i) => ({
+              id: `placeholder-related-${i}`,
+              title: `Related ${categoryInfo?.title ? categoryInfo.title.slice(0, -1) : ''} ${i + 1}`,
+              description: `Discover more about this related content from the GTA 6 universe.`,
+              category,
+              slug: `${slug}-related-${i + 1}`,
+              imageUrl: getLocalImageUrl(category),
+              content: '',
+              tags: ['Related', categoryInfo?.title || ''],
+              updatedAt: { toDate: () => new Date() },
+              galleryImages: []
+            }));
+            
+            setRelatedPages(placeholders);
+          }
+        } catch (error) {
+          console.error('Error fetching related pages:', error);
+          // Create placeholders on error
+          const placeholders = Array.from({ length: 3 }, (_, i) => ({
+            id: `placeholder-related-${i}`,
+            title: `Related ${categoryInfo?.title ? categoryInfo.title.slice(0, -1) : ''} ${i + 1}`,
+            description: `Discover more about this related content from the GTA 6 universe.`,
+            category,
+            slug: `${slug}-related-${i + 1}`,
+            imageUrl: getLocalImageUrl(category),
+            content: '',
+            tags: ['Related', categoryInfo?.title || ''],
+            updatedAt: { toDate: () => new Date() },
+            galleryImages: []
+          }));
+          
+          setRelatedPages(placeholders);
+        }
+      }
+    };
+    
+    fetchRelatedPages();
+  }, [pageData, category, slug, categoryInfo?.title]);
+  
   return (
     <div className="min-h-screen flex flex-col bg-gray-900">
       <Navbar transparent={true} />
@@ -483,38 +553,38 @@ function getWikiPage(slug) {
           {/* Header Section */}
           <div className="relative z-10 pt-28">            
             <div className="container mx-auto px-6 relative animate-fadeIn">
-              {/* Display error message if using placeholder */}
-              {error && (
+                {/* Display error message if using placeholder */}
+                {error && (
                 <div className="bg-yellow-900/50 border border-yellow-500 text-yellow-100 px-6 py-4 rounded-lg mb-6 max-w-4xl mx-auto backdrop-blur-sm shadow-lg">
                   <p className="font-medium">{error}</p>
                   <p className="text-sm mt-2 opacity-80">Using placeholder content and local images.</p>
-                </div>
-              )}
-              
-              {/* Breadcrumb */}
+                  </div>
+                )}
+                
+                {/* Breadcrumb */}
               <div className="mb-6 flex items-center text-sm text-white/80 max-w-4xl backdrop-blur-sm bg-black/10 inline-flex rounded-full py-2 px-4">
                 <Link href="/wiki" className="hover:text-white transition-colors flex items-center hover:scale-105 transition-transform">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
-                  Wiki
-                </Link>
+                    Wiki
+                  </Link>
                 <span className="mx-3 text-white/40">›</span>
                 <Link href={`/wiki/${category}`} className="hover:text-white transition-colors flex items-center hover:scale-105 transition-transform">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
-                  {categoryInfo?.title || category}
-                </Link>
+                    {categoryInfo?.title || category}
+                  </Link>
                 <span className="mx-3 text-white/40">›</span>
                 <span className="text-white font-medium">{pageData.title}</span>
-              </div>
-              
-              {/* Title and description */}
+                </div>
+                
+                {/* Title and description */}
               <div className="max-w-4xl backdrop-blur-sm bg-black/10 p-6 rounded-lg border border-gray-700/30 shadow-lg mb-8">
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg leading-tight">{pageData.title}</h1>
                 <p className="text-lg md:text-xl text-white/90 max-w-2xl leading-relaxed">{pageData.description}</p>
-              
+                
                 {/* Tags */}
                 {pageData.tags && pageData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-5">
@@ -734,7 +804,7 @@ function getWikiPage(slug) {
                           className="object-cover transition-transform duration-1000 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-50"></div>
-                      </div>
+            </div>
                       <div className="p-4 border-t border-gray-700/50">
                         <h3 className="text-lg font-bold text-white mb-2 flex items-center">
                           <svg className="w-5 h-5 mr-2 text-gta-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -838,73 +908,82 @@ function getWikiPage(slug) {
                       <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
-                      Related Pages
-                    </h2>
-                    <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-green to-transparent"></div>
-                  </div>
-                  
+                  Related Pages
+                </h2>
+                <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-green to-transparent"></div>
+              </div>
+              
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fadeIn">
-                    {[1, 2, 3].map((i) => (
-                      <Link 
-                        key={i}
-                        href={`/wiki/${category}/${slug}-related-${i}`}
+                {relatedPages.map((page, i) => (
+                  <Link 
+                    key={page.id}
+                    href={`/wiki/${category}/${page.slug}`}
                         className="group bg-gray-800/80 backdrop-blur-md rounded-xl overflow-hidden border border-gray-700/50 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fadeInUp"
-                        style={{ animationDelay: `${0.1 * i}s` }}
-                      >
+                    style={{ animationDelay: `${0.1 * i}s` }}
+                  >
                         <div className="relative h-52 overflow-hidden">
-                          <Image
-                            src={getLocalImageUrl(category)}
-                            alt={`Related Page ${i}`}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-700"
-                          />
+                      <Image
+                        src={page.imageUrl}
+                        alt={page.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
                           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"></div>
-                        </div>
+                          {page.tags && page.tags.length > 0 && (
+                            <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-wrap gap-2">
+                              {page.tags.slice(0, 2).map((tag: string) => (
+                                <span key={tag} className="px-2 py-1 rounded-md text-xs bg-black/50 backdrop-blur-sm text-gray-300 border border-gray-700/50">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                    </div>
                         <div className="p-6">
                           <h3 className="text-xl font-bold text-white mb-3 group-hover:text-gta-green transition-colors">
-                            Related {categoryInfo?.title ? categoryInfo.title.slice(0, -1) : ''} {i}
-                          </h3>
-                          <p className="text-gray-300 text-sm line-clamp-2 mb-4">
-                            Discover more about this related content from the GTA 6 universe.
-                          </p>
+                        {page.title}
+                      </h3>
+                      <p className="text-gray-300 text-sm line-clamp-2 mb-4">
+                        {page.description}
+                      </p>
                           <span className="text-gta-green group-hover:translate-x-1 transition-transform duration-200 inline-flex items-center font-medium">
-                            Explore
-                            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </section>
+                        Explore
+                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
             </div>
           </main>
-          
-          <Footer />
-          
-          {/* Add required CSS */}
-          <style jsx global>{`
-            @keyframes fadeIn {
-              from { opacity: 0; transform: translateY(20px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
+      
+      <Footer />
+      
+      {/* Add required CSS */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
             
             @keyframes fadeInTable {
               from { opacity: 0; transform: translateY(10px); }
               to { opacity: 1; transform: translateY(0); }
             }
-            
-            .animate-fadeIn {
-              opacity: 0;
-              animation: fadeIn 1s ease-out forwards;
-            }
-            
-            .animate-fadeInUp {
-              opacity: 0;
-              animation: fadeIn 1s ease-out forwards;
-            }
+        
+        .animate-fadeIn {
+          opacity: 0;
+          animation: fadeIn 1s ease-out forwards;
+        }
+        
+        .animate-fadeInUp {
+          opacity: 0;
+          animation: fadeIn 1s ease-out forwards;
+        }
             
             @keyframes pulse-slow {
               0%, 100% { opacity: 1; }
@@ -914,93 +993,93 @@ function getWikiPage(slug) {
             .animate-pulse-slow {
               animation: pulse-slow 5s ease-in-out infinite;
             }
-            
-            /* Add smooth scrolling */
-            html {
-              scroll-behavior: smooth;
-            }
-            
-            /* Enhanced Markdown Styling */
-            .markdown-content {
-              color: #e2e8f0;
-            }
-            
-            /* Add scroll margin to headings */
-            .markdown-content h1,
-            .markdown-content h2,
-            .markdown-content h3,
-            .markdown-content h4,
-            .markdown-content h5,
-            .markdown-content h6 {
+        
+        /* Add smooth scrolling */
+        html {
+          scroll-behavior: smooth;
+        }
+        
+        /* Enhanced Markdown Styling */
+        .markdown-content {
+          color: #e2e8f0;
+        }
+        
+        /* Add scroll margin to headings */
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
               scroll-margin-top: 100px;
-            }
-            
-            .markdown-content h1 {
+        }
+        
+        .markdown-content h1 {
               font-size: 2.5rem;
               margin-top: 2.5rem;
               margin-bottom: 1.75rem;
               font-weight: 800;
-              color: white;
+          color: white;
               padding-bottom: 0.75rem;
               border-bottom: 2px solid rgba(74, 85, 104, 0.7);
               letter-spacing: -0.025em;
-            }
-            
-            .markdown-content h2 {
+        }
+        
+        .markdown-content h2 {
               font-size: 2rem;
               margin-top: 2rem;
               margin-bottom: 1.5rem;
-              font-weight: 700;
-              color: white;
-              position: relative;
+          font-weight: 700;
+          color: white;
+          position: relative;
               padding-left: 1.25rem;
               letter-spacing: -0.025em;
-            }
-            
-            .markdown-content h2::before {
-              content: "";
-              position: absolute;
-              left: 0;
-              top: 0.25rem;
-              bottom: 0.25rem;
-              width: 4px;
-              border-radius: 4px;
-              background: linear-gradient(to bottom, #ff6b81, #ff4757);
-            }
-            
-            .markdown-content h3 {
+        }
+        
+        .markdown-content h2::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 0.25rem;
+          bottom: 0.25rem;
+          width: 4px;
+          border-radius: 4px;
+          background: linear-gradient(to bottom, #ff6b81, #ff4757);
+        }
+        
+        .markdown-content h3 {
               font-size: 1.75rem;
               margin-top: 1.75rem;
               margin-bottom: 1.25rem;
-              font-weight: 600;
-              color: #f7fafc;
+          font-weight: 600;
+          color: #f7fafc;
               letter-spacing: -0.025em;
-            }
-            
-            .markdown-content p {
+        }
+        
+        .markdown-content p {
               margin-bottom: 1.5rem;
               line-height: 1.8;
               font-size: 1.1rem;
-            }
-            
-            .markdown-content a {
-              color: #63b3ed;
-              text-decoration: none;
+        }
+        
+        .markdown-content a {
+          color: #63b3ed;
+          text-decoration: none;
               transition: all 0.2s;
               border-bottom: 1px solid transparent;
-            }
-            
-            .markdown-content a:hover {
-              color: #ff6b81;
+        }
+        
+        .markdown-content a:hover {
+          color: #ff6b81;
               border-bottom-color: #ff6b81;
-            }
-            
-            .markdown-content blockquote {
-              border-left: 4px solid #ff6b81;
+        }
+        
+        .markdown-content blockquote {
+          border-left: 4px solid #ff6b81;
               padding: 1.5rem;
               margin: 2rem 0;
-              font-style: italic;
-              background-color: rgba(0, 0, 0, 0.2);
+          font-style: italic;
+          background-color: rgba(0, 0, 0, 0.2);
               border-radius: 0.5rem;
               position: relative;
             }
@@ -1013,24 +1092,24 @@ function getWikiPage(slug) {
               font-size: 4rem;
               color: #ff6b81;
               opacity: 0.2;
-            }
-            
-            .markdown-content code {
-              background-color: rgba(0, 0, 0, 0.3);
-              padding: 0.2rem 0.4rem;
-              border-radius: 0.25rem;
+        }
+        
+        .markdown-content code {
+          background-color: rgba(0, 0, 0, 0.3);
+          padding: 0.2rem 0.4rem;
+          border-radius: 0.25rem;
               font-family: 'Fira Code', monospace;
-              font-size: 0.9em;
+          font-size: 0.9em;
               border: 1px solid rgba(74, 85, 104, 0.3);
-            }
-            
-            .markdown-content pre {
-              background-color: #1a202c;
+        }
+        
+        .markdown-content pre {
+          background-color: #1a202c;
               padding: 1.5rem;
               border-radius: 0.75rem;
-              overflow-x: auto;
+          overflow-x: auto;
               margin: 2rem 0;
-              border: 1px solid rgba(74, 85, 104, 0.7);
+          border: 1px solid rgba(74, 85, 104, 0.7);
               position: relative;
             }
             
@@ -1043,29 +1122,29 @@ function getWikiPage(slug) {
               height: 4px;
               background: linear-gradient(to right, #ff6b81, #ff4757);
               border-radius: 0.75rem 0.75rem 0 0;
-            }
-            
-            .markdown-content pre code {
-              background-color: transparent;
-              padding: 0;
-              color: #e2e8f0;
-              display: block;
-              line-height: 1.6;
+        }
+        
+        .markdown-content pre code {
+          background-color: transparent;
+          padding: 0;
+          color: #e2e8f0;
+          display: block;
+          line-height: 1.6;
               border: none;
               font-size: 0.95rem;
-            }
-            
-            .markdown-content ul, .markdown-content ol {
+        }
+        
+        .markdown-content ul, .markdown-content ol {
               margin-bottom: 1.5rem;
               padding-left: 1.75rem;
-            }
-            
-            .markdown-content li {
+        }
+        
+        .markdown-content li {
               margin-bottom: 0.75rem;
               line-height: 1.7;
-            }
-            
-            .markdown-content ul li {
+        }
+        
+        .markdown-content ul li {
               list-style-type: none;
               position: relative;
               padding-left: 1.5rem;
@@ -1077,58 +1156,58 @@ function getWikiPage(slug) {
               position: absolute;
               left: 0;
               font-weight: bold;
-            }
-            
-            .markdown-content ol li {
-              list-style-type: decimal;
+        }
+        
+        .markdown-content ol li {
+          list-style-type: decimal;
               padding-left: 0.5rem;
-            }
-            
-            .markdown-content table {
-              width: 100%;
+        }
+        
+        .markdown-content table {
+          width: 100%;
               margin: 2rem 0;
               border-collapse: separate;
               border-spacing: 0;
               border-radius: 0.5rem;
               overflow: hidden;
               border: 1px solid rgba(74, 85, 104, 0.7);
-            }
-            
-            .markdown-content th, .markdown-content td {
+        }
+        
+        .markdown-content th, .markdown-content td {
               padding: 1rem;
               border: 1px solid rgba(74, 85, 104, 0.7);
-            }
-            
-            .markdown-content th {
-              background-color: rgba(0, 0, 0, 0.3);
-              font-weight: 600;
-              text-align: left;
+        }
+        
+        .markdown-content th {
+          background-color: rgba(0, 0, 0, 0.3);
+          font-weight: 600;
+          text-align: left;
               color: #f7fafc;
-            }
-            
-            .markdown-content tr:nth-child(even) {
-              background-color: rgba(0, 0, 0, 0.15);
-            }
+        }
+        
+        .markdown-content tr:nth-child(even) {
+          background-color: rgba(0, 0, 0, 0.15);
+        }
             
             .markdown-content tr:hover {
               background-color: rgba(0, 0, 0, 0.2);
             }
-            
-            .markdown-content hr {
-              border: 0;
+        
+        .markdown-content hr {
+          border: 0;
               height: 2px;
               background: linear-gradient(to right, transparent, rgba(74, 85, 104, 0.7), transparent);
               margin: 3rem 0;
-            }
-            
-            .markdown-content img {
-              max-width: 100%;
+        }
+        
+        .markdown-content img {
+          max-width: 100%;
               border-radius: 0.75rem;
               margin: 2rem 0;
               box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
               border: 1px solid rgba(74, 85, 104, 0.3);
-            }
-          `}</style>
+        }
+      `}</style>
         </>
       ) : null}
     </div>

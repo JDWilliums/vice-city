@@ -10,14 +10,30 @@ import { getLocalImageUrl } from '@/lib/localImageService';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FirestoreDiagnostic from '@/components/wiki/FirestoreDiagnostic';
+import { useAuth } from '@/lib/AuthContext';
 
 // Helper function to generate a random ID similar to Firestore's auto-ID
 function generateId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
+// Add debounce function with proper type annotation
+function debounce(func: Function, wait: number) {
+  let timeout: NodeJS.Timeout | null = null;
+  
+  return function(this: any, ...args: any[]) {
+    const context = this;
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      timeout = null;
+      func.apply(context, args);
+    }, wait);
+  };
+}
+
 export default function WikiHomePage() {
   const router = useRouter();
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [featuredPages, setFeaturedPages] = useState<any[]>([]);
   const [recentPages, setRecentPages] = useState<any[]>([]);
@@ -197,8 +213,7 @@ export default function WikiHomePage() {
     const results = allPages.filter(page => 
       page.title.toLowerCase().includes(query) || 
       page.description.toLowerCase().includes(query) ||
-      (page.tags && Array.isArray(page.tags) && page.tags.some((tag: string) => tag.toLowerCase().includes(query))) ||
-      (page.content && page.content.toLowerCase().includes(query))
+      (page.tags && Array.isArray(page.tags) && page.tags.some((tag: string) => tag.toLowerCase().includes(query)))
     ).slice(0, 8); // Limit to 8 results
     
     console.log(`Found ${results.length} search results`, 
@@ -284,14 +299,14 @@ export default function WikiHomePage() {
       <Navbar transparent={true} />
       
       {/* Hero Section with Search */}
-      <div className="relative min-h-[500px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="relative min-h-[500px] flex items-center justify-center overflow-hidden bg-gradient-to-br z-99 from-gray-900 via-gray-800 to-gray-900">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <Image 
             src="/images/gta6-3.png" 
             alt="Vice City" 
             fill 
-            className="object-cover object-center opacity-30"
+            className="object-cover object-center opacity-90"
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent"></div>
@@ -300,8 +315,8 @@ export default function WikiHomePage() {
         
         {/* Animated Gradients */}
         <div className="absolute inset-0 z-5 opacity-40">
-          <div className="absolute top-0 -left-1/3 w-2/3 h-2/3 bg-gta-pink opacity-20 rounded-full blur-[150px] animate-pulse"></div>
-          <div className="absolute bottom-0 -right-1/3 w-2/3 h-2/3 bg-gta-blue opacity-20 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-0 -left-1/3 w-2/3 h-2/3 bg-gta-pink opacity-10 rounded-full blur-[150px] animate-pulse"></div>
+          <div className="absolute bottom-0 -right-1/3 w-2/3 h-2/3 bg-gta-blue opacity-10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
         
         <div className="container mx-auto px-6 z-10 text-center relative">
@@ -314,13 +329,13 @@ export default function WikiHomePage() {
             </p>
             
             {/* Search Form */}
-            <div className="max-w-2xl mx-auto mb-8 animate-fadeInUp relative z-[1000]" style={{ animationDelay: '0.3s' }}>
+            <div className="max-w-2xl mx-auto mb-8 animate-fadeInUp relative z-50" style={{ animationDelay: '0.3s' }}>
               <div className="relative bg-gray-800/60 backdrop-blur-md rounded-lg p-1 border border-gray-700/50 shadow-xl">
                 <form onSubmit={handleSearch} className="flex items-center">
                   <input
                     ref={searchInputRef}
                     type="text"
-                    placeholder="Search the GTA 6 Wiki..."
+                    placeholder="Search titles, tags, and descriptions..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     className="w-full bg-transparent px-5 py-4 text-white focus:outline-none text-lg"
@@ -334,6 +349,40 @@ export default function WikiHomePage() {
                     </svg>
                   </button>
                 </form>
+
+                {/* Search Results Dropdown */}
+                {isSearching && searchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl z-[1000]">
+                    <ul className="divide-y divide-gray-700 z-1000">
+                      {/* Only show the first search result */}
+                      <li className="hover:bg-gray-700/50 transition-colors">
+                        <button 
+                          onClick={() => handleSearchResultClick(searchResults[0])}
+                          className="w-full text-left p-4 flex items-start space-x-4"
+                        >
+                          {searchResults[0].imageUrl && (
+                            <div className="relative flex-shrink-0 w-16 h-16 rounded overflow-hidden">
+                              <Image 
+                                src={searchResults[0].imageUrl} 
+                                alt={searchResults[0].title} 
+                                fill 
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-white font-medium truncate">{searchResults[0].title}</h4>
+                            <p className="text-gray-400 text-sm truncate">{searchResults[0].description}</p>
+                            <span className="inline-block px-2 py-0.5 mt-1 text-xs rounded bg-gray-700 text-gray-300">
+                              {WIKI_CATEGORIES.find(cat => cat.id === searchResults[0].category)?.title || searchResults[0].category}
+                            </span>
+                          </div>
+                        </button>
+                      </li>
+                      
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -354,55 +403,9 @@ export default function WikiHomePage() {
         </div>
       </div>
       
-      {/* Full-screen Search Results Overlay */}
-      {isSearching && searchResults.length > 0 && (
-        <div className="fixed inset-0 z-[900] bg-black/60 backdrop-blur-sm flex items-start justify-center pt-[230px]">
-          <div className="container mx-auto px-4">
-            <div className="max-w-2xl mx-auto bg-gray-800 border border-gray-700 rounded-lg shadow-2xl max-h-[60vh] overflow-y-auto">
-              <ul className="divide-y divide-gray-700">
-                {searchResults.map(page => (
-                  <li key={page.id} className="hover:bg-gray-700/50 transition-colors">
-                    <button 
-                      onClick={() => handleSearchResultClick(page)}
-                      className="w-full text-left p-4 flex items-start space-x-4"
-                    >
-                      {page.imageUrl && (
-                        <div className="relative flex-shrink-0 w-16 h-16 rounded overflow-hidden">
-                          <Image 
-                            src={page.imageUrl} 
-                            alt={page.title} 
-                            fill 
-                            className="object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-white font-medium truncate">{page.title}</h4>
-                        <p className="text-gray-400 text-sm truncate">{page.description}</p>
-                        <span className="inline-block px-2 py-0.5 mt-1 text-xs rounded bg-gray-700 text-gray-300">
-                          {WIKI_CATEGORIES.find(cat => cat.id === page.category)?.title || page.category}
-                        </span>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-                <li className="p-3 text-center">
-                  <Link 
-                    href={`/wiki/search?q=${encodeURIComponent(searchQuery)}`}
-                    className="text-gta-blue hover:text-gta-pink text-sm"
-                  >
-                    View all search results
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      <main className="flex-grow container mx-auto px-4 py-16">
-        {/* Always show diagnostic component for troubleshooting */}
-        <FirestoreDiagnostic />
+      <main className="flex-grow container mx-auto px-4 py-16 z-0">
+        {/* Show diagnostic component only for admin users */}
+        {isAdmin && <FirestoreDiagnostic />}
         
         {/* Categories */}
         <section className="mb-20 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>

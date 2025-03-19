@@ -18,32 +18,26 @@ const CATEGORY_IMAGES = {
   locations: [
     '/images/wiki/location1.png',
     '/images/wiki/location2.png',
-    '/images/wiki/location3.png',
     '/images/gta6-1.png',
     '/images/gta6-3.png'
   ],
   characters: [
     '/images/wiki/character1.png',
     '/images/wiki/character2.png',
-    '/images/wiki/character3.png',
     '/images/gta6-2.png'
   ],
   vehicles: [
-    '/images/wiki/vehicle1.jpg',
-    '/images/wiki/vehicle2.jpg',
-    '/images/wiki/vehicle3.jpg',
+    '/images/wiki/vehicle1.png',
+    '/images/wiki/vehicle2.png',
     '/images/gta6-4.png'
   ],
   weapons: [
-    '/images/wiki/weapon1.jpg',
-    '/images/wiki/weapon2.jpg',
+    '/images/wiki/sample1.jpg',
     '/images/gta6-5.png'
   ],
   missions: [
-    '/images/wiki/mission1.jpg',
-    '/images/wiki/mission2.jpg',
-    '/images/gta6-1.png',
-    '/images/gta6-2.png'
+    '/images/gta6-8.png',
+    '/images/gta6-7.png'
   ]
 };
 

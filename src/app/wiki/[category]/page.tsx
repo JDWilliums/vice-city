@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getWikiPagesByCategory } from '@/lib/wikiFirestoreService';
+import { getWikiPagesByCategory, getAllWikiPages } from '@/lib/wikiFirestoreService';
 import { WikiCategory } from '@/lib/wikiHelpers';
 import { WIKI_CATEGORIES } from '@/data/wikiData';
 import { getLocalImageUrl } from '@/lib/localImageService';
@@ -29,22 +29,61 @@ export default function WikiCategoryPage() {
     const fetchWikiPages = async () => {
       try {
         setLoading(true);
+        
+        // Try to fetch pages by category
         const fetchedPages = await getWikiPagesByCategory(category);
         
-        // Process the pages to ensure they have image URLs
-        const processedPages = fetchedPages.map(page => {
-          // If the page doesn't have an image URL, assign a category-specific one
-          if (!page.imageUrl) {
-            return {
-              ...page,
-              imageUrl: getLocalImageUrl(category)
-            };
+        if (fetchedPages && fetchedPages.length > 0) {
+          // Process the pages to ensure they have image URLs
+          const processedPages = fetchedPages.map(page => {
+            // If the page doesn't have an image URL, assign a category-specific one
+            if (!page.imageUrl) {
+              return {
+                ...page,
+                imageUrl: getLocalImageUrl(category)
+              };
+            }
+            return page;
+          });
+          
+          setPages(processedPages);
+          setFilteredPages(processedPages);
+        } else {
+          // If no pages found, try getting all pages and filtering
+          console.warn(`No pages found directly for category: ${category}. Trying alternative method...`);
+          
+          const allPages = await getAllWikiPages(false);
+          
+          // Filter by this category
+          const filteredByCategory = allPages.filter(page => 
+            page.category === category && page.status === 'published'
+          );
+          
+          if (filteredByCategory.length > 0) {
+            // Process the pages to ensure they have image URLs
+            const processedPages = filteredByCategory.map(page => {
+              if (!page.imageUrl) {
+                return {
+                  ...page,
+                  imageUrl: getLocalImageUrl(category)
+                };
+              }
+              return page;
+            });
+            
+            setPages(processedPages);
+            setFilteredPages(processedPages);
+          } else {
+            // If still no pages, use placeholders
+            console.warn(`No wiki pages found for category: ${category}. Using placeholders.`);
+            setError('No wiki pages found in this category. Using placeholder content.');
+            
+            // Create placeholder pages
+            const placeholders = createPlaceholderPages(6);
+            setPages(placeholders);
+            setFilteredPages(placeholders);
           }
-          return page;
-        });
-        
-        setPages(processedPages);
-        setFilteredPages(processedPages);
+        }
       } catch (error) {
         console.error('Error fetching wiki pages:', error);
         setError('Failed to load wiki pages. Using placeholder content.');
@@ -78,7 +117,8 @@ export default function WikiCategoryPage() {
         slug: `placeholder-${category}-${i}`,
         category,
         imageUrl: getLocalImageUrl(category),
-        tags: [`Tag ${i + 1}`, `Example`, `GTA 6`]
+        tags: [`Tag ${i + 1}`, `Example`, `GTA 6`],
+        updatedAt: { toDate: () => new Date() }
       });
     }
     
@@ -110,6 +150,17 @@ export default function WikiCategoryPage() {
     }
   };
   
+  const formatDate = (timestamp: any): string => {
+    if (timestamp?.toDate) {
+      return timestamp.toDate().toLocaleDateString();
+    } else if (typeof timestamp === 'object' && timestamp !== null && timestamp.seconds) {
+      return new Date(timestamp.seconds * 1000).toLocaleDateString();
+    } else if (timestamp) {
+      return new Date(timestamp).toLocaleDateString();
+    }
+    return 'Unknown date';
+  };
+  
   if (!categoryInfo) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-900">
@@ -128,22 +179,30 @@ export default function WikiCategoryPage() {
       </div>
     );
   }
+
+  // Get the category image from localImageService
+  const categoryBgImage = getLocalImageUrl(category);
+  
+  // Get the category icon image URL
+  const categoryIconUrl = `/images/icons/${category}.png`;
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-900">
       <Navbar transparent={true} />
       
-      {/* Category Hero Header */}
-      <div className={`relative py-20 ${categoryInfo.color} overflow-hidden`}>
+      {/* Category Hero Header - with reduced color intensity */}
+      <div className="relative py-20 overflow-hidden">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <Image 
-            src={getLocalImageUrl(category)}
+            src={categoryBgImage}
             alt={categoryInfo.title}
             fill
-            className="object-cover object-center opacity-30"
+            className="object-cover object-center opacity-40"
           />
-          <div className={`absolute inset-0 bg-gradient-to-b ${categoryInfo.color} opacity-80`}></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-900/80 via-transparent to-gray-900/80"></div>
+          {/* Subtle category color accent instead of a full overlay */}
+          <div className={`absolute inset-0 ${categoryInfo.color} opacity-20`}></div>
         </div>
         
         <div className="container mx-auto px-6 z-10 relative">
@@ -158,19 +217,25 @@ export default function WikiCategoryPage() {
             </div>
             
             <div className="flex items-center mb-8">
-              <div className={`w-20 h-20 rounded-xl bg-white/10 flex items-center justify-center mr-6 text-4xl shadow-lg`}>
-                {categoryInfo.icon}
+              <div className={`w-20 h-20 rounded-xl bg-gray-800/80 flex items-center justify-center mr-6 shadow-lg overflow-hidden backdrop-blur-sm border border-gray-700`}>
+                <Image 
+                  src={categoryIconUrl}
+                  alt={categoryInfo.title}
+                  width={50}
+                  height={50}
+                  className="object-contain"
+                />
               </div>
               <div>
-                <h1 className={`text-4xl md:text-5xl font-bold ${categoryInfo.textColor} mb-3`}>
-                  {categoryInfo.title}
+                <h1 className={`text-4xl md:text-5xl font-bold text-white mb-3`}>
+                  <span className={categoryInfo.textColor}>{categoryInfo.title}</span>
                 </h1>
                 <p className="text-xl text-white/90">{categoryInfo.description}</p>
               </div>
             </div>
             
             {/* Search Form */}
-            <div className="bg-black/30 backdrop-blur-md rounded-lg p-1 border border-white/20 shadow-xl mb-4">
+            <div className="bg-gray-800/60 backdrop-blur-md rounded-lg p-1 border border-gray-700/50 shadow-xl mb-4">
               <form onSubmit={handleGlobalSearch} className="flex items-center">
                 <input
                   type="text"
@@ -181,7 +246,7 @@ export default function WikiCategoryPage() {
                 />
                 <button 
                   type="submit" 
-                  className={`px-5 py-3 ${categoryInfo.color} text-white rounded-r-md hover:opacity-90 transition-colors`}
+                  className="px-5 py-3 bg-gray-700/80 text-white rounded-r-md hover:bg-gray-600 transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -214,7 +279,7 @@ export default function WikiCategoryPage() {
                 onClick={() => setSearchQuery(tag)}
                 className={`px-3 py-1.5 rounded-full text-sm border border-gray-700 
                   ${searchQuery === tag 
-                    ? `bg-gta-pink text-white` 
+                    ? `bg-gray-700/90 ${categoryInfo.textColor}` 
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
                   } transition-colors`}
               >
@@ -240,7 +305,15 @@ export default function WikiCategoryPage() {
           </div>
         ) : filteredPages.length === 0 ? (
           <div className="text-center py-16 bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 animate-fadeIn">
-            <div className="text-5xl mb-4 opacity-30">{categoryInfo.icon}</div>
+            <div className="text-5xl mb-4 opacity-40">
+              <Image 
+                src={categoryIconUrl}
+                alt={categoryInfo.title}
+                width={80}
+                height={80}
+                className="mx-auto"
+              />
+            </div>
             <h2 className="text-2xl font-bold text-white mb-2">No pages found</h2>
             <p className="text-gray-400 mb-6">
               {searchQuery 
@@ -258,8 +331,8 @@ export default function WikiCategoryPage() {
                 </button>
               )}
               <Link 
-                href="/admin/wiki/create"
-                className={`px-6 py-3 ${categoryInfo.color} ${categoryInfo.textColor} font-bold rounded-md hover:opacity-90 transition-colors`}
+                href={`/admin/wiki/create?category=${category}`}
+                className={`px-6 py-3 bg-gray-800 hover:bg-gray-700 ${categoryInfo.textColor} font-bold rounded-md transition-colors border ${categoryInfo.borderColor}`}
               >
                 Create the First Page
               </Link>
@@ -303,8 +376,9 @@ export default function WikiCategoryPage() {
                   <h3 className="text-xl font-bold text-white mb-2 group-hover:text-gta-pink transition-colors">{page.title}</h3>
                   <p className="text-gray-300 text-sm line-clamp-2 mb-4">{page.description}</p>
                   
-                  <div className="flex justify-end">
-                    <span className={`text-${categoryInfo.id === 'characters' ? 'gta-pink' : categoryInfo.id === 'locations' ? 'gta-blue' : categoryInfo.id === 'vehicles' ? 'gta-green' : 'gta-yellow'} group-hover:translate-x-1 transition-transform duration-200 inline-flex items-center`}>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-400">{formatDate(page.updatedAt)}</span>
+                    <span className={`${categoryInfo.textColor} group-hover:translate-x-1 transition-transform duration-200 inline-flex items-center`}>
                       View details
                       <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -329,10 +403,21 @@ export default function WikiCategoryPage() {
           </div>
         )}
         
-        {/* Call to Action */}
-        <div className="mt-16 relative overflow-hidden rounded-xl p-1 animate-fadeInUp">
-          <div className={`absolute inset-0 ${categoryInfo.color} opacity-80`}></div>
-          <div className="relative bg-gray-900/80 backdrop-blur-sm rounded-lg p-8 text-center">
+        {/* Call to Action - with reduced color intensity */}
+        <div className="mt-16 relative overflow-hidden rounded-xl border border-gray-700 animate-fadeInUp">
+          <div className="absolute inset-0">
+            <Image 
+              src={categoryBgImage}
+              alt={categoryInfo.title}
+              fill
+              className="object-cover object-center opacity-30"
+            />
+            <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+            {/* Subtle category color accent */}
+            <div className={`absolute inset-0 ${categoryInfo.color} opacity-20`}></div>
+          </div>
+          
+          <div className="relative p-8 text-center">
             <h2 className="text-2xl font-bold text-white mb-4">
               Create New {categoryInfo.title.slice(0, -1)} Page
             </h2>
@@ -341,7 +426,7 @@ export default function WikiCategoryPage() {
             </p>
             <Link 
               href={`/admin/wiki/create?category=${category}`}
-              className={`inline-block px-6 py-3 ${categoryInfo.color} ${categoryInfo.textColor} font-bold rounded-md hover:opacity-90 transition-colors`}
+              className={`inline-block px-6 py-3 bg-gray-800 ${categoryInfo.textColor} font-bold rounded-md hover:bg-gray-700 transition-colors border ${categoryInfo.borderColor}`}
             >
               Create New Page
             </Link>

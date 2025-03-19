@@ -46,8 +46,7 @@ export default function WikiSearchPage() {
           const results = processedPages.filter(page => 
             page.title.toLowerCase().includes(lowerQuery) || 
             page.description.toLowerCase().includes(lowerQuery) ||
-            (page.tags && Array.isArray(page.tags) && page.tags.some((tag: string) => tag.toLowerCase().includes(lowerQuery))) ||
-            (page.content && page.content.toLowerCase().includes(lowerQuery))
+            (page.tags && Array.isArray(page.tags) && page.tags.some((tag: string) => tag.toLowerCase().includes(lowerQuery)))
           );
           
           setSearchResults(results);
@@ -215,7 +214,7 @@ export default function WikiSearchPage() {
               <form onSubmit={handleSearch} className="flex items-center">
                 <input
                   type="text"
-                  placeholder="Search for anything in the GTA 6 Wiki..."
+                  placeholder="Search titles, tags, and descriptions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-transparent px-5 py-3 text-white focus:outline-none"
@@ -280,13 +279,12 @@ export default function WikiSearchPage() {
                         <button
                           key={category}
                           onClick={() => setActiveFilter(category)}
-                          className={`px-3 py-1.5 rounded-full text-sm border flex items-center
+                          className={`px-3 py-1.5 rounded-full text-sm border
                             ${activeFilter === category 
                               ? `${catInfo?.color || 'bg-gta-blue'} ${catInfo?.textColor || 'text-white'} ${catInfo?.borderColor || 'border-blue-500'}` 
                               : 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
                             } transition-colors`}
                         >
-                          <span className="mr-1">{catInfo?.icon}</span>
                           {catInfo?.title || category}
                           <span className="ml-1">({resultsByCategory[category].length})</span>
                         </button>
@@ -319,6 +317,50 @@ export default function WikiSearchPage() {
                     >
                       Browse All Wiki Categories
                     </Link>
+                  </div>
+                </div>
+              )}
+              
+              {(!query || totalResults === 0) && (
+                <div className="mt-6 animate-fadeIn">
+                  <div className="border-t border-gray-700 pt-6">
+                    <h3 className="text-xl font-bold text-white mb-6">Don't know what to search? Browse categories instead</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {WIKI_CATEGORIES.map((category, index) => (
+                        <Link 
+                          key={category.id}
+                          href={`/wiki/${category.id}`}
+                          className="relative group bg-gray-800/80 backdrop-blur-sm p-4 rounded-lg border border-gray-700 overflow-hidden transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex items-center"
+                        >
+                          {/* Color accent */}
+                          <div 
+                            className={`absolute top-0 left-0 w-2 h-full transition-all duration-500 group-hover:w-full group-hover:opacity-90 opacity-100`}
+                            style={{
+                              backgroundColor: 
+                                category.id === 'characters' ? '#F152FF' : 
+                                category.id === 'missions' ? '#52FDFF' : 
+                                category.id === 'locations' ? '#56FF52' : 
+                                category.id === 'vehicles' ? '#FFE552' : 
+                                category.id === 'weapons' ? '#FF5252' : 
+                                category.id === 'activities' ? '#AC52FF' : '#F152FF'
+                            }}
+                          ></div>
+                          
+                          {/* Card gradient background */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-800/95 to-gray-900 transition-opacity duration-300 group-hover:opacity-40"></div>
+                          
+                          <div className="relative z-10 flex items-center">
+                            <div className="w-10 h-10 flex items-center justify-center mr-3 group-hover:scale-110 transition-all duration-300">
+                              <img src={category.icon} alt={category.title} className="max-w-full max-h-full" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-white transition-colors">{category.title}</h3>
+                              <p className="text-xs text-gray-300 mt-1 line-clamp-1">{category.description}</p>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -361,14 +403,6 @@ export default function WikiSearchPage() {
                           </span>
                         </div>
                         
-                        {page.content && query && (
-                          <div className="mb-4 bg-gray-900/50 p-3 rounded-md">
-                            <p className="text-sm text-gray-400 italic">
-                              {highlightSearchTerms(getContentSnippet(page.content, query), query)}
-                            </p>
-                          </div>
-                        )}
-                        
                         <div className="flex flex-wrap items-center justify-between mt-4">
                           {page.tags && Array.isArray(page.tags) && page.tags.length > 0 && (
                             <div className="flex flex-wrap gap-2 mr-4">
@@ -392,69 +426,6 @@ export default function WikiSearchPage() {
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-            
-            {/* Category Results Summary */}
-            {Object.keys(resultsByCategory).length > 1 && filteredResults.length > 0 && !activeFilter && (
-              <div className="mt-16">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-white border-l-4 border-gta-blue pl-4">
-                    Results by Category
-                  </h2>
-                  <div className="h-0.5 flex-grow ml-6 bg-gradient-to-r from-gta-blue to-transparent"></div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fadeIn">
-                  {Object.entries(resultsByCategory).map(([category, pages], index) => {
-                    const catInfo = WIKI_CATEGORIES.find(cat => cat.id === category);
-                    return (
-                      <div 
-                        key={category}
-                        className={`bg-gray-800/70 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-700/50 animate-fadeInUp`}
-                        style={{ animationDelay: `${0.2 + index * 0.1}s` }}
-                      >
-                        <div className={`${catInfo?.color || 'bg-gray-700'} p-4`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              <span className="text-2xl mr-2">{catInfo?.icon}</span>
-                              <h3 className={`${catInfo?.textColor || 'text-white'} font-bold`}>
-                                {catInfo?.title || category}
-                              </h3>
-                            </div>
-                            <span className="rounded-full bg-black/30 text-white text-sm px-2 py-0.5">
-                              {pages.length}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <ul className="divide-y divide-gray-700">
-                            {pages.slice(0, 3).map(page => (
-                              <li key={page.id} className="py-2">
-                                <Link 
-                                  href={`/wiki/${page.category}/${page.slug}`}
-                                  className="text-white hover:text-gta-blue transition-colors"
-                                >
-                                  {highlightSearchTerms(page.title, query)}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                          {pages.length > 3 && (
-                            <div className="pt-2 text-center">
-                              <button 
-                                onClick={() => setActiveFilter(category)}
-                                className="text-sm text-gta-blue hover:text-gta-pink transition-colors"
-                              >
-                                View all {pages.length} results
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             )}
           </>
