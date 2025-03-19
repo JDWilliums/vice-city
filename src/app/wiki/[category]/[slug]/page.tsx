@@ -1063,8 +1063,9 @@ function getWikiPage(slug) {
         }
         
         .markdown-content a {
-          color: #63b3ed;
+          color: #f152ff;
           text-decoration: none;
+          font-weight: bold;
               transition: all 0.2s;
               border-bottom: 1px solid transparent;
             }
@@ -1152,7 +1153,7 @@ function getWikiPage(slug) {
             
             .markdown-content ul li::before {
               content: "•";
-              color: #ff6b81;
+              color: #f152ff;
               position: absolute;
               left: 0;
               font-weight: bold;
