@@ -119,6 +119,12 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
             >
               NEWS
             </Link>
+            <Link 
+              href="/gallery" 
+              className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
+            >
+              GALLERY
+            </Link>
             {isAdmin && (
               <Link 
                 href="/tools" 
@@ -280,6 +286,13 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 NEWS
+              </Link>
+              <Link 
+                href="/gallery" 
+                className="text-white hover:text-gta-pink transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-pink"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                GALLERY
               </Link>
               <Link 
                 href="/tools" 
