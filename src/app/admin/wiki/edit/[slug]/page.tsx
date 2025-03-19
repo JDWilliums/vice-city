@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import WikiEditor from '@/components/wiki/WikiEditor';
+import { getWikiPage, deleteWikiPage, unarchiveWikiPage } from '@/lib/wikiFirestoreService';
+import { ArchiveBoxIcon, ArchiveBoxXMarkIcon } from '@heroicons/react/24/outline';
 
 export default function EditWikiPage() {
   const { user, isAdmin } = useAuth();
@@ -14,6 +16,34 @@ export default function EditWikiPage() {
   const params = useParams();
   const pageId = params.slug as string;
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [pageData, setPageData] = useState<any>(null);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [showUnarchiveConfirm, setShowUnarchiveConfirm] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState(false);
+  
+  // Load page data to determine if it's archived
+  useEffect(() => {
+    async function loadPageData() {
+      if (!pageId) return;
+      
+      try {
+        setLoading(true);
+        const data = await getWikiPage(pageId);
+        setPageData(data);
+      } catch (error) {
+        console.error("Error loading wiki page:", error);
+        setErrorMessage("Failed to load wiki page data");
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    if (user && isAdmin) {
+      loadPageData();
+    }
+  }, [pageId, user, isAdmin]);
   
   // Handle successful page update
   const handleSuccess = (updatedPageId: string) => {
@@ -27,7 +57,52 @@ export default function EditWikiPage() {
   
   // Handle errors during page update
   const handleError = (error: string) => {
+    setErrorMessage(`Error: ${error}`);
     console.error('Error updating wiki page:', error);
+  };
+  
+  // Handle archive confirmation
+  const handleArchiveConfirm = async () => {
+    if (!user || !pageId) return;
+    
+    try {
+      setActionInProgress(true);
+      await deleteWikiPage(pageId, user);
+      setSuccessMessage('Wiki page archived successfully! Redirecting...');
+      setShowArchiveConfirm(false);
+      
+      // Redirect to the admin dashboard after 2 seconds
+      setTimeout(() => {
+        router.push('/admin/wiki');
+      }, 2000);
+    } catch (error) {
+      setErrorMessage(`Failed to archive: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error archiving wiki page:', error);
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+  
+  // Handle unarchive confirmation
+  const handleUnarchiveConfirm = async () => {
+    if (!user || !pageId) return;
+    
+    try {
+      setActionInProgress(true);
+      await unarchiveWikiPage(pageId, user, 'published');
+      setSuccessMessage('Wiki page unarchived and published successfully! Redirecting...');
+      setShowUnarchiveConfirm(false);
+      
+      // Redirect to the admin dashboard after 2 seconds
+      setTimeout(() => {
+        router.push('/admin/wiki');
+      }, 2000);
+    } catch (error) {
+      setErrorMessage(`Failed to unarchive: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error unarchiving wiki page:', error);
+    } finally {
+      setActionInProgress(false);
+    }
   };
   
   // Not logged in or not an admin
@@ -60,22 +135,112 @@ export default function EditWikiPage() {
       <Navbar />
       
       <main className="flex-grow container mx-auto px-4 py-12 mt-16">
-        <div className="mb-8 flex items-center">
-          <Link
-            href="/admin/wiki"
-            className="mr-4 p-2 hover:bg-gray-800 rounded-full"
-          >
-            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
-          </Link>
-          <h1 className="text-3xl font-bold text-white">Edit Wiki Page</h1>
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center">
+            <Link
+              href="/admin/wiki"
+              className="mr-4 p-2 hover:bg-gray-800 rounded-full"
+            >
+              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+              </svg>
+            </Link>
+            <h1 className="text-3xl font-bold text-white">Edit Wiki Page</h1>
+          </div>
+          
+          {!loading && pageData && (
+            <div className="flex space-x-4">
+              {pageData.status !== 'archived' ? (
+                <button
+                  onClick={() => setShowArchiveConfirm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-700/30 hover:bg-red-700/60 text-white rounded-md transition-colors"
+                  disabled={actionInProgress}
+                >
+                  <ArchiveBoxIcon className="h-5 w-5" />
+                  Archive
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowUnarchiveConfirm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-700/30 hover:bg-green-700/60 text-white rounded-md transition-colors"
+                  disabled={actionInProgress}
+                >
+                  <ArchiveBoxXMarkIcon className="h-5 w-5" />
+                  Unarchive
+                </button>
+              )}
+            </div>
+          )}
         </div>
         
         {/* Success message */}
         {successMessage && (
           <div className="mb-6 p-4 bg-green-900/50 border border-green-600 rounded-lg">
             <p className="text-green-300">{successMessage}</p>
+          </div>
+        )}
+        
+        {/* Error message */}
+        {errorMessage && (
+          <div className="mb-6 p-4 bg-red-900/50 border border-red-600 rounded-lg">
+            <p className="text-red-300">{errorMessage}</p>
+          </div>
+        )}
+        
+        {/* Archive Confirmation Dialog */}
+        {showArchiveConfirm && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm z-50">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 max-w-md">
+              <h3 className="text-xl font-bold text-white mb-4">Archive Page?</h3>
+              <p className="text-gray-300 mb-6">
+                This will archive the page and it will no longer be visible to users.
+                You can unarchive it later if needed.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowArchiveConfirm(false)}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
+                  disabled={actionInProgress}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleArchiveConfirm}
+                  className="px-4 py-2 bg-red-700 text-white rounded-md hover:bg-red-600 transition-colors"
+                  disabled={actionInProgress}
+                >
+                  {actionInProgress ? 'Archiving...' : 'Archive'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Unarchive Confirmation Dialog */}
+        {showUnarchiveConfirm && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm z-50">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 max-w-md">
+              <h3 className="text-xl font-bold text-white mb-4">Unarchive Page?</h3>
+              <p className="text-gray-300 mb-6">
+                This will unarchive the page and publish it, making it visible to users again.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowUnarchiveConfirm(false)}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
+                  disabled={actionInProgress}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUnarchiveConfirm}
+                  className="px-4 py-2 bg-green-700 text-white rounded-md hover:bg-green-600 transition-colors"
+                  disabled={actionInProgress}
+                >
+                  {actionInProgress ? 'Unarchiving...' : 'Unarchive & Publish'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
         

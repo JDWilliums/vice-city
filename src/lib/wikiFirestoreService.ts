@@ -818,4 +818,60 @@ export function generateSlug(title: string): string {
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/--+/g, '-') // Replace multiple hyphens with single hyphen
     .trim();
+}
+
+/**
+ * Unarchives a wiki page (reactivates a previously archived page)
+ */
+export async function unarchiveWikiPage(pageId: string, user: User, newStatus: 'published' | 'draft' = 'published'): Promise<void> {
+  try {
+    if (!isFirestoreAvailable) {
+      throw new Error('Using localStorage fallback');
+    }
+    
+    const pageRef = doc(db, 'wiki-pages', pageId);
+    
+    // Update status to published or draft, depending on parameter
+    await updateDoc(pageRef, {
+      status: newStatus,
+      updatedAt: serverTimestamp() as Timestamp,
+      lastUpdatedBy: {
+        uid: user.uid,
+        displayName: user.displayName || 'Unknown User',
+      },
+    });
+    
+    // Create an unarchive revision
+    const pageSnap = await getDoc(pageRef);
+    if (pageSnap.exists()) {
+      const pageData = pageSnap.data() as WikiPageFirestore;
+      await createRevision(pageData, user, `Page unarchived and set to ${newStatus}`);
+    }
+  } catch (error) {
+    console.error('Firestore error, using localStorage fallback:', error);
+    isFirestoreAvailable = false;
+    
+    // Get existing pages from localStorage
+    const existingPages = getLocalWikiPages();
+    const pageIndex = existingPages.findIndex(page => page.id === pageId);
+    
+    if (pageIndex === -1) {
+      throw new Error(`Wiki page with ID ${pageId} not found`);
+    }
+    
+    // Update the page status
+    const pageData = existingPages[pageIndex];
+    pageData.status = newStatus;
+    pageData.updatedAt = createTimestamp();
+    pageData.lastUpdatedBy = {
+      uid: user.uid,
+      displayName: user.displayName || 'Unknown User',
+    };
+    
+    // Save the updated pages
+    saveLocalWikiPages(existingPages);
+    
+    // Create an unarchive revision
+    await createRevision(pageData, user, `Page unarchived and set to ${newStatus}`);
+  }
 } 
