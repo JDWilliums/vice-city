@@ -8,7 +8,7 @@ import { WikiPageFirestore, createWikiPage, updateWikiPage, getWikiPage, generat
 import MarkdownEditor from './MarkdownEditor';
 import WikiDetailsEditor from './WikiDetailsEditor';
 import { WIKI_CATEGORIES } from '@/data/wikiData';
-import { TagIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { TagIcon, XMarkIcon, PlusIcon, CheckIcon, PencilIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 
 interface WikiEditorProps {
@@ -65,6 +65,18 @@ export default function WikiEditor({
   
   // New state for gallery image input
   const [newGalleryImage, setNewGalleryImage] = useState<string>('');
+  
+  // New state for gallery image error
+  const [galleryImageError, setGalleryImageError] = useState('');
+  
+  // New state for editing gallery image
+  const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null);
+  
+  // New state for preview image
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  
+  // New state for featured image error
+  const [featuredImageError, setFeaturedImageError] = useState('');
   
   // Load existing page data if editing
   useEffect(() => {
@@ -159,13 +171,40 @@ export default function WikiEditor({
   
   // Handle adding gallery image
   const handleAddGalleryImage = () => {
-    if (newGalleryImage.trim() && !formData.galleryImages.includes(newGalleryImage.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        galleryImages: [...prev.galleryImages, newGalleryImage.trim()]
-      }));
-      setNewGalleryImage('');
+    if (!newGalleryImage.trim()) return;
+    
+    let formattedImage = newGalleryImage.trim();
+    setGalleryImageError('');
+    
+    // Check if it's a local image path (not an external URL)
+    const isLocalImagePath = !formattedImage.startsWith('http') && 
+      (formattedImage.endsWith('.png') || 
+       formattedImage.endsWith('.jpg') || 
+       formattedImage.endsWith('.jpeg') || 
+       formattedImage.endsWith('.gif') || 
+       formattedImage.endsWith('.webp'));
+       
+    // For local images, ensure they start with /images/
+    if (isLocalImagePath) {
+      if (formattedImage.startsWith('images/')) {
+        formattedImage = `/${formattedImage}`;
+      } else if (!formattedImage.startsWith('/images/')) {
+        setGalleryImageError('Local image paths should start with "/images/"');
+        return;
+      }
     }
+    
+    // Check if image already exists in gallery
+    if (formData.galleryImages.includes(formattedImage)) {
+      setGalleryImageError('This image has already been added to the gallery');
+      return;
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      galleryImages: [...prev.galleryImages, formattedImage]
+    }));
+    setNewGalleryImage('');
   };
   
   // Handle removing gallery image
@@ -203,17 +242,191 @@ export default function WikiEditor({
     }
   };
   
-  // Handle gallery image input keypress (add image on Enter)
+  // Handle editing gallery image
+  const handleEditGalleryImage = (index: number) => {
+    setEditingImageIndex(index);
+    setNewGalleryImage(formData.galleryImages[index]);
+    setGalleryImageError('');
+  };
+  
+  // Handle updating gallery image
+  const handleUpdateGalleryImage = () => {
+    if (editingImageIndex === null) return handleAddGalleryImage();
+    
+    if (!newGalleryImage.trim()) {
+      setGalleryImageError('Image path cannot be empty');
+      return;
+    }
+    
+    let formattedImage = newGalleryImage.trim();
+    setGalleryImageError('');
+    
+    // Check if it's a local image path (not an external URL)
+    const isLocalImagePath = !formattedImage.startsWith('http') && 
+      (formattedImage.endsWith('.png') || 
+       formattedImage.endsWith('.jpg') || 
+       formattedImage.endsWith('.jpeg') || 
+       formattedImage.endsWith('.gif') || 
+       formattedImage.endsWith('.webp'));
+       
+    // For local images, ensure they start with /images/
+    if (isLocalImagePath) {
+      if (formattedImage.startsWith('images/')) {
+        formattedImage = `/${formattedImage}`;
+      } else if (!formattedImage.startsWith('/images/')) {
+        setGalleryImageError('Local image paths should start with "/images/"');
+        return;
+      }
+    }
+    
+    // Check if image already exists in gallery (except for the one being edited)
+    const otherImages = formData.galleryImages.filter((_, idx) => idx !== editingImageIndex);
+    if (otherImages.includes(formattedImage)) {
+      setGalleryImageError('This image has already been added to the gallery');
+      return;
+    }
+    
+    setFormData(prev => {
+      const newGalleryImages = [...prev.galleryImages];
+      newGalleryImages[editingImageIndex!] = formattedImage;
+      return {
+        ...prev,
+        galleryImages: newGalleryImages
+      };
+    });
+    
+    setNewGalleryImage('');
+    setEditingImageIndex(null);
+  };
+  
+  // Handle cancel editing
+  const handleCancelEditing = () => {
+    setNewGalleryImage('');
+    setEditingImageIndex(null);
+    setGalleryImageError('');
+  };
+  
+  // Update gallery image input keypress handler
   const handleGalleryImageKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleAddGalleryImage();
+      if (editingImageIndex !== null) {
+        handleUpdateGalleryImage();
+      } else {
+        handleAddGalleryImage();
+      }
+    } else if (e.key === 'Escape' && editingImageIndex !== null) {
+      e.preventDefault();
+      handleCancelEditing();
     }
   };
   
   // Add handler for details changes
   const handleDetailsChange = (details: WikiPageDetail[]) => {
     setFormData(prev => ({ ...prev, details }));
+  };
+  
+  // Handle fixing all gallery image paths
+  const handleFixAllImagePaths = () => {
+    const fixedImages = formData.galleryImages.map(url => {
+      // Don't modify external URLs
+      if (url.startsWith('http')) return url;
+      
+      // Fix images/ to /images/
+      if (url.startsWith('images/') && !url.startsWith('/images/')) {
+        return `/${url}`;
+      }
+      
+      // If path is a local image but doesn't start with /images/, add the prefix
+      const isLocalImage = 
+        url.endsWith('.png') || 
+        url.endsWith('.jpg') || 
+        url.endsWith('.jpeg') || 
+        url.endsWith('.gif') || 
+        url.endsWith('.webp');
+        
+      if (isLocalImage && !url.startsWith('/')) {
+        // Check if it needs /images/ or just /
+        if (url.startsWith('images/')) {
+          return `/${url}`;
+        } else if (!url.startsWith('/images/')) {
+          return `/images/${url}`;
+        }
+      }
+      
+      return url;
+    });
+    
+    // Check if any changes were made
+    const pathsFixed = JSON.stringify(fixedImages) !== JSON.stringify(formData.galleryImages);
+    
+    setFormData(prev => ({
+      ...prev,
+      galleryImages: fixedImages
+    }));
+    
+    if (pathsFixed) {
+      setSuccessMessage('All gallery image paths have been fixed');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } else {
+      setSuccessMessage('All paths are already correctly formatted');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    }
+  };
+  
+  // Handle featured image input change
+  const handleFeaturedImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Update the form data
+    handleInputChange(e);
+    
+    // Clear any previous error
+    setFeaturedImageError('');
+  };
+  
+  // Function to fix featured image path
+  const handleFixFeaturedImagePath = () => {
+    const imageUrl = formData.imageUrl;
+    
+    // Don't modify if empty
+    if (!imageUrl.trim()) return;
+    
+    // Don't modify external URLs
+    if (imageUrl.startsWith('http')) return;
+    
+    let fixedUrl = imageUrl.trim();
+    
+    // Fix images/ to /images/
+    if (fixedUrl.startsWith('images/') && !fixedUrl.startsWith('/images/')) {
+      fixedUrl = `/${fixedUrl}`;
+    } 
+    // Check if it's a local image that doesn't start with /images/
+    else if (!fixedUrl.startsWith('/images/') && !fixedUrl.startsWith('http')) {
+      const isLocalImage = 
+        fixedUrl.endsWith('.png') || 
+        fixedUrl.endsWith('.jpg') || 
+        fixedUrl.endsWith('.jpeg') || 
+        fixedUrl.endsWith('.gif') || 
+        fixedUrl.endsWith('.webp');
+        
+      if (isLocalImage) {
+        fixedUrl = `/images/${fixedUrl}`;
+      }
+    }
+    
+    // Only update if the URL was actually changed
+    if (fixedUrl !== imageUrl) {
+      setFormData(prev => ({
+        ...prev,
+        imageUrl: fixedUrl
+      }));
+      setSuccessMessage('Featured image path has been fixed');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } else {
+      setSuccessMessage('Featured image path is already correctly formatted');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    }
   };
   
   // Handle form submission
@@ -248,10 +461,53 @@ export default function WikiEditor({
         throw new Error(`Please fix the following issues before ${publishStatus === 'published' ? 'publishing' : 'saving'}:\n• ${validationErrors.join('\n• ')}`);
       }
       
+      // Auto-format the featured image URL
+      let formattedImageUrl = formData.imageUrl.trim();
+      if (formattedImageUrl && !formattedImageUrl.startsWith('http')) {
+        if (formattedImageUrl.startsWith('images/') && !formattedImageUrl.startsWith('/images/')) {
+          formattedImageUrl = `/${formattedImageUrl}`;
+        } else if (!formattedImageUrl.startsWith('/images/')) {
+          const isLocalImage = 
+            formattedImageUrl.endsWith('.png') || 
+            formattedImageUrl.endsWith('.jpg') || 
+            formattedImageUrl.endsWith('.jpeg') || 
+            formattedImageUrl.endsWith('.gif') || 
+            formattedImageUrl.endsWith('.webp');
+            
+          if (isLocalImage) {
+            formattedImageUrl = `/images/${formattedImageUrl}`;
+          }
+        }
+      }
+      
+      // Auto-format all gallery image URLs
+      const formattedGalleryImages = formData.galleryImages.map(url => {
+        if (url.startsWith('http')) return url;
+        
+        if (url.startsWith('images/') && !url.startsWith('/images/')) {
+          return `/${url}`;
+        } 
+        
+        if (!url.startsWith('/images/')) {
+          const isLocalImage = 
+            url.endsWith('.png') || 
+            url.endsWith('.jpg') || 
+            url.endsWith('.jpeg') || 
+            url.endsWith('.gif') || 
+            url.endsWith('.webp');
+            
+          if (isLocalImage) {
+            return `/images/${url}`;
+          }
+        }
+        
+        return url;
+      });
+      
       // Generate slug if not editing
       const slug = pageId ? formData.slug : generateSlug(formData.title);
       
-      // Prepare page data
+      // Prepare page data with formatted image URLs
       const pageData: Omit<WikiPageFirestore, 'createdAt' | 'updatedAt'> = {
         id: pageId || '', // Will be set by createWikiPage if new
         slug,
@@ -260,8 +516,8 @@ export default function WikiEditor({
         category: formData.category,
         subcategory: formData.subcategory || '',
         content: formData.content,
-        imageUrl: formData.imageUrl.trim(),
-        galleryImages: formData.galleryImages || [],
+        imageUrl: formattedImageUrl,
+        galleryImages: formattedGalleryImages,
         tags: formData.tags || [],
         details: formData.details || [],
         createdBy: {
@@ -293,6 +549,19 @@ export default function WikiEditor({
       if (onError) onError(error as Error);
     } finally {
       setSaving(false);
+    }
+  };
+  
+  // Update newGalleryImage and set preview
+  const handleGalleryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewGalleryImage(value);
+    
+    // Only set preview if there's a value
+    if (value.trim()) {
+      setPreviewImage(value.trim());
+    } else {
+      setPreviewImage(null);
     }
   };
   
@@ -417,41 +686,75 @@ export default function WikiEditor({
         
         {/* Featured Image */}
         <div className="mt-8">
-          <div className="flex items-center">
-            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-300 mb-2">
+          <div className="flex items-center mb-2">
+            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-300">
               Featured Image URL <span className="text-red-500">*</span>
             </label>
             {!formData.imageUrl && <span className="ml-2 text-sm text-gray-500">(Required for publishing)</span>}
+            <div className="relative ml-2 group">
+              <InformationCircleIcon className="h-5 w-5 text-gray-400 hover:text-gray-300" />
+              <div className="hidden group-hover:block absolute left-0 bottom-full mb-2 w-64 p-2 bg-gray-800 text-xs text-gray-300 rounded-md shadow-lg z-10">
+                <p className="mb-1"><strong>Image Path Requirements:</strong></p>
+                <p className="mb-1">• Local images should start with <code className="bg-gray-700 p-0.5 rounded">/images/</code></p>
+                <p className="mb-1">• Paths starting with <code className="bg-gray-700 p-0.5 rounded">images/</code> will be automatically corrected</p>
+                <p>• External URLs should start with <code className="bg-gray-700 p-0.5 rounded">http://</code> or <code className="bg-gray-700 p-0.5 rounded">https://</code></p>
+              </div>
+            </div>
           </div>
-          <input
-            type="text"
-            id="imageUrl"
-            name="imageUrl"
-            value={formData.imageUrl}
-            onChange={handleInputChange}
-            onBlur={handleBlur}
-            className={`mt-1 block w-full bg-gray-800 border ${getFieldError('imageUrl') ? 'border-red-500' : 'border-gray-700'} rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue`}
-            placeholder="images/character-1.png or any URL to an image"
-            required
-          />
+          <div className="flex">
+            <input
+              type="text"
+              id="imageUrl"
+              name="imageUrl"
+              value={formData.imageUrl}
+              onChange={handleFeaturedImageChange}
+              onBlur={handleBlur}
+              className={`block w-full bg-gray-800 border ${getFieldError('imageUrl') ? 'border-red-500' : 'border-gray-700'} rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue`}
+              placeholder="/images/featured-image.png or any URL to an image"
+              required
+            />
+            <button
+              type="button"
+              onClick={handleFixFeaturedImagePath}
+              className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gta-blue hover:bg-gta-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gta-blue"
+            >
+              <CheckIcon className="h-5 w-5 mr-1" />
+              Fix Path
+            </button>
+          </div>
+          
           {getFieldError('imageUrl') && (
             <p className="mt-1 text-sm text-red-500">Featured image URL is required for publishing</p>
           )}
           
+          {featuredImageError && (
+            <p className="mt-1 text-sm text-red-500">{featuredImageError}</p>
+          )}
+          
           {/* Preview of the featured image */}
           {formData.imageUrl && (
-            <div className="mt-2 relative rounded-md overflow-hidden">
-              <div className="aspect-w-16 aspect-h-9 max-h-64 relative">
+            <div className="mt-4 flex items-start">
+              <div className="w-64 h-40 relative rounded-md overflow-hidden border border-gray-700">
                 <Image 
                   src={formData.imageUrl} 
                   alt="Featured image preview" 
                   fill 
-                  style={{ objectFit: 'contain' }}
+                  style={{ objectFit: 'cover' }}
                   className="rounded-md" 
                   onError={(e) => {
                     e.currentTarget.src = '/images/placeholder.png';
+                    setFeaturedImageError('Unable to load image. Please check the URL.');
                   }}
                 />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-sm font-medium text-gray-300 mb-2">Featured Image Preview</h3>
+                <p className="text-xs text-gray-400 mb-2">This image will be displayed at the top of your wiki page.</p>
+                <p className="text-xs text-gray-400">
+                  {formData.imageUrl.startsWith('/images/') || formData.imageUrl.startsWith('https://') || formData.imageUrl.startsWith('http://') 
+                    ? '✓ Valid image path format' 
+                    : '⚠️ Path may need correction - click "Fix Path"'}
+                </p>
               </div>
             </div>
           )}
@@ -459,55 +762,141 @@ export default function WikiEditor({
         
         {/* Gallery Images */}
         <div className="mt-8">
-          <label htmlFor="galleryImages" className="block text-sm font-medium text-gray-300 mb-2">
-            Gallery Images (Optional)
-          </label>
+          <div className="flex items-center mb-2">
+            <label htmlFor="galleryImages" className="block text-sm font-medium text-gray-300">
+              Gallery Images (Optional)
+            </label>
+            <div className="relative ml-2 group">
+              <InformationCircleIcon className="h-5 w-5 text-gray-400 hover:text-gray-300" />
+              <div className="hidden group-hover:block absolute left-0 bottom-full mb-2 w-64 p-2 bg-gray-800 text-xs text-gray-300 rounded-md shadow-lg z-10">
+                <p className="mb-1"><strong>Image Path Requirements:</strong></p>
+                <p className="mb-1">• Local images should start with <code className="bg-gray-700 p-0.5 rounded">/images/</code></p>
+                <p className="mb-1">• Paths starting with <code className="bg-gray-700 p-0.5 rounded">images/</code> will be automatically corrected</p>
+                <p>• External URLs should start with <code className="bg-gray-700 p-0.5 rounded">http://</code> or <code className="bg-gray-700 p-0.5 rounded">https://</code></p>
+              </div>
+            </div>
+          </div>
           <div className="flex">
             <input
               type="text"
               id="galleryImages"
               value={newGalleryImage}
-              onChange={(e) => setNewGalleryImage(e.target.value)}
+              onChange={handleGalleryImageChange}
               onKeyPress={handleGalleryImageKeyPress}
               className="block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-gta-blue focus:border-gta-blue"
-              placeholder="images/gallery-1.png or any URL to an image"
+              placeholder="/images/gallery-1.png or any URL to an image"
             />
-            <button
-              type="button"
-              onClick={handleAddGalleryImage}
-              className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gta-blue hover:bg-gta-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gta-blue"
-            >
-              <PlusIcon className="h-5 w-5 mr-1" />
-              Add
-            </button>
+            {editingImageIndex !== null ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleUpdateGalleryImage}
+                  className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  <CheckIcon className="h-5 w-5 mr-1" />
+                  Update
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelEditing}
+                  className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  <XMarkIcon className="h-5 w-5 mr-1" />
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAddGalleryImage}
+                className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gta-blue hover:bg-gta-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gta-blue"
+              >
+                <PlusIcon className="h-5 w-5 mr-1" />
+                Add
+              </button>
+            )}
           </div>
+          
+          {galleryImageError && (
+            <p className="mt-1 text-sm text-red-500">{galleryImageError}</p>
+          )}
+          
+          {/* Preview image */}
+          {previewImage && (
+            <div className="mt-2 flex items-center">
+              <div className="w-32 h-20 relative border border-gray-700 rounded-md overflow-hidden">
+                <Image 
+                  src={previewImage} 
+                  alt="Image preview" 
+                  fill 
+                  style={{ objectFit: 'cover' }}
+                  className="rounded-md" 
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/placeholder.png';
+                  }}
+                />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-gray-300">Image preview</p>
+                <p className="text-xs text-gray-400">
+                  {previewImage.startsWith('/images/') || previewImage.startsWith('https://') || previewImage.startsWith('http://') 
+                    ? '✓ Valid image path format' 
+                    : '⚠️ Path may need correction'}
+                </p>
+              </div>
+            </div>
+          )}
           
           {/* Display gallery images */}
           {formData.galleryImages.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
               {formData.galleryImages.map((url, index) => (
-                <div key={index} className="relative rounded-md overflow-hidden group">
+                <div key={index} className="relative rounded-md overflow-hidden bg-gray-800 border border-gray-700 group">
                   <div className="aspect-w-16 aspect-h-9 relative">
                     <Image 
                       src={url} 
                       alt={`Gallery image ${index + 1}`} 
                       fill 
                       style={{ objectFit: 'cover' }}
-                      className="rounded-md" 
+                      className="rounded-t-md" 
                       onError={(e) => {
                         e.currentTarget.src = '/images/placeholder.png';
                       }}
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveGalleryImage(url)}
-                    className="absolute top-2 right-2 inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    <XMarkIcon className="h-5 w-5" aria-hidden="true" />
-                  </button>
+                  <div className="p-2 text-xs text-gray-300 truncate">
+                    {url}
+                  </div>
+                  <div className="absolute top-2 right-2 flex">
+                    <button
+                      type="button"
+                      onClick={() => handleEditGalleryImage(index)}
+                      className="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-1"
+                    >
+                      <PencilIcon className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveGalleryImage(url)}
+                      className="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      <XMarkIcon className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
               ))}
+            </div>
+          )}
+          
+          {formData.galleryImages.length > 0 && (
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={handleFixAllImagePaths}
+                className="text-sm text-gray-300 hover:text-white"
+              >
+                Fix all image paths
+              </button>
             </div>
           )}
         </div>
