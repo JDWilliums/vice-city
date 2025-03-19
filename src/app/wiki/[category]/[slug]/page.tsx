@@ -708,7 +708,7 @@ function getWikiPage(slug) {
                     </a>
                     <Link 
                       href={`/admin/wiki/edit/${pageData.id}`}
-                      className="inline-flex items-center px-5 py-2.5 bg-gta-blue text-white rounded-lg hover:bg-blue-600 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                      className="inline-flex items-center px-5 py-2.5 bg-gta-blue text-black rounded-lg hover:bg-blue-600 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                     >
                       <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -965,7 +965,7 @@ function getWikiPage(slug) {
               bottom: 0.25rem;
               width: 4px;
               border-radius: 4px;
-              background: linear-gradient(to bottom, #ff6b81, #ff4757);
+              background: #f152ff;
             }
             
             .markdown-content h3 {
@@ -991,12 +991,12 @@ function getWikiPage(slug) {
             }
             
             .markdown-content a:hover {
-              color: #ff6b81;
-              border-bottom-color: #ff6b81;
+              color: #f152ff;
+              border-bottom-color: #f152ff;
             }
             
             .markdown-content blockquote {
-              border-left: 4px solid #ff6b81;
+              border-left: 4px solid #f152ff;
               padding: 1.5rem;
               margin: 2rem 0;
               font-style: italic;
@@ -1009,9 +1009,9 @@ function getWikiPage(slug) {
               content: '"';
               position: absolute;
               top: -0.5rem;
-              left: -0.5rem;
+              right: 1.5rem;
               font-size: 4rem;
-              color: #ff6b81;
+              color: #f152ff;
               opacity: 0.2;
             }
             
@@ -1041,7 +1041,7 @@ function getWikiPage(slug) {
               left: 0;
               right: 0;
               height: 4px;
-              background: linear-gradient(to right, #ff6b81, #ff4757);
+              background: #f152ff;
               border-radius: 0.75rem 0.75rem 0 0;
             }
             
