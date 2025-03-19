@@ -31,7 +31,7 @@ interface WikiPageData {
   imageUrl: string;
   galleryImages?: string[];
   slug: string;
-  tags: string[];
+  tags?: string[];
   updatedAt: any;
   details?: WikiPageDetail[];
 }
