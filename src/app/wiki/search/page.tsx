@@ -183,7 +183,7 @@ export default function WikiSearchPage() {
       <Navbar transparent={true} />
       
       {/* Search Hero Header */}
-      <div className="relative py-16 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
+      <div className="relative py-28 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
         {/* Animated Gradients */}
         <div className="absolute inset-0 z-0 opacity-30">
           <div className="absolute top-0 -left-1/3 w-2/3 h-2/3 bg-gta-pink opacity-20 rounded-full blur-[150px] animate-pulse"></div>

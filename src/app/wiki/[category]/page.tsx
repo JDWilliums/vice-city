@@ -191,7 +191,7 @@ export default function WikiCategoryPage() {
       <Navbar transparent={true} />
       
       {/* Category Hero Header - with reduced color intensity */}
-      <div className="relative py-20 overflow-hidden">
+      <div className="relative py-28 overflow-hidden">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <Image 

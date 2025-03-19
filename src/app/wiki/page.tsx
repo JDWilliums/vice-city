@@ -299,7 +299,7 @@ export default function WikiHomePage() {
       <Navbar transparent={true} />
       
       {/* Hero Section with Search */}
-      <div className="relative min-h-[500px] flex items-center justify-center overflow-hidden bg-gradient-to-br z-99 from-gray-900 via-gray-800 to-gray-900">
+      <div className="relative min-h-[600px] flex items-center justify-center overflow-hidden bg-gradient-to-br z-10 from-gray-900 via-gray-800 to-gray-900 pt-20">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <Image 
@@ -319,7 +319,7 @@ export default function WikiHomePage() {
           <div className="absolute bottom-0 -right-1/3 w-2/3 h-2/3 bg-gta-blue opacity-10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
         
-        <div className="container mx-auto px-6 z-10 text-center relative">
+        <div className="container mx-auto px-6 z-10 text-center relative mt-10">
           <div className="animate-fadeIn">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
               GTA 6 <span className="text-gta-pink">Wiki</span>
@@ -386,22 +386,40 @@ export default function WikiHomePage() {
               </div>
             </div>
             
+            {/* Popular Tags */}
+            <div className="max-w-2xl mx-auto mb-8 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
+              <div className="flex flex-wrap gap-2 justify-center">
+                
+                {['Vice City', 'Jason', 'Lucia', 'Missions', 'Vehicles', 'Weapons', 'Map', 'Easter Eggs', 'Soundtrack'].map(tag => (
+                  <Link
+                    key={tag}
+                    href={`/wiki/search?q=${encodeURIComponent(tag)}`}
+                    className="px-3 py-1.5 bg-gray-800/80 backdrop-blur-sm rounded-full text-sm border border-gray-700 hover:bg-gray-700 hover:text-white transition-colors text-gray-300"
+                  >
+                    {tag}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            
             {error && (
               <div className="mt-4 bg-red-900/50 border border-red-500 text-red-100 px-4 py-3 rounded mx-auto max-w-2xl">
                 <p>{error}</p>
                 <p className="text-sm mt-2">Using placeholder content and local images.</p>
               </div>
-            )}
+               )}
+            </div>
+              
+            {/* Scroll indicator */}
+            <div className="mt-6 mb-4 flex justify-center animate-bounce">
+              <svg className="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </div>
           </div>
         </div>
         
-        {/* Scroll indicator */}
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center animate-bounce">
-          <svg className="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
-      </div>
+        
       
       <main className="flex-grow container mx-auto px-4 py-16 z-0">
         {/* Show diagnostic component only for admin users */}
