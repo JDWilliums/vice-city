@@ -6,32 +6,79 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { newsArticles, NewsArticle } from '@/data/newsData';
+import { NewsArticleFirestore, getNewsArticleBySlug, getAllNewsArticles } from '@/lib/newsFirestoreService';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 export default function ArticlePage() {
   const params = useParams();
   const slug = params.slug as string;
   
-  const [article, setArticle] = useState<NewsArticle | null>(null);
-  const [relatedArticles, setRelatedArticles] = useState<NewsArticle[]>([]);
+  const [article, setArticle] = useState<NewsArticleFirestore | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<NewsArticleFirestore[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Convert markdown to HTML
+  const renderMarkdown = (content: string) => {
+    const rawHtml = marked.parse(content) as string;
+    if (typeof window !== 'undefined') {
+      return DOMPurify.sanitize(rawHtml);
+    }
+    return rawHtml;
+  };
   
   useEffect(() => {
-    // Find the article with the matching slug
-    const currentArticle = newsArticles.find(a => a.slug === slug);
-    
-    if (currentArticle) {
-      setArticle(currentArticle);
-      
-      // Find related articles (same category, excluding current)
-      const related = newsArticles
-        .filter(a => a.category === currentArticle.category && a.id !== currentArticle.id)
-        .slice(0, 3);
-      
-      setRelatedArticles(related);
+    async function loadArticle() {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Get the article with the matching slug
+        const currentArticle = await getNewsArticleBySlug(slug);
+        
+        if (currentArticle) {
+          setArticle(currentArticle);
+          
+          // Get all published articles
+          const allArticles = await getAllNewsArticles(false);
+          
+          // Find related articles (same category, excluding current)
+          const related = allArticles
+            .filter(a => a.category === currentArticle.category && a.id !== currentArticle.id)
+            .slice(0, 3);
+          
+          setRelatedArticles(related);
+        } else {
+          setError('Article not found');
+        }
+      } catch (err) {
+        console.error('Error loading article:', err);
+        setError('Failed to load the article');
+      } finally {
+        setLoading(false);
+      }
     }
+    
+    loadArticle();
   }, [slug]);
   
-  if (!article) {
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col">
+        <Navbar />
+        <div className="h-14 w-full"></div>
+        <div className="flex-grow flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gta-blue"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+  
+  // Error or article not found
+  if (error || !article) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <Navbar />
@@ -47,6 +94,19 @@ export default function ArticlePage() {
       </div>
     );
   }
+  
+  // Format date
+  const formatDate = (date: any) => {
+    if (!date) return 'Unknown';
+    
+    const timestamp = typeof date === 'object' && date.toDate ? date.toDate() : new Date(date);
+    
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }).format(timestamp);
+  };
   
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -123,11 +183,7 @@ export default function ArticlePage() {
               </div>
               <span className="font-medium">{article.author}</span>
               <span className="mx-2">•</span>
-              <time dateTime={article.date} className="text-gray-400">{new Date(article.date).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}</time>
+              <time className="text-gray-400">{formatDate(article.createdAt)}</time>
             </div>
           </div>
         </div>
@@ -137,19 +193,21 @@ export default function ArticlePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="prose prose-lg prose-invert max-w-none">
-                {/* Render the article content as pre-formatted text without markdown */}
-                <div className="whitespace-pre-wrap">
-                  {article.content}
-                </div>
+                {/* Render the article content as HTML converted from markdown */}
+                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(article.content) }}></div>
               </div>
               
               {/* Tags */}
               <div className="mt-12 pt-6 border-t border-gray-800">
-                <span className="text-gray-400 mr-3">Tags:</span>
+                <span className="text-gray-400 mr-3">Category:</span>
                 <div className="inline-flex flex-wrap gap-2">
-                  <span className="px-2 py-1 bg-gray-800 rounded-full text-xs">{article.category}</span>
-                  <span className="px-2 py-1 bg-gray-800 rounded-full text-xs">GTA 6</span>
-                  <span className="px-2 py-1 bg-gray-800 rounded-full text-xs">Vice City</span>
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    article.category === 'news' ? 'bg-gta-blue' : 
+                    article.category === 'features' ? 'bg-gta-pink' : 
+                    'bg-gta-green'
+                  }`}>
+                    {article.category}
+                  </span>
                 </div>
               </div>
               
@@ -172,28 +230,32 @@ export default function ArticlePage() {
               <div className="sticky top-24">
                 <h3 className="text-xl font-bold mb-6 pb-2 border-b border-gray-800">Related Articles</h3>
                 <div className="space-y-6">
-                  {relatedArticles.map(related => (
-                    <Link key={related.id} href={`/news/${related.slug}`} className="block group">
-                      <div className="flex gap-4">
-                        <div className="w-24 h-24 relative flex-shrink-0 rounded overflow-hidden">
-                          <Image 
-                            src={related.imageUrl}
-                            alt={related.title}
-                            fill
-                            className="object-cover"
-                          />
+                  {relatedArticles.length > 0 ? (
+                    relatedArticles.map(related => (
+                      <Link key={related.id} href={`/news/${related.slug}`} className="block group">
+                        <div className="flex gap-4">
+                          <div className="w-24 h-24 relative flex-shrink-0 rounded overflow-hidden">
+                            <Image 
+                              src={related.imageUrl}
+                              alt={related.title}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div>
+                            <h4 className="font-bold line-clamp-2 group-hover:text-gta-blue transition-colors">
+                              {related.title}
+                            </h4>
+                            <p className="text-gray-400 text-sm mt-1">
+                              {formatDate(related.createdAt)}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-bold line-clamp-2 group-hover:text-gta-blue transition-colors">
-                            {related.title}
-                          </h4>
-                          <p className="text-gray-400 text-sm mt-1">
-                            {new Date(related.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="text-gray-400">No related articles found</p>
+                  )}
                 </div>
                 
                 <h3 className="text-xl font-bold mt-10 mb-6 pb-2 border-b border-gray-800">Categories</h3>

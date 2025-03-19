@@ -134,7 +134,7 @@ export default function ToolsPage() {
           <AdminBadge className="w-6 h-6" />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-rows-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Wiki Management */}
           <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:border-gta-pink transition-colors">
             <h2 className="text-xl font-bold text-white mb-4">Wiki Management</h2>
@@ -159,6 +159,15 @@ export default function ToolsPage() {
             <p className="text-gray-400 mb-4">Review and moderate user-generated content.</p>
             <Link href="/tools/moderation" className="px-4 py-2 bg-gta-green text-white rounded hover:bg-green-600 transition-colors inline-block">
               Moderate Content
+            </Link>
+          </div>
+
+          {/* News Management */}
+          <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:border-gta-pink transition-colors">
+            <h2 className="text-xl font-bold text-white mb-4">News Management</h2>
+            <p className="text-gray-400 mb-4">Create, edit, and manage news content.</p>
+            <Link href="/admin/news" className="px-4 py-2 bg-gta-pink text-white rounded hover:bg-pink-600 transition-colors inline-block">
+              Manage News
             </Link>
           </div>
         </div>
