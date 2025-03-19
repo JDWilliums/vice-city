@@ -4,6 +4,14 @@ import { User } from 'firebase/auth';
 import { WikiCategory } from './wikiHelpers';
 
 // Interface for wiki page content with Firestore timestamps
+export interface WikiPageDetail {
+  label: string;
+  value: string;
+  type: 'text' | 'badge' | 'link';
+  badgeColor?: 'green' | 'red' | 'blue' | 'yellow' | 'gray';
+  linkHref?: string;
+}
+
 export interface WikiPageFirestore {
   id: string;
   slug: string; // URL-friendly identifier
@@ -16,6 +24,7 @@ export interface WikiPageFirestore {
   galleryImages?: string[]; // Array of image URLs for the gallery
   relatedPages?: string[];
   tags?: string[];
+  details?: WikiPageDetail[]; // New field for the details table
   createdAt: Timestamp;
   updatedAt: Timestamp;
   createdBy: {
@@ -519,7 +528,23 @@ export async function getWikiPageBySlug(slug: string): Promise<WikiPageFirestore
     const querySnapshot = await getDocs(q);
     
     if (!querySnapshot.empty) {
-      return querySnapshot.docs[0].data() as WikiPageFirestore;
+      const doc = querySnapshot.docs[0];
+      const data = doc.data() as WikiPageFirestore;
+      data.id = doc.id; // Ensure the document ID is included
+      
+      // Log details badge info
+      if (data.details) {
+        console.log(`[getWikiPageBySlug] Found ${data.details.length} details for page "${data.title}"`);
+        data.details.forEach(detail => {
+          if (detail.type === 'badge') {
+            console.log(`[getWikiPageBySlug] Badge detail from Firestore: "${detail.label}" with value="${detail.value}", color="${detail.badgeColor}"`);
+          }
+        });
+      } else {
+        console.log(`[getWikiPageBySlug] No details found for page "${data.title}"`);
+      }
+      
+      return data;
     }
     
     return null;

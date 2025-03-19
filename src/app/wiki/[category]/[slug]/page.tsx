@@ -76,22 +76,12 @@ export default function WikiPage() {
           const placeholderPage = createPlaceholderPage();
           setPageData(placeholderPage);
         } else {
-          // Fetch details from Firestore or use placeholder
-          let detailsData: WikiPageDetail[] = [];
+          console.log("Fetched page data:", page);
+          console.log("Has details?", !!page.details);
+          console.log("Details length:", page.details?.length);
           
-          if (page.details && page.details.length > 0) {
-            // Use existing details if they exist
-            detailsData = page.details;
-          } else {
-            // Otherwise fetch based on the entity ID
-            try {
-              detailsData = await getEntityDetails(slug);
-            } catch (detailsError) {
-              console.error('Error fetching entity details:', detailsError);
-              // If error, don't show details section
-              detailsData = [];
-            }
-          }
+          const defaultDetails = await getEntityDetails(slug);
+          console.log("Default details:", defaultDetails);
           
           // Process the page data with all required fields
           const processedPage: WikiPageData = {
@@ -100,9 +90,19 @@ export default function WikiPage() {
             galleryImages: (page.galleryImages && page.galleryImages.length > 0) 
               ? page.galleryImages 
               : getMultipleLocalImageUrls(3, category),
-            details: detailsData
+            details: page.details || defaultDetails
           };
           
+          // Debug details badge colors
+          if (processedPage.details) {
+            processedPage.details.forEach(detail => {
+              if (detail.type === 'badge') {
+                console.log(`Badge detail "${detail.label}": value="${detail.value}", color=${detail.badgeColor}`);
+              }
+            });
+          }
+          
+          console.log("Processed page details:", processedPage.details);
           setPageData(processedPage);
         }
       } catch (error) {
@@ -263,56 +263,68 @@ function getWikiPage(slug) {
     } as WikiPageData;
   };
   
-  // This function will retrieve details data from Firestore in the future
-  // It's a placeholder for now and should be implemented when Firestore is set up
+  // This function will retrieve details data from Firestore
   const getEntityDetails = async (entityId: string): Promise<WikiPageDetail[]> => {
-    // This will be replaced with actual Firestore code when database is ready
-    console.log('Fetching details for entity:', entityId);
-    
-    // For now return placeholder data based on the category
-    if (category === 'characters') {
-      return [
-        { label: 'Full Name', value: entityId.charAt(0).toUpperCase() + entityId.slice(1), type: 'text' as const },
-        { label: 'Occupation', value: 'Criminal', type: 'text' as const },
-        { label: 'Status', value: 'Alive', type: 'badge' as const, badgeColor: 'green' },
-        { label: 'Location', value: 'Vice City', type: 'text' as const },
-        { label: 'First Appearance', value: 'Prologue', type: 'text' as const },
-        { label: 'Affiliation', value: 'Rodriguez Cartel', type: 'link' as const, linkHref: '/wiki/factions/rodriguez-cartel' }
-      ];
-    } else if (category === 'locations') {
-      return [
-        { label: 'Region', value: 'Leonida', type: 'text' as const },
-        { label: 'Type', value: 'City', type: 'text' as const },
-        { label: 'Status', value: 'Active', type: 'badge' as const, badgeColor: 'blue' },
-        { label: 'Population', value: '2.7 million', type: 'text' as const },
-        { label: 'Activities', value: 'Various Missions', type: 'text' as const },
-        { label: 'Related', value: 'Vice Beach', type: 'link' as const, linkHref: '/wiki/locations/vice-beach' }
-      ];
-    } else if (category === 'vehicles') {
-      return [
-        { label: 'Manufacturer', value: 'Declasse', type: 'text' as const },
-        { label: 'Type', value: 'Sports Car', type: 'text' as const },
-        { label: 'Speed', value: '9/10', type: 'text' as const },
-        { label: 'Handling', value: '8/10', type: 'text' as const },
-        { label: 'Price', value: '$850,000', type: 'text' as const },
-        { label: 'Similar', value: 'Infernus', type: 'link' as const, linkHref: '/wiki/vehicles/infernus' }
-      ];
-    } else if (category === 'weapons') {
-      return [
-        { label: 'Type', value: 'Assault Rifle', type: 'text' as const },
-        { label: 'Damage', value: '7/10', type: 'text' as const },
-        { label: 'Rate of Fire', value: '8/10', type: 'text' as const },
-        { label: 'Accuracy', value: '6/10', type: 'text' as const },
-        { label: 'Price', value: '$3,500', type: 'text' as const },
-        { label: 'Similar', value: 'Carbine Rifle', type: 'link' as const, linkHref: '/wiki/weapons/carbine-rifle' }
-      ];
-    } else {
-      return [
-        { label: 'Category', value: category.charAt(0).toUpperCase() + category.slice(1), type: 'text' as const },
-        { label: 'ID', value: entityId, type: 'text' as const },
-        { label: 'Status', value: 'Available', type: 'badge' as const, badgeColor: 'green' },
-        { label: 'Added', value: new Date().toLocaleDateString(), type: 'text' as const }
-      ];
+    try {
+      // Generate default details based on the category
+      let details: WikiPageDetail[] = [];
+      
+      if (category === 'characters') {
+        details = [
+          { label: 'Full Name', value: entityId.charAt(0).toUpperCase() + entityId.slice(1), type: 'text' as const },
+          { label: 'Occupation', value: 'Criminal', type: 'text' as const },
+          { label: 'Status', value: 'Alive', type: 'badge' as const, badgeColor: 'green' },
+          { label: 'Location', value: 'Vice City', type: 'text' as const },
+          { label: 'First Appearance', value: 'Prologue', type: 'text' as const },
+          { label: 'Affiliation', value: 'Rodriguez Cartel', type: 'link' as const, linkHref: '/wiki/factions/rodriguez-cartel' }
+        ];
+      } else if (category === 'locations') {
+        details = [
+          { label: 'Region', value: 'Leonida', type: 'text' as const },
+          { label: 'Type', value: 'City', type: 'text' as const },
+          { label: 'Status', value: 'Active', type: 'badge' as const, badgeColor: 'blue' },
+          { label: 'Population', value: '2.7 million', type: 'text' as const },
+          { label: 'Activities', value: 'Various Missions', type: 'text' as const },
+          { label: 'Related', value: 'Vice Beach', type: 'link' as const, linkHref: '/wiki/locations/vice-beach' }
+        ];
+      } else if (category === 'vehicles') {
+        details = [
+          { label: 'Manufacturer', value: 'Declasse', type: 'text' as const },
+          { label: 'Type', value: 'Sports Car', type: 'text' as const },
+          { label: 'Speed', value: '9/10', type: 'text' as const },
+          { label: 'Handling', value: '8/10', type: 'text' as const },
+          { label: 'Price', value: '$850,000', type: 'text' as const },
+          { label: 'Similar', value: 'Infernus', type: 'link' as const, linkHref: '/wiki/vehicles/infernus' }
+        ];
+      } else if (category === 'weapons') {
+        details = [
+          { label: 'Type', value: 'Assault Rifle', type: 'text' as const },
+          { label: 'Damage', value: '7/10', type: 'text' as const },
+          { label: 'Rate of Fire', value: '8/10', type: 'text' as const },
+          { label: 'Accuracy', value: '6/10', type: 'text' as const },
+          { label: 'Price', value: '$3,500', type: 'text' as const },
+          { label: 'Similar', value: 'Carbine Rifle', type: 'link' as const, linkHref: '/wiki/weapons/carbine-rifle' }
+        ];
+      } else {
+        details = [
+          { label: 'Category', value: category.charAt(0).toUpperCase() + category.slice(1), type: 'text' as const },
+          { label: 'ID', value: entityId, type: 'text' as const },
+          { label: 'Status', value: 'Available', type: 'badge' as const, badgeColor: 'green' },
+          { label: 'Added', value: new Date().toLocaleDateString(), type: 'text' as const }
+        ];
+      }
+      
+      // Log badge details being generated
+      details.forEach(detail => {
+        if (detail.type === 'badge') {
+          console.log(`getEntityDetails generating badge: "${detail.label}" with value="${detail.value}", color="${detail.badgeColor}"`);
+        }
+      });
+      
+      return details;
+    } catch (error) {
+      console.error('Error fetching entity details:', error);
+      return [];
     }
   };
   
@@ -460,12 +472,13 @@ function getWikiPage(slug) {
           <div 
             className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
             style={{ 
-              backgroundImage: `url(${getLocalImageUrl(category)})`,
-              filter: 'brightness(0.6) saturate(1.2)'
+              backgroundImage: `url('/images/wiki-background.jpg')`,
+              filter: 'brightness(0.6) saturate(1.2)',
+              backgroundAttachment: 'scroll'
             }}
           />
-          <div className="fixed inset-0 z-0 bg-gradient-to-b from-gray-900/70 via-gray-900/50 to-gray-900/95"></div>
-          <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-gray-900/20 to-gray-900/60"></div>
+          <div className="fixed inset-0 z-0 bg-gradient-to-b from-gray-900/80 via-gray-900/60 to-gray-900/90"></div>
+          <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-gray-900/30 to-gray-900/70"></div>
           
           {/* Header Section */}
           <div className="relative z-10 pt-28">            
@@ -805,7 +818,7 @@ function getWikiPage(slug) {
                             ))}
                           </div>
                           <div className="p-3 bg-gray-700/20 border-t border-gray-700/50 text-center">
-                            <p className="text-xs text-gray-400">Additional details available in-game</p>
+                            <p className="text-xs text-gray-400"></p>
                           </div>
                         </>
                       )}
@@ -875,6 +888,11 @@ function getWikiPage(slug) {
           <style jsx global>{`
             @keyframes fadeIn {
               from { opacity: 0; transform: translateY(20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            
+            @keyframes fadeInTable {
+              from { opacity: 0; transform: translateY(10px); }
               to { opacity: 1; transform: translateY(0); }
             }
             

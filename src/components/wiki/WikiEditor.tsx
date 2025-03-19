@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from 'firebase/auth';
 import { WikiCategory } from '@/lib/wikiHelpers';
-import { WikiPageFirestore, createWikiPage, updateWikiPage, getWikiPage, generateSlug } from '@/lib/wikiFirestoreService';
+import { WikiPageFirestore, createWikiPage, updateWikiPage, getWikiPage, generateSlug, WikiPageDetail } from '@/lib/wikiFirestoreService';
 import MarkdownEditor from './MarkdownEditor';
+import WikiDetailsEditor from './WikiDetailsEditor';
 import { WIKI_CATEGORIES } from '@/data/wikiData';
 import { TagIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
@@ -43,6 +44,7 @@ export default function WikiEditor({
     tags: string[];
     status: 'published' | 'draft' | 'archived';
     featured: boolean;
+    details: WikiPageDetail[];
   }>({
     title: '',
     slug: '',
@@ -54,7 +56,8 @@ export default function WikiEditor({
     galleryImages: [],
     tags: [],
     status: 'draft',
-    featured: false
+    featured: false,
+    details: []
   });
   
   // Current tag input
@@ -85,7 +88,8 @@ export default function WikiEditor({
             galleryImages: pageData.galleryImages || [],
             tags: pageData.tags || [],
             status: pageData.status || 'draft',
-            featured: pageData.featured || false
+            featured: pageData.featured || false,
+            details: pageData.details || []
           });
         }
       } catch (error) {
@@ -207,6 +211,11 @@ export default function WikiEditor({
     }
   };
   
+  // Add handler for details changes
+  const handleDetailsChange = (details: WikiPageDetail[]) => {
+    setFormData(prev => ({ ...prev, details }));
+  };
+  
   // Handle form submission
   const handleSubmit = async (publishStatus: 'draft' | 'published' = 'published') => {
     setSaving(true);
@@ -254,6 +263,7 @@ export default function WikiEditor({
         imageUrl: formData.imageUrl.trim(),
         galleryImages: formData.galleryImages || [],
         tags: formData.tags || [],
+        details: formData.details || [],
         createdBy: {
           uid: user.uid,
           displayName: user.displayName || 'Unknown User',
@@ -551,6 +561,15 @@ export default function WikiEditor({
               ))}
             </div>
           )}
+        </div>
+        
+        {/* Details */}
+        <div className="mt-8">
+          <WikiDetailsEditor
+            details={formData.details}
+            onChange={handleDetailsChange}
+            category={formData.category}
+          />
         </div>
         
         {/* Content */}
