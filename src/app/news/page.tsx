@@ -13,6 +13,27 @@ export default function NewsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Calculate reading time
+  const calculateReadingTime = (content: string): string => {
+    // Average reading speed (words per minute)
+    const wordsPerMinute = 200;
+    
+    // Count words in the content
+    const wordCount = content?.split(/\s+/).length || 0;
+    
+    // Calculate reading time in minutes
+    const minutes = Math.ceil(wordCount / wordsPerMinute);
+    
+    // Return formatted string
+    if (minutes < 1) {
+      return "< 1 min read";
+    } else if (minutes === 1) {
+      return "1 min read";
+    } else {
+      return `${minutes} min read`;
+    }
+  };
+  
   // Load all articles
   useEffect(() => {
     async function loadArticles() {
@@ -233,6 +254,13 @@ export default function NewsPage() {
                               <span>{article.author}</span>
                               <span className="mx-1">•</span>
                               <span>{formatDate(article.createdAt)}</span>
+                              <span className="mx-1">•</span>
+                              <span className="flex items-center">
+                                <svg className="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {calculateReadingTime(article.content)}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -284,6 +312,13 @@ export default function NewsPage() {
                         <p className="text-gray-400 text-sm mb-4 flex-grow line-clamp-3">{article.excerpt}</p>
                         <div className="flex items-center text-sm text-gray-500 mt-auto">
                           <span>{article.author}</span>
+                          <span className="mx-2">•</span>
+                          <span className="flex items-center">
+                            <svg className="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {calculateReadingTime(article.content)}
+                          </span>
                         </div>
                       </div>
                     </article>

@@ -9,6 +9,17 @@ import Footer from '@/components/Footer';
 import { NewsArticleFirestore, getNewsArticleBySlug, getAllNewsArticles } from '@/lib/newsFirestoreService';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import Prism from 'prismjs';
+
+// Import Prism languages
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-jsx';
+import 'prismjs/components/prism-tsx';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-json';
+import 'prismjs/components/prism-bash';
+import 'prismjs/components/prism-markdown';
 
 export default function ArticlePage() {
   const params = useParams();
@@ -19,8 +30,80 @@ export default function ArticlePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Calculate reading time
+  const calculateReadingTime = (content: string): string => {
+    // Average reading speed (words per minute)
+    const wordsPerMinute = 200;
+    
+    // Count words in the content
+    const wordCount = content?.split(/\s+/).length || 0;
+    
+    // Calculate reading time in minutes
+    const minutes = Math.ceil(wordCount / wordsPerMinute);
+    
+    // Return formatted string
+    if (minutes < 1) {
+      return "< 1 min read";
+    } else if (minutes === 1) {
+      return "1 min read";
+    } else {
+      return `${minutes} min read`;
+    }
+  };
+  
+  // Apply syntax highlighting when content changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !loading && article) {
+      Prism.highlightAll();
+    }
+  }, [article, loading]);
+  
   // Convert markdown to HTML
   const renderMarkdown = (content: string) => {
+    if (!content) return '';
+    
+    // Configure marked options
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+      // headerIds is not in the type but actually supported by marked
+      // @ts-ignore
+      headerIds: true,
+      highlight: function(code: string, lang: string) {
+        return `<pre class="language-${lang}"><code class="language-${lang}">${code}</code></pre>`;
+      }
+    });
+    
+    // Create a new renderer that uses ID generation logic
+    const renderer = new marked.Renderer();
+    
+    // Track used IDs to avoid duplicates
+    const usedIds = new Set<string>();
+    
+    renderer.heading = (text, level) => {
+      // Generate base ID
+      let headingId = text.toLowerCase().replace(/[^\w]+/g, '-');
+      
+      // Ensure unique ID
+      if (usedIds.has(headingId)) {
+        // Find a unique ID by adding a numeric suffix
+        let counter = 1;
+        let newId = `${headingId}-${counter}`;
+        while (usedIds.has(newId)) {
+          counter++;
+          newId = `${headingId}-${counter}`;
+        }
+        headingId = newId;
+      }
+      
+      // Add to used IDs set
+      usedIds.add(headingId);
+      
+      return `<h${level} id="${headingId}">${text}</h${level}>`;
+    };
+    
+    marked.setOptions({ renderer });
+    
     const rawHtml = marked.parse(content) as string;
     if (typeof window !== 'undefined') {
       return DOMPurify.sanitize(rawHtml);
@@ -178,12 +261,19 @@ export default function ArticlePage() {
             </h1>
             
             <div className="mt-4 flex items-center text-gray-300">
-              <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-sm font-bold mr-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-gta-blue to-gta-pink rounded-full flex items-center justify-center text-sm font-bold text-gray-900 shadow-md mr-2">
                 {article.author.split(' ').map(n => n[0]).join('')}
               </div>
               <span className="font-medium">{article.author}</span>
               <span className="mx-2">•</span>
               <time className="text-gray-400">{formatDate(article.createdAt)}</time>
+              <span className="mx-2">•</span>
+              <div className="flex items-center text-gray-400">
+                <svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{calculateReadingTime(article.content)}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -192,33 +282,50 @@ export default function ArticlePage() {
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <div className="prose prose-lg prose-invert max-w-none">
+              <div className="prose prose-lg prose-invert max-w-none bg-gray-900/30 p-8 rounded-lg shadow-xl border border-gray-800">
+                {/* Article Excerpt/Lead-in */}
+                <p className="text-xl text-gray-300 font-medium mb-4 leading-relaxed border-l-4 border-gta-blue pl-4 italic">
+                  {article.excerpt}
+                </p>
+                
+                {/* Reading Time */}
+                <div className="flex items-center text-sm text-gray-400 mb-8 ml-4">
+                  <svg className="w-4 h-4 mr-1 text-gta-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{calculateReadingTime(article.content)}</span>
+                </div>
+                
                 {/* Render the article content as HTML converted from markdown */}
                 <div dangerouslySetInnerHTML={{ __html: renderMarkdown(article.content) }}></div>
               </div>
               
               {/* Tags */}
-              <div className="mt-12 pt-6 border-t border-gray-800">
-                <span className="text-gray-400 mr-3">Category:</span>
+              <div className="mt-12 pt-6 border-t border-gray-800 flex flex-wrap items-center">
+                <span className="text-gray-400 mr-3 font-medium">Category:</span>
                 <div className="inline-flex flex-wrap gap-2">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    article.category === 'news' ? 'bg-gta-blue' : 
-                    article.category === 'features' ? 'bg-gta-pink' : 
-                    'bg-gta-green'
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    article.category === 'news' ? 'bg-gta-blue text-gray-900' : 
+                    article.category === 'features' ? 'bg-gta-pink text-gray-900' : 
+                    'bg-gta-green text-gray-900'
                   }`}>
                     {article.category}
                   </span>
                 </div>
+                
+                <span className="ml-auto text-gray-400 text-sm">
+                  Published on {formatDate(article.createdAt)}
+                </span>
               </div>
               
               {/* Author Info */}
-              <div className="mt-8 p-6 bg-gray-900/50 border border-gray-800 rounded-lg">
+              <div className="mt-8 p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-lg shadow-lg">
                 <div className="flex items-center">
-                  <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-xl font-bold">
+                  <div className="w-16 h-16 bg-gradient-to-br from-gta-blue to-gta-pink rounded-full flex items-center justify-center text-xl font-bold text-gray-900 shadow-md">
                     {article.author.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div className="ml-4">
-                    <h3 className="font-bold text-xl">{article.author}</h3>
+                    <h3 className="font-bold text-xl text-white">Written by {article.author}</h3>
                     <p className="text-gray-400">Staff Writer</p>
                   </div>
                 </div>
@@ -228,25 +335,34 @@ export default function ArticlePage() {
             {/* Sidebar */}
             <div>
               <div className="sticky top-24">
-                <h3 className="text-xl font-bold mb-6 pb-2 border-b border-gray-800">Related Articles</h3>
+                <h3 className="text-xl font-bold mb-6 pb-2 border-b border-gray-800 flex items-center">
+                  <svg className="w-5 h-5 text-gta-blue mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                  </svg>
+                  Related Articles
+                </h3>
                 <div className="space-y-6">
                   {relatedArticles.length > 0 ? (
                     relatedArticles.map(related => (
                       <Link key={related.id} href={`/news/${related.slug}`} className="block group">
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 p-3 rounded-lg hover:bg-gray-800/50 transition-colors border border-transparent hover:border-gray-700">
                           <div className="w-24 h-24 relative flex-shrink-0 rounded overflow-hidden">
                             <Image 
                               src={related.imageUrl}
                               alt={related.title}
                               fill
-                              className="object-cover"
+                              className="object-cover transform group-hover:scale-110 transition-transform duration-300"
                             />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                           </div>
                           <div>
                             <h4 className="font-bold line-clamp-2 group-hover:text-gta-blue transition-colors">
                               {related.title}
                             </h4>
-                            <p className="text-gray-400 text-sm mt-1">
+                            <p className="text-gray-400 text-sm mt-1 flex items-center">
+                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                              </svg>
                               {formatDate(related.createdAt)}
                             </p>
                           </div>
@@ -258,25 +374,39 @@ export default function ArticlePage() {
                   )}
                 </div>
                 
-                <h3 className="text-xl font-bold mt-10 mb-6 pb-2 border-b border-gray-800">Categories</h3>
-                <div className="space-y-2">
+                <h3 className="text-xl font-bold mt-10 mb-6 pb-2 border-b border-gray-800 flex items-center">
+                  <svg className="w-5 h-5 text-gta-pink mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                  </svg>
+                  Categories
+                </h3>
+                <div className="space-y-3">
                   <Link 
                     href="/news?category=news"
-                    className="block px-4 py-2 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors"
+                    className="block px-4 py-3 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors border border-transparent hover:border-gta-blue group"
                   >
-                    News
+                    <div className="flex items-center">
+                      <span className="w-3 h-3 bg-gta-blue rounded-full mr-3 group-hover:scale-125 transition-transform"></span>
+                      <span className="group-hover:text-gta-blue transition-colors">News</span>
+                    </div>
                   </Link>
                   <Link 
                     href="/news?category=features"
-                    className="block px-4 py-2 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors"
+                    className="block px-4 py-3 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors border border-transparent hover:border-gta-pink group"
                   >
-                    Features
+                    <div className="flex items-center">
+                      <span className="w-3 h-3 bg-gta-pink rounded-full mr-3 group-hover:scale-125 transition-transform"></span>
+                      <span className="group-hover:text-gta-pink transition-colors">Features</span>
+                    </div>
                   </Link>
                   <Link 
                     href="/news?category=guides"
-                    className="block px-4 py-2 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors"
+                    className="block px-4 py-3 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors border border-transparent hover:border-gta-green group"
                   >
-                    Guides
+                    <div className="flex items-center">
+                      <span className="w-3 h-3 bg-gta-green rounded-full mr-3 group-hover:scale-125 transition-transform"></span>
+                      <span className="group-hover:text-gta-green transition-colors">Guides</span>
+                    </div>
                   </Link>
                 </div>
               </div>
