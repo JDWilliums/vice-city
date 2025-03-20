@@ -114,14 +114,6 @@ export default function NewsPage() {
                     width={400}
                     height={200}
                   />
-                  <div className="absolute flex justify-center items-center -inset-4 blur-[40px] opacity-10000">
-                    <Image
-                        src="/vcnews.png"
-                        alt="Vice City News Network"
-                        width={400}
-                        height={400}
-                      />
-                    </div>
                 </div>
               </div>
               
