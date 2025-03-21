@@ -3,30 +3,5 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "outputDirectory": ".next",
-  "functions": {
-    "src/app/api/image/route.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
-  "images": {
-    "sizes": [16, 32, 64, 96, 128, 256, 384, 640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    "domains": [],
-    "remotePatterns": [
-      {
-        "protocol": "https",
-        "hostname": "lh3.googleusercontent.com"
-      },
-      {
-        "protocol": "https",
-        "hostname": "cdn.discordapp.com"
-      }
-    ]
-  },
-  "build": {
-    "env": {
-      "NEXT_SHARP_PATH": "./node_modules/sharp"
-    }
-  }
+  "outputDirectory": ".next"
 } 
