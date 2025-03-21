@@ -198,7 +198,7 @@ export default function ArticlePage() {
       
       <main className="flex-grow">
         {/* Article Header */}
-        <div className="relative min-h-[600px] flex items-center justify-center overflow-hidden bg-gradient-to-br z-10 from-gray-900 via-gray-800 to-gray-900">
+        <div className="relative min-h-[500px] flex items-center justify-center overflow-hidden bg-gradient-to-br z-10 from-gray-900 via-gray-800 to-gray-900">
           <Image 
             src={article.imageUrl}
             alt={article.title}
