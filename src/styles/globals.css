@@ -55,3 +55,45 @@
 .leaflet-container {
   @apply bg-map-bg h-full z-0;
 } 
+
+/* Global animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0.3; }
+}
+
+.animate-fadeIn {
+  opacity: 0;
+  animation: fadeIn 1s ease-out forwards;
+}
+
+.animate-fadeInUp {
+  opacity: 0;
+  animation: fadeInUp 1s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 8s infinite;
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  animation: gradient 8s ease infinite;
+  background-size: 400% 400%;
+} 

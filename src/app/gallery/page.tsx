@@ -450,32 +450,70 @@ export default function Gallery() {
 
   return (
     <>
-      <Navbar transparent={false} />
-      <main className="min-h-screen bg-gradient-to-b from-gray-900 to-dark-bg pt-24 pb-16">
-        <div className="container-custom">
-          {/* Page Header with Featured Image Background */}
-          <header className="relative rounded-lg overflow-hidden mb-12">
-            <div className="absolute inset-0 z-0 opacity-30">
-              <Image 
-                src="/images/gta6-0.png" 
-                alt="GTA 6 Background" 
-                fill
-                className="object-cover object-center"
-              />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black z-0"></div>
-            <div className="relative z-10 text-center py-16 px-4">
-              <h1 className="text-5xl font-bold mb-4 text-white">
+      <Navbar transparent={true} />
+      <main className="min-h-screen bg-gradient-to-b from-gray-900 to-dark-bg pb-16">
+        {/* Hero Section with Header */}
+        <div className="relative min-h-[600px] flex items-center justify-center overflow-hidden bg-gradient-to-br z-10 from-gray-900 via-gray-800 to-gray-900 pt-20">
+          {/* Background Image with Overlay */}
+          <div className="absolute inset-0 z-0">
+            <Image 
+              src="/images/gta6-0.png" 
+              alt="Gallery Background" 
+              fill 
+              className="object-cover object-center opacity-100"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-900/70 to-transparent"></div>
+          </div>
+          
+          {/* Animated Gradients */}
+          <div className="absolute inset-0 z-5 opacity-40">
+            <div className="absolute top-0 -left-1/3 w-2/3 h-2/3 bg-gta-pink opacity-5 rounded-full blur-[200px] animate-pulse"></div>
+            <div className="absolute bottom-0 -right-1/3 w-2/3 h-2/3 bg-gta-blue opacity-5 rounded-full blur-[200px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+          </div>
+          
+          <div className="container mx-auto px-6 z-10 text-center relative mt-10">
+            <div className="animate-fadeIn">
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
                 GTA 6 <span className="text-gta-pink">Gallery</span>
               </h1>
-              <p className="text-gray-300 max-w-2xl mx-auto">
-                Explore official artwork, screenshots, and fan creations from the upcoming Grand Theft Auto VI set in Vice City and Leonida.
+              <p className="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto mb-10 drop-shadow-md">
+                Explore official artwork, screenshots, and fan creations from the upcoming Grand Theft Auto VI.
               </p>
+              
+              {/* Category Filter Buttons */}
+              <div className="flex flex-wrap justify-center gap-2 mb-8 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setActiveCategory(category.id)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                      activeCategory === category.id
+                        ? 'bg-gta-pink text-white'
+                        : 'bg-gray-800/80 backdrop-blur-sm text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-700'
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
             </div>
-          </header>
+                  
+            
+          </div>
 
+          {/* Scroll indicator - positioned at bottom of header */}
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center animate-bounce">
+              <svg className="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </div>
+        </div>
+        
+        <div className="container-custom pt-16">
           {/* Search and Filter Controls */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 mb-8 border border-gray-700">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 mb-8 border border-gray-700 animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
             <div className="flex flex-col md:flex-row gap-4 justify-between">
               {/* Search */}
               <div className="w-full md:w-1/3">
@@ -520,23 +558,6 @@ export default function Gallery() {
             </div>
           </div>
 
-          {/* Category Filters */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setActiveCategory(category.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  activeCategory === category.id
-                    ? 'bg-gta-pink text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
-
           {/* Gallery Grid */}
           <div id="gallery-grid" className="relative">
             {isLoading && (
@@ -548,98 +569,52 @@ export default function Gallery() {
               </div>
             )}
             
-            <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ${isLoading ? 'opacity-50' : ''}`}>
-              {sortedItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="bg-gray-800/50 backdrop-blur-sm rounded-lg overflow-hidden border border-gray-700 hover:border-gta-blue/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-gta-blue/20 cursor-pointer group"
-                  onClick={() => handleImageClick(item.id)}
-                >
-                  <div className="aspect-video relative overflow-hidden">
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="object-cover transform group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent h-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                        {item.availableResolutions.length > 0 
-                          ? `Up to ${item.availableResolutions[item.availableResolutions.length - 1]}` 
-                          : 'Preview only'}
-                      </span>
-                    </div>
+            {sortedItems.length === 0 ? (
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-8 text-center border border-gray-700 animate-fadeInUp" style={{ animationDelay: '0.6s' }}>
+                <p className="text-gray-300 text-lg">No images found matching your criteria.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {sortedItems.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="relative group bg-gray-800/60 backdrop-blur-sm rounded-lg overflow-hidden border border-gray-700/80 hover:border-gta-pink transition-all hover:shadow-xl hover:shadow-gta-pink/10 hover:-translate-y-1 animate-fadeInUp"
+                    style={{ animationDelay: `${0.6 + index * 0.05}s` }}
+                  >
+                    <button onClick={() => handleImageClick(item.id)} className="block w-full">
+                      <div className="relative aspect-square">
+                        <Image
+                          src={item.image}
+                          alt={item.title}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          className="object-cover transform group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="absolute bottom-0 left-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                          <h3 className="font-bold text-lg">{item.title}</h3>
+                          <p className="text-sm text-gray-300 line-clamp-2">{item.description}</p>
+                        </div>
+                      </div>
+                      <div className="p-3 flex justify-between items-center">
+                        <span className="text-xs text-gray-400 capitalize">{item.category}</span>
+                        <span className="text-xs px-1.5 py-0.5 bg-gray-900 text-gray-400 rounded">
+                          {item.availableResolutions.length} sizes
+                        </span>
+                      </div>
+                    </button>
                   </div>
-                  <div className="p-3">
-                    <h3 className="text-white font-semibold group-hover:text-gta-pink transition-colors">{item.title}</h3>
-                    <div className="flex justify-between items-center mt-1">
-                      <p className="text-gray-400 text-sm">{item.category.charAt(0).toUpperCase() + item.category.slice(1)}</p>
-                      <p className="text-gray-500 text-xs">{new Date(item.date).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* No Results Message */}
-            {sortedItems.length === 0 && !isLoading && (
-              <div className="text-center py-12 bg-gray-800/30 rounded-lg border border-gray-700 backdrop-blur-sm">
-                <div className="text-5xl mb-4">🔍</div>
-                <p className="text-gray-300 text-lg mb-2">No images found</p>
-                <p className="text-gray-400">Try adjusting your search or filter criteria.</p>
-                <button 
-                  className="mt-4 px-4 py-2 bg-gta-pink/80 hover:bg-gta-pink text-white rounded-md transition-colors"
-                  onClick={() => {
-                    setActiveCategory('all');
-                    setSearchQuery('');
-                  }}
-                >
-                  Reset Filters
-                </button>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-8 flex flex-wrap justify-center gap-2">
-              {/* Previous page button */}
-              <button 
-                onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`px-3 py-2 rounded-md flex items-center gap-1 ${
-                  currentPage === 1 
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
-                    : 'bg-gray-800 hover:bg-gray-700 text-white'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span>Previous</span>
-              </button>
-              
-              {/* Page number buttons */}
-              <div className="flex items-center gap-1">
+          {/* Pagination - with animation */}
+          {!isLoading && totalPages > 1 && (
+            <div className="flex justify-center mt-12 animate-fadeInUp" style={{ animationDelay: '1s' }}>
+              <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-700 p-2 inline-flex gap-2">
                 {renderPaginationButtons()}
               </div>
-              
-              {/* Next page button */}
-              <button 
-                onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`px-3 py-2 rounded-md flex items-center gap-1 ${
-                  currentPage === totalPages 
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
-                    : 'bg-gray-800 hover:bg-gray-700 text-white'
-                }`}
-              >
-                <span>Next</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
             </div>
           )}
 
@@ -797,6 +772,36 @@ export default function Gallery() {
 
         .animate-fade-in-out {
           animation: fadeInOut 2s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+          0% { opacity: 0.3; }
+          50% { opacity: 0.6; }
+          100% { opacity: 0.3; }
+        }
+        
+        .animate-fadeIn {
+          opacity: 0;
+          animation: fadeIn 1s ease-out forwards;
+        }
+        
+        .animate-fadeInUp {
+          opacity: 0;
+          animation: fadeInUp 1s ease-out forwards;
+        }
+        
+        .animate-pulse {
+          animation: pulse 8s infinite;
         }
       `}</style>
     </>
