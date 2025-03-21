@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import Head from 'next/head';
 
 // GTA 6 estimated release date (Fall 2025)
 const RELEASE_DATE = new Date('2025-12-01T00:00:00');
@@ -115,6 +116,19 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <Head>
+        <title>GTA 6 Countdown - Vice City Fan Site</title>
+        <meta name="description" content="Stay updated with the latest GTA 6 news, countdown, and information about Rockstar's upcoming game set in Vice City." />
+        <meta name="keywords" content="GTA 6, Grand Theft Auto VI, Vice City, Rockstar Games, GTA 6 countdown, GTA 6 release date, Lucia and Jason, GTA 6 trailer, GTA 6 news" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <link rel="canonical" href="https://vice.city" />
+        <meta property="og:title" content="GTA 6 Countdown - Vice City Fan Site" />
+        <meta property="og:description" content="Stay updated with the latest GTA 6 news, countdown, and information about Rockstar's upcoming game set in Vice City." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://vice.city" />
+        <meta property="og:image" content="https://vice.city/images/gta6-logo.png" />
+      </Head>
+      
       <Navbar transparent={true} />
       
       {/* Background Images with simpler fade effect */}
@@ -132,6 +146,7 @@ export default function HomePage() {
               fill
               className="object-cover object-center"
               priority={index === 0}
+              sizes="100vw"
             />
           </div>
         ))}
@@ -146,42 +161,42 @@ export default function HomePage() {
         </div>
       </div>
       
-      <main className="relative z-20 pt-24">
+      <main className="relative z-20 pt-16 md:pt-24">
         <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center px-4 animate-fadeIn">
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 text-white">
+          <div className="text-center px-4 animate-fadeIn w-full">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 md:mb-8 text-white">
               GTA VI Countdown
             </h1>
             
             {/* Countdown Timer */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-4">
-              <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-                <div className="text-4xl md:text-6xl font-bold text-white mb-1">{days}</div>
-                <div className="text-gray-400 uppercase tracking-wider text-sm">Days</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-4xl mx-auto mb-4">
+              <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-4 md:p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
+                <div className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-1">{days}</div>
+                <div className="text-gray-400 uppercase tracking-wider text-xs sm:text-sm">Days</div>
               </div>
               
-              <div className="bg-black/60 backdrop-blur-sm border border-gta-pink/30 rounded-lg p-6 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
-                <div className="text-4xl md:text-6xl font-bold text-white mb-1">{hours}</div>
-                <div className="text-gray-400 uppercase tracking-wider text-sm">Hours</div>
+              <div className="bg-black/60 backdrop-blur-sm border border-gta-pink/30 rounded-lg p-4 md:p-6 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
+                <div className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-1">{hours}</div>
+                <div className="text-gray-400 uppercase tracking-wider text-xs sm:text-sm">Hours</div>
               </div>
               
-              <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-6 animate-fadeInUp" style={{ animationDelay: '0.6s' }}>
-                <div className="text-4xl md:text-6xl font-bold text-white mb-1">{minutes}</div>
-                <div className="text-gray-400 uppercase tracking-wider text-sm">Minutes</div>
+              <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-4 md:p-6 animate-fadeInUp" style={{ animationDelay: '0.6s' }}>
+                <div className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-1">{minutes}</div>
+                <div className="text-gray-400 uppercase tracking-wider text-xs sm:text-sm">Minutes</div>
               </div>
               
-              <div className="bg-black/60 backdrop-blur-sm border border-gta-pink/30 rounded-lg p-6 animate-fadeInUp" style={{ animationDelay: '0.8s' }}>
-                <div className="text-4xl md:text-6xl font-bold text-white mb-1">{seconds}</div>
-                <div className="text-gray-400 uppercase tracking-wider text-sm">Seconds</div>
+              <div className="bg-black/60 backdrop-blur-sm border border-gta-pink/30 rounded-lg p-4 md:p-6 animate-fadeInUp" style={{ animationDelay: '0.8s' }}>
+                <div className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-1">{seconds}</div>
+                <div className="text-gray-400 uppercase tracking-wider text-xs sm:text-sm">Seconds</div>
               </div>
             </div>
 
-            <p className="text-sm md:text-m text-gray-400 mb-16 max-w-3xl mx-auto">
+            <p className="text-xs sm:text-sm md:text-m text-gray-400 mb-10 md:mb-16 max-w-3xl mx-auto">
               (Countdown to the end of Fall, actual release date is currently unknown)
             </p>
             
             {/* GTA 6 Logo */}
-            <div className="relative flex justify-center mb-16 animate-fadeInUp" style={{ animationDelay: '1s' }}>
+            <div className="relative flex justify-center mb-10 md:mb-16 animate-fadeInUp" style={{ animationDelay: '1s' }}>
               <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[150px] opacity-5 animate-pulse"></div>
               <Image 
                 src="/images/gta6-logo.png" 
@@ -190,18 +205,19 @@ export default function HomePage() {
                 height={300} 
                 className="w-full max-w-2xl h-auto relative"
                 priority
+                sizes="(max-width: 640px) 90vw, (max-width: 768px) 80vw, 600px"
               />
             </div>
             
             {/* Call to Action */}
-            <div className="flex flex-col md:flex-row gap-4 justify-center mb-16 animate-fadeInUp" style={{ animationDelay: '1.2s' }}>
-              <Link href="/news" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center mb-10 md:mb-16 animate-fadeInUp px-4" style={{ animationDelay: '1.2s' }}>
+              <Link href="/news" className="px-6 md:px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-base md:text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1 w-full sm:w-auto">
                 Latest News
               </Link>
-              <Link href="https://discord.gg/rGqyNP4AC6" className="px-8 py-3 bg-gradient-to-b from-indigo-400 to-indigo-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-indigo-400/20 transition-all hover:-translate-y-1">
+              <Link href="https://discord.gg/rGqyNP4AC6" className="px-6 md:px-8 py-3 bg-gradient-to-b from-indigo-400 to-indigo-500 text-white text-base md:text-lg font-bold rounded-md hover:shadow-lg hover:shadow-indigo-400/20 transition-all hover:-translate-y-1 w-full sm:w-auto">
                 Join our Discord
               </Link>
-              <Link href="/wiki" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
+              <Link href="/wiki" className="px-6 md:px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-base md:text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1 w-full sm:w-auto">
                 Explore the Wiki
               </Link>
             </div>
@@ -209,53 +225,53 @@ export default function HomePage() {
         </div>
 
         {/* What We Know So Far Section */}
-        <section className="flex items-center relative py-20">
+        <section className="flex items-center relative py-12 md:py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-8 md:mb-12 text-center animate-fadeInUp">
                 <span className="text-white">What We Know...</span>
               </h2>
               
-              <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg p-8 mb-12 animate-fadeInUp">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-6">
-                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-blue">
-                      <h3 className="text-xl font-bold mb-2 text-gta-blue">Dual Protagonists</h3>
-                      <p className="text-gray-300">Play as both Lucia and Jason, the first female protagonist in the mainline series, in a Bonnie & Clyde inspired crime saga.</p>
+              <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg p-5 md:p-8 mb-8 md:mb-12 animate-fadeInUp">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
+                  <div className="space-y-4 md:space-y-6">
+                    <div className="bg-gray-900/50 p-4 md:p-5 rounded-lg border-l-4 border-gta-blue">
+                      <h3 className="text-lg md:text-xl font-bold mb-2 text-gta-blue">Dual Protagonists</h3>
+                      <p className="text-gray-300 text-sm md:text-base">Play as both Lucia and Jason, the first female protagonist in the mainline series, in a Bonnie & Clyde inspired crime saga.</p>
                     </div>
                     
-                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-pink">
-                      <h3 className="text-xl font-bold mb-2 text-gta-pink">Vice City Returns</h3>
-                      <p className="text-gray-300">Return to a reimagined Vice City and surrounding areas in the fictional state of Leonida, inspired by Miami and Florida.</p>
+                    <div className="bg-gray-900/50 p-4 md:p-5 rounded-lg border-l-4 border-gta-pink">
+                      <h3 className="text-lg md:text-xl font-bold mb-2 text-gta-pink">Vice City Returns</h3>
+                      <p className="text-gray-300 text-sm md:text-base">Return to a reimagined Vice City and surrounding areas in the fictional state of Leonida, inspired by Miami and Florida.</p>
                     </div>
                     
-                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-blue">
-                      <h3 className="text-xl font-bold mb-2 text-gta-blue">Modern Setting</h3>
-                      <p className="text-gray-300">Set in the modern day, not the 1980s of the original Vice City, with contemporary themes and technology.</p>
+                    <div className="bg-gray-900/50 p-4 md:p-5 rounded-lg border-l-4 border-gta-blue">
+                      <h3 className="text-lg md:text-xl font-bold mb-2 text-gta-blue">Modern Setting</h3>
+                      <p className="text-gray-300 text-sm md:text-base">Set in the modern day, not the 1980s of the original Vice City, with contemporary themes and technology.</p>
                     </div>
                   </div>
                   
-                  <div className="space-y-6">
-                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-pink">
-                      <h3 className="text-xl font-bold mb-2 text-gta-pink">Improved Online</h3>
-                      <p className="text-gray-300">GTA Online is set to be bigger in scale, built for longevity, and more integrated with modern online gaming trends.</p>
+                  <div className="space-y-4 md:space-y-6">
+                    <div className="bg-gray-900/50 p-4 md:p-5 rounded-lg border-l-4 border-gta-pink">
+                      <h3 className="text-lg md:text-xl font-bold mb-2 text-gta-pink">Improved Online</h3>
+                      <p className="text-gray-300 text-sm md:text-base">GTA Online is set to be bigger in scale, built for longevity, and more integrated with modern online gaming trends.</p>
                     </div>
                     
-                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-blue">
-                      <h3 className="text-xl font-bold mb-2 text-gta-blue">Largest Map Yet</h3>
-                      <p className="text-gray-300">The biggest and most detailed open world in Rockstar history, with diverse environments from urban city to swamplands.</p>
+                    <div className="bg-gray-900/50 p-4 md:p-5 rounded-lg border-l-4 border-gta-blue">
+                      <h3 className="text-lg md:text-xl font-bold mb-2 text-gta-blue">Largest Map Yet</h3>
+                      <p className="text-gray-300 text-sm md:text-base">The biggest and most detailed open world in Rockstar history, with diverse environments from urban city to swamplands.</p>
                     </div>
                     
-                    <div className="bg-gray-900/50 p-5 rounded-lg border-l-4 border-gta-pink">
-                      <h3 className="text-xl font-bold mb-2 text-gta-pink">Fall 2025 Release</h3>
-                      <p className="text-gray-300">Slated for release in Fall 2025 for PlayStation 5 and Xbox Series X|S, with a PC version likely to follow later.</p>
+                    <div className="bg-gray-900/50 p-4 md:p-5 rounded-lg border-l-4 border-gta-pink">
+                      <h3 className="text-lg md:text-xl font-bold mb-2 text-gta-pink">Fall 2025 Release</h3>
+                      <p className="text-gray-300 text-sm md:text-base">Slated for release in Fall 2025 for PlayStation 5 and Xbox Series X|S, with a PC version likely to follow later.</p>
                     </div>
                   </div>
                 </div>
               </div>
               
               <div className="flex justify-center animate-fadeInUp">
-                <Link href="/wiki" className="px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-blue/20 transition-all hover:-translate-y-1">
+                <Link href="/wiki" className="px-6 md:px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-base md:text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-blue/20 transition-all hover:-translate-y-1">
                   Explore Full Wiki
                 </Link>
               </div>
@@ -264,9 +280,9 @@ export default function HomePage() {
         </section>
         
         {/* Trailer Section */}
-        <section className="flex items-center relative py-20">
+        <section className="flex items-center relative py-12 md:py-20">
           <div className="container mx-auto px-4">
-            <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-8 md:mb-12 text-center animate-fadeInUp">
               <span className="text-white">Official Trailer</span>
             </h2>
             
@@ -283,7 +299,7 @@ export default function HomePage() {
                 ></iframe>
               </div>
               
-              <div className="mt-8 text-center text-gray-400 animate-fadeInUp">
+              <div className="mt-6 md:mt-8 text-center text-gray-400 animate-fadeInUp">
                 <p>Watch on <a href="https://www.youtube.com/watch?v=QdBZY2fkU-0" target="_blank" rel="noopener noreferrer" className="text-gta-pink hover:underline">YouTube</a> for highest quality</p>
               </div>
             </div>
@@ -291,29 +307,30 @@ export default function HomePage() {
         </section>
         
         {/* Updates Section */}
-        <section className="flex items-center relative py-20">
+        <section className="flex items-center relative py-12 md:py-20">
           <div className="container mx-auto px-4">
-            <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center animate-fadeInUp">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-8 md:mb-12 text-center animate-fadeInUp">
               <span className="text-white">Latest Updates</span>
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto animate-fadeInUp">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto animate-fadeInUp">
               <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
-                <div className="h-48 relative overflow-hidden">
+                <div className="h-40 sm:h-48 relative overflow-hidden">
                   <Image 
                     src="/images/gta6-1.png" 
                     alt="GTA 6 Update" 
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                   />
                 </div>
-                <div className="p-6">
+                <div className="p-4 md:p-6">
                   <div className="text-xs text-gray-400 mb-2">March 15, 2024</div>
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-gta-blue transition-colors">Rockstar Confirms Dual Protagonist System</h3>
-                  <p className="text-gray-300 mb-4">New details emerge about the game's protagonists, Lucia and Jason, in this exciting update.</p>
-                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center">
+                  <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 group-hover:text-gta-blue transition-colors">Rockstar Confirms Dual Protagonist System</h3>
+                  <p className="text-gray-300 text-sm md:text-base mb-3 md:mb-4">New details emerge about the game's protagonists, Lucia and Jason, in this exciting update.</p>
+                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center text-sm md:text-base">
                     Read More
-                    <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                     </svg>
                   </Link>
@@ -321,21 +338,22 @@ export default function HomePage() {
               </div>
               
               <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
-                <div className="h-48 relative overflow-hidden">
+                <div className="h-40 sm:h-48 relative overflow-hidden">
                   <Image 
                     src="/images/gta6-2.png" 
                     alt="GTA 6 Update" 
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                   />
                 </div>
-                <div className="p-6">
+                <div className="p-4 md:p-6">
                   <div className="text-xs text-gray-400 mb-2">February 28, 2024</div>
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-gta-blue transition-colors">Map Size Reportedly Largest in GTA History</h3>
-                  <p className="text-gray-300 mb-4">Insiders claim the new Vice City map will be significantly larger than previous GTA worlds.</p>
-                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center">
+                  <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 group-hover:text-gta-blue transition-colors">Map Size Reportedly Largest in GTA History</h3>
+                  <p className="text-gray-300 text-sm md:text-base mb-3 md:mb-4">Insiders claim the new Vice City map will be significantly larger than previous GTA worlds.</p>
+                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center text-sm md:text-base">
                     Read More
-                    <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                     </svg>
                   </Link>
@@ -343,21 +361,22 @@ export default function HomePage() {
               </div>
               
               <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
-                <div className="h-48 relative overflow-hidden">
+                <div className="h-40 sm:h-48 relative overflow-hidden">
                   <Image 
                     src="/images/gta6-3.png" 
                     alt="GTA 6 Update" 
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                   />
                 </div>
-                <div className="p-6">
+                <div className="p-4 md:p-6">
                   <div className="text-xs text-gray-400 mb-2">January 19, 2024</div>
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-gta-blue transition-colors">New Game Mechanics Revealed</h3>
-                  <p className="text-gray-300 mb-4">Rockstar shares insights on new gameplay features including enhanced stealth and dynamic weather.</p>
-                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center">
+                  <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 group-hover:text-gta-blue transition-colors">New Game Mechanics Revealed</h3>
+                  <p className="text-gray-300 text-sm md:text-base mb-3 md:mb-4">Rockstar shares insights on new gameplay features including enhanced stealth and dynamic weather.</p>
+                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center text-sm md:text-base">
                     Read More
-                    <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                     </svg>
                   </Link>
@@ -365,8 +384,8 @@ export default function HomePage() {
               </div>
             </div>
             
-            <div className="mt-12 text-center animate-fadeInUp">
-              <Link href="/news" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-green/20 transition-all hover:-translate-y-1">
+            <div className="mt-8 md:mt-12 text-center animate-fadeInUp">
+              <Link href="/news" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-base md:text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-green/20 transition-all hover:-translate-y-1">
                 View All News
               </Link>
             </div>
@@ -374,30 +393,30 @@ export default function HomePage() {
         </section>
         
         {/* Final CTA */}
-        <section className="py-20 relative">
+        <section className="py-12 md:py-20 relative">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto bg-black/80 backdrop-blur-sm border border-gray-800 rounded-lg p-8 text-center relative overflow-hidden">
+            <div className="max-w-4xl mx-auto bg-black/80 backdrop-blur-sm border border-gray-800 rounded-lg p-5 md:p-8 text-center relative overflow-hidden">
               <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink/10 via-gta-blue/10 to-gta-green/10 blur-[50px] animate-pulse"></div>
               
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 relative text-white">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 md:mb-6 relative text-white">
                 Join The <span className="text-gta-pink">vice.city</span> Community
               </h2>
-              <p className="text-xl text-gray-300 mb-8 relative">Stay updated with the latest news, share your theories, and connect with other fans.</p>
+              <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 md:mb-8 relative">Stay updated with the latest news, share your theories, and connect with other fans.</p>
               
-              <div className="flex flex-col md:flex-row justify-center gap-4 relative">
-                <Link href="/wiki" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
+              <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 relative">
+                <Link href="/wiki" className="px-5 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1 text-sm md:text-base">
                   Explore Wiki
                 </Link>
-                <Link href="/map" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
+                <Link href="/map" className="px-5 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1 text-sm md:text-base">
                   Interactive Map
                 </Link>
-                <Link href="/news" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
+                <Link href="/news" className="px-5 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1 text-sm md:text-base">
                   Latest News
                 </Link>
               </div>
             </div>
             
-            <div className="mt-16 text-gray-400 text-sm text-center animate-fadeInUp">
+            <div className="mt-8 md:mt-16 text-gray-400 text-xs md:text-sm text-center animate-fadeInUp">
               <p className="mt-2">This is a fan site and is not affiliated with Rockstar Games or Take-Two Interactive.</p>
             </div>
           </div>
@@ -439,6 +458,18 @@ export default function HomePage() {
         
         .duration-1500 {
           transition-duration: 1500ms;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 640px) {
+          body {
+            overscroll-behavior: none;
+          }
+          
+          /* Improve touch targets */
+          button, a {
+            min-height: 44px;
+          }
         }
       `}</style>
     </div>
