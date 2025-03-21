@@ -15,6 +15,12 @@ export function getOptimizedImageUrl(
 ) {
   const { width, height, format = 'png', download = false, filename } = options;
   
+  // Validate image path
+  if (!imagePath) return imagePath;
+  
+  // For display (non-download), use Next.js Image component
+  // This function is only needed for downloads or specific formats
+  
   // Build the API URL with query parameters
   let url = `/api/image?path=${encodeURIComponent(imagePath)}`;
   
@@ -23,7 +29,7 @@ export function getOptimizedImageUrl(
   if (height) url += `&height=${height}`;
   
   // Add format
-  url += `&format=${format}`;
+  if (format) url += `&format=${format}`;
   
   // Add download options
   if (download) {
@@ -64,7 +70,8 @@ export function getPhoneResolution(modelId: string) {
 
 // Generate a placeholder URL for an image thumbnail
 export function getPlaceholderUrl(imagePath: string, width = 20) {
-  return `/api/image?path=${encodeURIComponent(imagePath)}&width=${width}&format=webp`;
+  if (!imagePath) return '';
+  return `/_next/image?url=${encodeURIComponent(imagePath)}&w=${width}&q=75`;
 }
 
 // Format the filename based on title and resolution

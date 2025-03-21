@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Setting this to false can help with dynamic routes
+  // Use 'serverless' output for better Vercel compatibility
   output: 'standalone',
   
   // Image optimization configuration
@@ -22,6 +22,10 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     // Increase the image optimization buffer size to handle large images
     minimumCacheTTL: 60,
+    // Important: allow local images to be optimized
+    domains: ['localhost', 'vice.city'],
+    // Use AVIF format when possible for better compression
+    formats: ['image/avif', 'image/webp'],
   },
   
   // Disable strict mode in production to avoid double-rendering issues
@@ -39,6 +43,23 @@ const nextConfig = {
   modularizeImports: {
     '@heroicons/react': {
       transform: '@heroicons/react/{{member}}',
+    },
+  },
+  
+  // Optimize serverless function size
+  experimental: {
+    // Don't include Sharp in server components
+    serverComponentsExternalPackages: [],
+    // Use the native Next.js image optimizer instead
+    optimizeImages: true,
+    // Exclude unnecessary files from traces
+    outputFileTracingExcludes: {
+      '*': [
+        '**/*.test.*',
+        '**/*.spec.*',
+        '**/tests/**',
+        '**/__tests__/**',
+      ],
     },
   },
 }
