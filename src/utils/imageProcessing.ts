@@ -3,7 +3,15 @@
  */
 
 /**
- * Get an image URL from a resolution-specific folder
+ * Get an image URL with resolution folder support
+ * 
+ * This function generates a URL to fetch an image from resolution-specific folders.
+ * It will look for the image in the following locations, in order:
+ * 1. /{resolution}/{filename} - Direct in resolution folder
+ * 2. /{resolution}/{original-path}/{filename} - Resolution folder with original path
+ * 3. /{original-path}/{resolution}/{filename} - Original path with resolution subfolder
+ * 4. /{original-path}/{filename} - Original path (fallback)
+ * 
  * @param imagePath Path to the original image
  * @param resolution Resolution identifier (e.g., '1080p')
  * @param download Whether to trigger a download
@@ -19,7 +27,7 @@ export const getImageUrl = (
   // Ensure path is valid
   if (!imagePath) return '';
   
-  // Clean the path
+  // Clean the path (keep leading slash for API parameter)
   const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
   
   // Construct the API URL
@@ -71,13 +79,15 @@ export const getPlaceholderUrl = (imagePath: string): string => {
 };
 
 /**
- * Format the image filename for download based on title and resolution
+ * Format the image filename for download based on original filename and resolution
+ * @param imagePath Original image path
+ * @param resolution Resolution identifier (e.g., '1080p')
+ * @returns Formatted filename for download
  */
-export const formatImageFilename = (title: string, resolution: string): string => {
-  // Clean the title and add resolution
-  return title
-    .replace(/[^\w\s-]/g, '') // Remove special chars
-    .trim()
-    .replace(/\s+/g, '-') // Replace spaces with dashes
-    .concat(`-${resolution}`);
+export const formatImageFilename = (imagePath: string, resolution: string): string => {
+  // Extract the base filename (without extension)
+  const baseName = imagePath.split('/').pop()?.split('.')[0] || 'image';
+  
+  // Format as basename-resolution
+  return `${baseName}-${resolution}`;
 }; 
