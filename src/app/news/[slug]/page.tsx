@@ -193,12 +193,12 @@ export default function ArticlePage() {
   
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <Navbar />
-      <div className="h-14 w-full"></div>
+      <Navbar transparent={true} />
+      
       
       <main className="flex-grow">
         {/* Article Header */}
-        <div className="relative aspect-[5/1] w-full bg-gray-900">
+        <div className="relative min-h-[600px] flex items-center justify-center overflow-hidden bg-gradient-to-br z-10 from-gray-900 via-gray-800 to-gray-900">
           <Image 
             src={article.imageUrl}
             alt={article.title}
@@ -233,7 +233,7 @@ export default function ArticlePage() {
           <div className="absolute bottom-0 left-0 w-full p-6 md:p-12 container mx-auto z-20">
             {/* Breadcrumb Navigation */}
             <div className="mb-6 flex items-center text-sm text-gray-400">
-              <Link href="/news" className="hover:text-white transition-colors">News</Link>
+              <Link href="/news" className="hover:text-white transition-colors">Vice News</Link>
               <span className="mx-2">›</span>
               <Link 
                 href={`/news?category=${article.category}`}

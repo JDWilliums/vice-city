@@ -453,8 +453,7 @@ export default function Gallery() {
       <Navbar transparent={true} />
       <main className="min-h-screen bg-gradient-to-b from-gray-900 to-dark-bg pb-16">
         {/* Hero Section with Header */}
-        <div className="relative min-h-[600px] flex items-center justify-center overflow-hidden bg-gradient-to-br z-10 from-gray-900 via-gray-800 to-gray-900 pt-20">
-          {/* Background Image with Overlay */}
+        <div className="relative min-h-[400px] flex items-center justify-center overflow-hidden bg-gradient-to-br z-10 from-gray-900 via-gray-800 to-gray-900 pt-20">
           <div className="absolute inset-0 z-0">
             <Image 
               src="/images/gta6-0.png" 
@@ -499,16 +498,16 @@ export default function Gallery() {
                 ))}
               </div>
             </div>
-                  
-            
-          </div>
-
-          {/* Scroll indicator - positioned at bottom of header */}
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center animate-bounce">
+            {/* Scroll indicator - positioned at bottom of header */}
+            <div className="mt-6 mb-4 flex justify-center animate-bounce">
               <svg className="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
             </div>
+            
+          </div>
+
+          
         </div>
         
         <div className="container-custom pt-16">
