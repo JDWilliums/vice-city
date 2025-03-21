@@ -129,12 +129,7 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
                 <AdminBadge className="ml-1" />
               </Link>
             )}
-            <Link 
-              href="/about" 
-              className="text-white hover:text-gta-pink transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gta-pink after:transition-all"
-            >
-              ABOUT
-            </Link>
+            
             
             {/* Authentication */}
             {user ? (
@@ -255,13 +250,6 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
           <div className="md:hidden pt-4 pb-4 bg-gradient-to-b from-gray-800 to-gray-900 mt-2 rounded-lg border border-gray-700">
             <div className="flex flex-col space-y-4">
               <Link 
-                href="/home" 
-                className="text-white hover:text-gta-blue transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-blue"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                HOME
-              </Link>
-              <Link 
                 href="/map" 
                 className="text-white hover:text-gta-blue transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-blue"
                 onClick={() => setIsMenuOpen(false)}
@@ -289,20 +277,7 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
               >
                 GALLERY
               </Link>
-              <Link 
-                href="/tools" 
-                className="text-white hover:text-gta-yellow transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-yellow"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                TOOLS
-              </Link>
-              <Link 
-                href="/about" 
-                className="text-white hover:text-gta-yellow transition-colors px-4 py-2 border-l-2 border-transparent hover:border-gta-yellow"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                ABOUT
-              </Link>
+              
               
               {/* Mobile Auth Links */}
               <div className="border-t border-gray-700 pt-4 mt-2">
