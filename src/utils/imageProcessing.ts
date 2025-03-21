@@ -76,8 +76,9 @@ export function getPhoneResolution(modelId: string) {
 // Generate a placeholder URL for an image thumbnail
 export function getPlaceholderUrl(imagePath: string, width = 20) {
   if (!imagePath) return '';
-  // Use Next.js built-in image optimization
-  return `/_next/image?url=${encodeURIComponent(imagePath)}&w=${width}&q=75`;
+  // Use Next.js built-in image optimization with the correct URL format
+  // Important: Do not encode the URL - Next.js will handle it
+  return `/_next/image?url=${imagePath}&w=${width}&q=75`;
 }
 
 // Format the filename based on title and resolution

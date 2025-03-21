@@ -36,16 +36,26 @@
             padding: 10px;
             border-radius: 4px;
             background: #f9f9f9;
+            text-align: center;
         }
         .image-item img {
             max-width: 100%;
             height: auto;
             display: block;
+            border: 1px dashed #ccc;
         }
         .image-info {
             margin-top: 10px;
             font-size: 14px;
             color: #555;
+        }
+        .actual-size {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .size-mismatch {
+            font-weight: bold;
+            color: #f44336;
         }
         button {
             background: #4CAF50;
@@ -60,17 +70,45 @@
         button:hover {
             background: #45a049;
         }
+        .original-size {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e9f7ef;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .debug-info {
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow: auto;
+        }
     </style>
 </head>
 <body>
     <h1>Image API Test</h1>
     
     <div class="test-section">
+        <h2>Image Information</h2>
+        <div id="original-size" class="original-size">
+            Loading original image size...
+        </div>
+        
+        <div id="debug-info" class="debug-info">Debug logs will appear here</div>
+    </div>
+    
+    <div class="test-section">
         <h2>Direct Image Display Test</h2>
         <div class="image-test">
             <h3>Original Image</h3>
             <div class="image-item">
-                <img src="/images/gta6-0.png" alt="Original Image">
+                <img id="original-image" src="/images/gta6-0.png" alt="Original Image">
                 <div class="image-info">Original image directly from public folder</div>
             </div>
         </div>
@@ -80,17 +118,17 @@
             <div class="image-container">
                 <div class="image-item">
                     <img src="/api/image?path=/images/gta6-0.png&width=200" alt="200px width">
-                    <div class="image-info">Width: 200px</div>
+                    <div class="image-info">Requested: Width 200px</div>
                 </div>
                 
                 <div class="image-item">
                     <img src="/api/image?path=/images/gta6-0.png&width=400" alt="400px width">
-                    <div class="image-info">Width: 400px</div>
+                    <div class="image-info">Requested: Width 400px</div>
                 </div>
                 
                 <div class="image-item">
                     <img src="/api/image?path=/images/gta6-0.png&width=600" alt="600px width">
-                    <div class="image-info">Width: 600px</div>
+                    <div class="image-info">Requested: Width 600px</div>
                 </div>
             </div>
         </div>
@@ -100,12 +138,12 @@
             <div class="image-container">
                 <div class="image-item">
                     <img src="/api/image?path=/images/gta6-0.png&width=300&height=200" alt="300x200">
-                    <div class="image-info">300px × 200px</div>
+                    <div class="image-info">Requested: 300px × 200px</div>
                 </div>
                 
                 <div class="image-item">
                     <img src="/api/image?path=/images/gta6-0.png&width=400&height=300" alt="400x300">
-                    <div class="image-info">400px × 300px</div>
+                    <div class="image-info">Requested: 400px × 300px</div>
                 </div>
             </div>
         </div>
@@ -115,11 +153,11 @@
         <h2>Download Test</h2>
         <p>Click the buttons below to test different download sizes:</p>
         
-        <button onclick="window.open('/api/image?path=/images/gta6-0.png&width=1280&height=720&download=true&filename=test-720p', '_blank')">Download 720p (1280×720)</button>
+        <button onclick="testDownload(1280, 720)">Test Download 720p (1280×720)</button>
         <br>
-        <button onclick="window.open('/api/image?path=/images/gta6-0.png&width=1920&height=1080&download=true&filename=test-1080p', '_blank')">Download 1080p (1920×1080)</button>
+        <button onclick="testDownload(1920, 1080)">Test Download 1080p (1920×1080)</button>
         <br>
-        <button onclick="window.open('/api/image?path=/images/gta6-0.png&width=2560&height=1440&download=true&filename=test-1440p', '_blank')">Download 1440p (2560×1440)</button>
+        <button onclick="testDownload(2560, 1440)">Test Download 1440p (2560×1440)</button>
     </div>
     
     <div class="test-section">
@@ -127,14 +165,25 @@
         <div class="image-container">
             <div class="image-item">
                 <img src="/api/image?path=/images/gta6-0.png&width=400&format=webp" alt="WebP Format">
-                <div class="image-info">WebP Format</div>
+                <div class="image-info">WebP Format, Width 400px</div>
             </div>
             
             <div class="image-item">
                 <img src="/api/image?path=/images/gta6-0.png&width=400&format=jpg" alt="JPEG Format">
-                <div class="image-info">JPEG Format</div>
+                <div class="image-info">JPEG Format, Width 400px</div>
             </div>
         </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>PNG Download Test</h2>
+        <p>Test PNG downloads specifically (this matches the gallery download functionality):</p>
+        
+        <button onclick="testPngDownload(1280, 720)">PNG Download 720p (1280×720)</button>
+        <br>
+        <button onclick="testPngDownload(1920, 1080)">PNG Download 1080p (1920×1080)</button>
+        <br>
+        <button onclick="testPngDownload(2560, 1440)">PNG Download 1440p (2560×1440)</button>
     </div>
     
     <script>
@@ -142,9 +191,117 @@
         document.querySelectorAll('.image-item img').forEach(img => {
             img.onload = function() {
                 const infoDiv = this.nextElementSibling;
-                infoDiv.innerHTML += `<br>Actual size: ${this.naturalWidth}×${this.naturalHeight}px`;
+                // Check if the dimensions match what's expected
+                const actualSize = `${this.naturalWidth}×${this.naturalHeight}px`;
+                
+                // Add the actual size to the info div with a class
+                const sizeSpan = document.createElement('div');
+                sizeSpan.textContent = `Actual size: ${actualSize}`;
+                
+                // Add a class based on whether the size matches what was requested
+                const requestedSize = infoDiv.textContent;
+                if (requestedSize.includes(this.naturalWidth.toString())) {
+                    sizeSpan.className = 'actual-size';
+                } else {
+                    sizeSpan.className = 'size-mismatch';
+                }
+                
+                infoDiv.appendChild(sizeSpan);
+                
+                // Log the result to help debugging
+                logDebug(`Image loaded: ${this.src}\nActual size: ${actualSize}`);
+            };
+            
+            img.onerror = function() {
+                logDebug(`Error loading image: ${this.src}`);
             };
         });
+        
+        // Function to check the original image dimensions
+        function checkOriginalImageSize() {
+            const originalImage = document.getElementById('original-image');
+            
+            originalImage.onload = function() {
+                const width = this.naturalWidth;
+                const height = this.naturalHeight;
+                document.getElementById('original-size').textContent = 
+                    `Original Image Size: ${width}×${height}px`;
+                
+                logDebug(`Original image loaded: ${width}×${height}px`);
+            };
+        }
+        
+        // Debug logging function
+        function logDebug(message) {
+            const debugDiv = document.getElementById('debug-info');
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.textContent += `[${timestamp}] ${message}\n\n`;
+            
+            // Auto-scroll to bottom
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+        
+        // Function to test downloads and analyze their size
+        function testDownload(width, height) {
+            logDebug(`Testing download: ${width}×${height}px`);
+            
+            // Construct the URL
+            const url = `/api/image?path=/images/gta6-0.png&width=${width}&height=${height}&download=true&filename=test-${width}x${height}`;
+            
+            // Create an invisible iframe to load the download
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            // Listen for the iframe load event
+            iframe.onload = function() {
+                logDebug(`Download initiated: ${width}×${height}px`);
+                // Remove the iframe after a delay
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 5000);
+            };
+            
+            // Set the iframe src to initiate the download
+            iframe.src = url;
+            
+            // Also open in a new tab for inspection
+            window.open(url, '_blank');
+        }
+        
+        // Function to test PNG downloads specifically
+        function testPngDownload(width, height) {
+            logDebug(`Testing PNG download: ${width}×${height}px`);
+            
+            // Construct the URL - note the format=png parameter
+            const url = `/api/image?path=/images/gta6-0.png&width=${width}&height=${height}&format=png&quality=95&download=true&filename=test-png-${width}x${height}`;
+            
+            logDebug(`PNG download URL: ${url}`);
+            
+            // Create an invisible iframe to load the download
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            // Listen for the iframe load event
+            iframe.onload = function() {
+                logDebug(`PNG download initiated: ${width}×${height}px`);
+                // Remove the iframe after a delay
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 5000);
+            };
+            
+            // Set the iframe src to initiate the download
+            iframe.src = url;
+            
+            // Also open in a new tab for inspection
+            window.open(url, '_blank');
+        }
+        
+        // Initialize
+        checkOriginalImageSize();
+        logDebug('Page loaded - testing Next.js image optimization without Sharp');
     </script>
 </body>
 </html> 

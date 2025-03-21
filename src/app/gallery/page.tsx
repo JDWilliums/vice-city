@@ -296,13 +296,23 @@ export default function Gallery() {
       ? phoneResolutions.find((r) => r.id === resolution)
       : availableResolutions.find((r) => r.id === resolution);
     
-    if (!resData) return;
+    if (!resData) {
+      console.error(`Resolution data not found for: ${resolution}`);
+      return;
+    }
     
     // Use our utility function to generate the API URL
     const filename = formatImageFilename(title, resolution);
+    
+    // Make sure we explicitly specify width and height
+    const width = resData.width;
+    const height = resData.height;
+    
+    console.log(`Requesting download with dimensions: ${width}×${height}`);
+    
     const apiUrl = getOptimizedImageUrl(imageUrl, {
-      width: resData.width,
-      height: resData.height,
+      width: width,
+      height: height,
       format: 'png', // Using PNG for downloads to maintain quality
       quality: 95,   // High quality for downloads
       download: true,
@@ -310,7 +320,8 @@ export default function Gallery() {
     });
     
     // Track download attempt for analytics/debugging
-    console.log(`Downloading image: ${title} at ${resolution} resolution`);
+    console.log(`Downloading image: ${title} at ${resolution} resolution (${width}×${height})`);
+    console.log(`Download URL: ${apiUrl}`);
     
     // Open download in new tab for better UX with large files
     window.open(apiUrl, '_blank');

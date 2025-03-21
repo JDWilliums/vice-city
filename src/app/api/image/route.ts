@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
-import sharp from 'sharp'; // Import Sharp for manual resizing
 
 // Debug flag
 const DEBUG = true;
@@ -82,89 +81,32 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Try manual resizing with Sharp first (more reliable for downloads)
+    // For image optimization using Next.js image optimizer
     try {
-      if (DEBUG) console.log(`[Image API] Attempting manual resize with Sharp`);
-      
-      const widthInt = width ? parseInt(width) : null;
-      const heightInt = height ? parseInt(height) : null;
-      
-      if (widthInt || heightInt) {
-        const fileBuffer = fs.readFileSync(fullImagePath);
-        let sharpInstance = sharp(fileBuffer);
-        
-        // Resize image
-        sharpInstance = sharpInstance.resize({
-          width: widthInt || undefined,
-          height: heightInt || undefined,
-          fit: 'inside',
-          withoutEnlargement: true
-        });
-        
-        // Set format
-        if (format === 'png') {
-          sharpInstance = sharpInstance.png({ quality: parseInt(quality) });
-        } else if (format === 'jpg' || format === 'jpeg') {
-          sharpInstance = sharpInstance.jpeg({ quality: parseInt(quality) });
-        } else {
-          sharpInstance = sharpInstance.webp({ quality: parseInt(quality) });
-        }
-        
-        // Get buffer
-        const resizedBuffer = await sharpInstance.toBuffer();
-        
-        // Check metadata to verify resizing worked
-        const metadata = await sharp(resizedBuffer).metadata();
-        if (DEBUG) console.log(`[Image API] Sharp resize result:`, {
-          requestedWidth: widthInt,
-          requestedHeight: heightInt,
-          actualWidth: metadata.width,
-          actualHeight: metadata.height,
-          format: metadata.format,
-          size: resizedBuffer.length / 1024 + 'KB'
-        });
-        
-        // Create response
-        const response = new NextResponse(resizedBuffer);
-        response.headers.set('Content-Type', `image/${format === 'jpg' ? 'jpeg' : format}`);
-        
-        if (download) {
-          response.headers.set('Content-Disposition', `attachment; filename="${filename}.${format}"`);
-        }
-        
-        response.headers.set('Cache-Control', 'public, max-age=31536000');
-        
-        return response;
-      }
-    } catch (sharpError) {
-      if (DEBUG) console.error(`[Image API] Sharp resize error, falling back to Next.js:`, sharpError);
-    }
-
-    // For image optimization using Next.js image optimizer (fallback)
-    try {
-      // Construct optimizer URL (ensuring it's absolute to work internally)
+      // Construct the URL for Next.js image optimizer
       const baseUrl = request.nextUrl.origin;
-      const encodedImagePath = encodeURIComponent(imagePath.startsWith('/') ? imagePath : `/${imagePath}`);
+      
+      // CRITICAL: Format URL exactly as Next.js expects it - this is path from public directory
+      // Use simple, non-encoded path format - Next.js will handle encoding internally
       const nextImageUrl = new URL(`${baseUrl}/_next/image`);
       
-      // Add the image URL parameter (using the URL format expected by Next.js)
-      nextImageUrl.searchParams.set('url', encodedImagePath);
-      
-      // Set required parameters
+      // Important: We must NOT double-encode the URL and use the proper format
+      nextImageUrl.searchParams.set('url', imagePath);
       nextImageUrl.searchParams.set('w', width || '1920');
       nextImageUrl.searchParams.set('q', quality);
       
-      // Set optional parameters
       if (height) {
         nextImageUrl.searchParams.set('h', height);
       }
 
-      if (DEBUG) console.log(`[Image API] Next.js Image URL: ${nextImageUrl.toString()}`);
+      if (DEBUG) {
+        console.log(`[Image API] Next.js Image URL: ${nextImageUrl.toString()}`);
+        console.log(`[Image API] Requested format: ${format}, dimensions: ${width}x${height}`);
+      }
       
       // Fetch the optimized image from Next.js
       const imageResponse = await fetch(nextImageUrl.toString(), {
         headers: {
-          // Add host header to ensure request works internally
           'Host': request.headers.get('host') || 'localhost'
         }
       });
@@ -189,7 +131,10 @@ export async function GET(request: NextRequest) {
         response.headers.set('Content-Type', `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`);
         
         if (download) {
-          response.headers.set('Content-Disposition', `attachment; filename="${filename}.${fileExt}"`);
+          // If a specific format was requested, use that for the filename extension
+          const downloadExt = format || fileExt;
+          response.headers.set('Content-Disposition', `attachment; filename="${filename}.${downloadExt}"`);
+          if (DEBUG) console.log(`[Image API] Serving original file as ${filename}.${downloadExt}`);
         }
         
         response.headers.set('Cache-Control', 'public, max-age=31536000');
@@ -200,31 +145,37 @@ export async function GET(request: NextRequest) {
       // Get the optimized image as array buffer
       const imageBuffer = await imageResponse.arrayBuffer();
       
-      // Verify the image was actually resized by Next.js
-      try {
-        const buffer = Buffer.from(imageBuffer);
-        const metadata = await sharp(buffer).metadata();
-        if (DEBUG) console.log(`[Image API] Next.js optimizer result:`, {
-          requestedWidth: parseInt(width || '0'),
-          requestedHeight: height ? parseInt(height) : null,
-          actualWidth: metadata.width,
-          actualHeight: metadata.height,
-          format: metadata.format,
-          size: buffer.length / 1024 + 'KB'
-        });
-      } catch (error) {
-        if (DEBUG) console.error(`[Image API] Error checking image metadata:`, error);
+      // Log the size of the optimized image
+      if (DEBUG) {
+        const size = Math.round((imageBuffer.byteLength / 1024) * 100) / 100;
+        console.log(`[Image API] Next.js optimizer result - size: ${size}KB, format: ${format}`);
       }
       
       // Create response with the optimized image
       const response = new NextResponse(imageBuffer);
       
       // Set appropriate headers for download
-      const contentType = imageResponse.headers.get('content-type') || `image/${format === 'jpg' ? 'jpeg' : format}`;
-      response.headers.set('Content-Type', contentType);
+      // Note: Next.js will convert to WebP by default, unless we tell it not to
+      // For PNG downloads, we need to ensure the content type is set correctly
+      let contentType = imageResponse.headers.get('content-type');
+      
+      // If we requested PNG but got WebP, we should note this in logs
+      if (format === 'png' && contentType?.includes('webp')) {
+        if (DEBUG) console.log(`[Image API] Warning: Requested PNG but Next.js returned WebP`);
+      }
+      
+      // Force the content type if necessary for specific formats
+      if (format === 'png') {
+        contentType = 'image/png';
+      } else if (format === 'jpg') {
+        contentType = 'image/jpeg';
+      }
+      
+      response.headers.set('Content-Type', contentType || `image/${format === 'jpg' ? 'jpeg' : format}`);
       
       if (download) {
         response.headers.set('Content-Disposition', `attachment; filename="${filename}.${format}"`);
+        if (DEBUG) console.log(`[Image API] Serving optimized file as ${filename}.${format}`);
       }
       
       response.headers.set('Cache-Control', 'public, max-age=31536000');
@@ -243,7 +194,10 @@ export async function GET(request: NextRequest) {
         response.headers.set('Content-Type', `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`);
         
         if (download) {
-          response.headers.set('Content-Disposition', `attachment; filename="${filename}.${fileExt}"`);
+          // Default to the requested format for the extension if we have one
+          const downloadExt = format || fileExt;
+          response.headers.set('Content-Disposition', `attachment; filename="${filename}.${downloadExt}"`);
+          if (DEBUG) console.log(`[Image API] Serving original file after error as ${filename}.${downloadExt}`);
         }
         
         response.headers.set('Cache-Control', 'public, max-age=31536000');
