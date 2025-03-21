@@ -608,17 +608,7 @@ export default function WikiHomePage() {
                     </li>
                   ))}
                 </ul>
-                <div className="p-4 text-center border-t border-gray-700/70">
-                  <Link 
-                    href="/wiki/recent"
-                    className="text-gta-green hover:text-gta-blue transition-colors inline-flex items-center"
-                  >
-                    View all recent updates
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
+                
               </div>
             )}
           </div>
@@ -662,13 +652,14 @@ export default function WikiHomePage() {
         <section className="relative overflow-hidden rounded-xl p-1 animate-fadeInUp" style={{ animationDelay: '1.5s' }}>
           <div className="absolute inset-0 bg-gradient-to-r from-gta-pink via-gta-blue to-gta-green animate-gradient"></div>
           <div className="relative bg-gray-900/95 rounded-lg p-10 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Contribute to the Wiki</h2>
+            <h2 className="text-3xl font-bold text-white mb-4"> 🚧 Contribute to the Wiki 🚧 </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Help build the most comprehensive resource for GTA 6 by contributing your knowledge and insights.
+              <p className="text-gray-400 p-10">Currently, the wiki & contribution is under construction.</p>
+              <p className="text-gray-400">Help build the most comprehensive resource for GTA 6 by contributing your knowledge and insights.</p>
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link 
-                href="/admin/wiki"
+                href="/wiki"
                 className="px-8 py-4 bg-gradient-to-r from-gta-pink to-pink-600 text-white font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1"
               >
                 Start Contributing

@@ -41,8 +41,17 @@ export default function MapPage() {
   return (
     <>
       <Navbar />
-      <main className="pt-16 bg-map-bg">
+      <main className="pt-16 bg-map-bg relative">
         {mapLoaded && <MapComponent />}
+        
+        {/* Work In Progress Watermark */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+          <div className="transform rotate-[-30deg] bg-black bg-opacity-30 px-12 py-6 rounded-lg">
+            <h1 className="text-5xl font-bold text-white opacity-30 border-4 border-white p-4 tracking-widest">
+              🚧  UNDER CONSTRUCTION  🚧
+            </h1>
+          </div>
+        </div>
       </main>
       <Footer />
     </>

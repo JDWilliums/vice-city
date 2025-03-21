@@ -700,7 +700,7 @@ function getWikiPage(slug) {
                 <div className="bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-700/50 overflow-hidden mb-12 animate-fadeIn shadow-xl hover:shadow-gta-blue/10 transition-all duration-300">
                   <div 
                     ref={contentRef}
-                    className="prose prose-invert max-w-none px-8 py-10 markdown-content"
+                    className="prose prose-invert max-w-none px-8 py-10 markdown-content wiki-slug-content"
                     dangerouslySetInnerHTML={{ __html: renderMarkdown(pageData.content) }}
                   />
                 </div>
@@ -810,9 +810,8 @@ function getWikiPage(slug) {
                           <svg className="w-5 h-5 mr-2 text-gta-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          Featured Image
+                          {pageData.title}
                         </h3>
-                        <p className="text-sm text-gray-400">{pageData.title} - Main visual</p>
                       </div>
 
                       {/* Details Table - Will be populated from Firestore */}
@@ -1207,6 +1206,19 @@ function getWikiPage(slug) {
               margin: 2rem 0;
               box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
               border: 1px solid rgba(74, 85, 104, 0.3);
+        }
+
+        /* Special styling for this page's bullet points only */
+        .wiki-slug-content ul li::before {
+          content: "" !important;
+          color: transparent !important;
+          background-color: #52FDFF !important;
+          width: 0.375em !important;
+          height: 0.375em !important;
+          top: 0.6875em !important;
+          border-radius: 0 !important; /* Ensure it's a square */
+          position: absolute !important;
+          left: 0.375em !important;
         }
       `}</style>
         </>

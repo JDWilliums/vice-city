@@ -132,15 +132,18 @@ export default function Map() {
         <ZoomControl position="topright" />
         
         {/* GTA 5 Map as Image Overlay */}
+        {/*}
         <ImageOverlay
           url="/gta5map.png"
           bounds={MAP_BOUNDS}
           opacity={1}
           zIndex={1}
         />
+        */}
         
         <SetViewOnInit />
         
+        {/*}
         {filteredMarkers.map(marker => (
           <Marker 
             key={marker.id}
@@ -164,6 +167,7 @@ export default function Map() {
             </Popup>
           </Marker>
         ))}
+        */}
       </MapContainer>
     </div>
   );
