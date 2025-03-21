@@ -2,86 +2,82 @@
  * Utility functions for image processing
  */
 
-// Generate an optimized image URL based on provided parameters
-export function getOptimizedImageUrl(
+/**
+ * Get an image URL from a resolution-specific folder
+ * @param imagePath Path to the original image
+ * @param resolution Resolution identifier (e.g., '1080p')
+ * @param download Whether to trigger a download
+ * @param filename Custom filename for download
+ * @returns URL to the image
+ */
+export const getImageUrl = (
   imagePath: string,
-  options: {
-    width?: number;
-    height?: number;
-    format?: 'png' | 'jpg' | 'webp';
-    quality?: number;
-    download?: boolean;
-    filename?: string;
-  }
-) {
-  const { width, height, format = 'webp', quality = 80, download = false, filename } = options;
-  
-  // Validate image path
-  if (!imagePath) return imagePath;
-  
-  // For display (non-download), use Next.js Image component which is optimized by Next.js
-  if (!download) {
-    return imagePath;
-  }
-  
-  // For downloads or specific formats, use our custom API
-  // Build the API URL with query parameters
-  let url = `/api/image?path=${encodeURIComponent(imagePath)}`;
-  
-  // Add dimensions if provided
-  if (width) url += `&width=${width}`;
-  if (height) url += `&height=${height}`;
-  
-  // Add format and quality
-  url += `&format=${format}`;
-  url += `&quality=${quality}`;
-  
-  // Add download flag
-  url += '&download=true';
-  
-  // Add filename if provided
-  if (filename) url += `&filename=${encodeURIComponent(filename)}`;
-  
-  return url;
-}
-
-// Available desktop resolutions
-export const availableResolutions = [
-  { id: '720p', name: '720p', width: 1280, height: 720 },
-  { id: '1080p', name: '1080p', width: 1920, height: 1080 },
-  { id: '1440p', name: '1440p', width: 2560, height: 1440 },
-  { id: '4k', name: '4K', width: 3840, height: 2160 }
-];
-
-// Common phone resolutions
-export const phoneResolutions = [
-  { id: 'iphone-standard', name: 'iPhone Standard', width: 750, height: 1334 },
-  { id: 'iphone-plus', name: 'iPhone Plus', width: 1080, height: 1920 },
-  { id: 'iphone-x', name: 'iPhone X/11/12', width: 1125, height: 2436 },
-  { id: 'iphone-promax', name: 'iPhone Pro Max', width: 1284, height: 2778 },
-  { id: 'android-standard', name: 'Android Standard', width: 1080, height: 1920 },
-  { id: 'android-large', name: 'Android Large', width: 1440, height: 2560 }
-];
-
-// Get resolution by device type
-export function getResolutionsForDeviceType(deviceType: 'desktop' | 'phone') {
-  return deviceType === 'phone' ? phoneResolutions : availableResolutions;
-}
-
-// Get specific phone resolution for a model
-export function getPhoneResolution(modelId: string) {
-  return phoneResolutions.find(resolution => resolution.id === modelId);
-}
-
-// Generate a placeholder URL for an image thumbnail
-export function getPlaceholderUrl(imagePath: string, width = 20) {
+  resolution?: string,
+  download: boolean = false,
+  filename?: string
+): string => {
+  // Ensure path is valid
   if (!imagePath) return '';
-  // Use Next.js built-in image optimization with the correct URL format
-  // Important: Do not encode the URL - Next.js will handle it
-  return `/_next/image?url=${imagePath}&w=${width}&q=75`;
-}
+  
+  // Clean the path
+  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  
+  // Construct the API URL
+  const params = new URLSearchParams();
+  params.append('path', cleanPath);
+  
+  if (resolution) params.append('resolution', resolution);
+  if (download) params.append('download', 'true');
+  if (filename) params.append('filename', filename);
+  
+  return `/api/image?${params.toString()}`;
+};
 
-// Format the filename based on title and resolution
-export function formatImageFilename(title: string, resolution: string) {
-  return `GTA6-${title.replace(/\s+/g, '-')}-${resolution}`;
-} 
+// Standard available resolutions for desktop
+export const availableResolutions = [
+  { id: '720p', width: 1280, height: 720, name: '720p HD' },
+  { id: '1080p', width: 1920, height: 1080, name: '1080p Full HD' },
+  { id: '1440p', width: 2560, height: 1440, name: '1440p QHD' },
+  { id: '4k', width: 3840, height: 2160, name: '4K UHD' }
+];
+
+// Phone resolutions
+export const phoneResolutions = [
+  { id: 'iphone', width: 828, height: 1792, name: 'iPhone' },
+  { id: 'android', width: 1080, height: 2340, name: 'Android' },
+  { id: 'ipad', width: 2048, height: 2732, name: 'iPad' }
+];
+
+/**
+ * Get available resolutions based on device type
+ */
+export const getResolutionsForDeviceType = (type: 'desktop' | 'phone') => {
+  return type === 'desktop' ? availableResolutions : phoneResolutions;
+};
+
+/**
+ * Get phone resolution data
+ */
+export const getPhoneResolution = (id: string) => {
+  return phoneResolutions.find(r => r.id === id) || phoneResolutions[0];
+};
+
+/**
+ * Get a placeholder URL for image thumbnail
+ */
+export const getPlaceholderUrl = (imagePath: string): string => {
+  // Use thumbnail resolution folder for placeholders
+  return getImageUrl(imagePath, 'thumb');
+};
+
+/**
+ * Format the image filename for download based on title and resolution
+ */
+export const formatImageFilename = (title: string, resolution: string): string => {
+  // Clean the title and add resolution
+  return title
+    .replace(/[^\w\s-]/g, '') // Remove special chars
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with dashes
+    .concat(`-${resolution}`);
+}; 

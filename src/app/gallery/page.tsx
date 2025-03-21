@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { getOptimizedImageUrl, availableResolutions, phoneResolutions, formatImageFilename } from '@/utils/imageProcessing';
+import { availableResolutions, phoneResolutions, formatImageFilename, getPhoneResolution, getImageUrl } from '@/utils/imageProcessing';
 
 // Image gallery categories
 const categories = [
@@ -291,40 +291,32 @@ export default function Gallery() {
 
   // Handle download image
   const handleDownload = (imageUrl: string, resolution: string, title: string, isPhoneResolution = false) => {
-    // Find the resolution data
-    const resData = isPhoneResolution 
-      ? phoneResolutions.find((r) => r.id === resolution)
-      : availableResolutions.find((r) => r.id === resolution);
-    
-    if (!resData) {
-      console.error(`Resolution data not found for: ${resolution}`);
-      return;
+    try {
+      // Find the resolution data based on the selected resolution
+      const resolutionData = isPhoneResolution 
+        ? getPhoneResolution(resolution)
+        : availableResolutions.find(r => r.id === resolution);
+      
+      if (!resolutionData) {
+        console.error(`Resolution not found: ${resolution}`);
+        return;
+      }
+      
+      console.log(`Downloading image: ${title} at ${resolution} (${resolutionData.width}x${resolutionData.height})`);
+      
+      // Generate a download URL for the pre-sized image using the resolution folder
+      const downloadUrl = getImageUrl(
+        imageUrl,
+        resolution,  // Use the resolution ID to find the pre-sized image
+        true,        // Request download
+        formatImageFilename(title, resolution)
+      );
+      
+      // Open in a new tab for better handling of large files
+      window.open(downloadUrl, '_blank');
+    } catch (error) {
+      console.error('Error generating download URL:', error);
     }
-    
-    // Use our utility function to generate the API URL
-    const filename = formatImageFilename(title, resolution);
-    
-    // Make sure we explicitly specify width and height
-    const width = resData.width;
-    const height = resData.height;
-    
-    console.log(`Requesting download with dimensions: ${width}×${height}`);
-    
-    const apiUrl = getOptimizedImageUrl(imageUrl, {
-      width: width,
-      height: height,
-      format: 'png', // Using PNG for downloads to maintain quality
-      quality: 95,   // High quality for downloads
-      download: true,
-      filename
-    });
-    
-    // Track download attempt for analytics/debugging
-    console.log(`Downloading image: ${title} at ${resolution} resolution (${width}×${height})`);
-    console.log(`Download URL: ${apiUrl}`);
-    
-    // Open download in new tab for better UX with large files
-    window.open(apiUrl, '_blank');
   };
 
   // Copy image link to clipboard

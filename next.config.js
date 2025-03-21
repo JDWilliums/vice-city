@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Standard output for Vercel
+  // Output as standalone for production
   output: 'standalone',
   
   // Image optimization configuration
@@ -59,7 +59,7 @@ const nextConfig = {
     },
   },
   
-  // Experimental features - removed invalid options
+  // Experimental features
   experimental: {
     // Valid experimental options only
     largePageDataBytes: 128 * 1000, // 128KB
