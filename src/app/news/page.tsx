@@ -3,12 +3,20 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { NewsArticleFirestore, getAllNewsArticles, getNewsArticlesByCategory } from '@/lib/newsFirestoreService';
 
 export default function NewsPage() {
-  const [filter, setFilter] = useState('all');
+  const searchParams = useSearchParams();
+  
+  // Get category from URL query or default to 'all'
+  const categoryParam = searchParams.get('category');
+  const validCategories = ['news', 'features', 'guides'];
+  const initialFilter = validCategories.includes(categoryParam as string) ? categoryParam as string : 'all';
+  
+  const [filter, setFilter] = useState(initialFilter);
   const [articles, setArticles] = useState<NewsArticleFirestore[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +41,17 @@ export default function NewsPage() {
       return `${minutes} min read`;
     }
   };
+  
+  // Update URL when filter changes
+  useEffect(() => {
+    // Update URL to reflect current filter without full page reload
+    const url = filter === 'all' 
+      ? '/news' 
+      : `/news?category=${filter}`;
+    
+    // Use history API to update URL without reload
+    window.history.pushState({}, '', url);
+  }, [filter]);
   
   // Load all articles
   useEffect(() => {

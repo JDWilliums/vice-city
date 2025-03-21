@@ -30,6 +30,15 @@ export default function ArticlePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Update document title when article is loaded
+  useEffect(() => {
+    if (article) {
+      document.title = `${article.title} | GTA 6 News | vice.city`;
+    } else if (error) {
+      document.title = 'Article Not Found | GTA 6 News | vice.city';
+    }
+  }, [article, error]);
+  
   // Calculate reading time
   const calculateReadingTime = (content: string): string => {
     // Average reading speed (words per minute)
@@ -163,12 +172,13 @@ export default function ArticlePage() {
   // Error or article not found
   if (error || !article) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex flex-col">
         <Navbar />
         <div className="h-12 w-full"></div>
         <div className="container mx-auto px-4 py-12 text-center">
           <h1 className="text-3xl mb-4">Article Not Found</h1>
           <p className="mb-8">The article you're looking for doesn't exist or has been moved.</p>
+          
           <Link href="/news" className="px-4 py-2 bg-gta-blue rounded-md">
             Return to News
           </Link>
@@ -248,9 +258,7 @@ export default function ArticlePage() {
               className={`relative inline-block mb-4 group`}
             >
               <span className={`inline-block uppercase text-xs font-bold px-3 py-1 rounded-sm transition-transform group-hover:scale-105 ${
-                article.category === 'news' ? 'bg-gta-blue' : 
-                article.category === 'features' ? 'bg-gta-pink' : 
-                'bg-gta-green'
+                'bg-red-500'
               }`}>
                 {article.category}
               </span>
@@ -383,7 +391,7 @@ export default function ArticlePage() {
                 <div className="space-y-3">
                   <Link 
                     href="/news?category=news"
-                    className="block px-4 py-3 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors border border-transparent hover:border-gta-blue group"
+                    className="block w-full text-left px-4 py-3 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors border border-transparent hover:border-gta-blue group"
                   >
                     <div className="flex items-center">
                       <span className="w-3 h-3 bg-gta-blue rounded-full mr-3 group-hover:scale-125 transition-transform"></span>
@@ -392,7 +400,7 @@ export default function ArticlePage() {
                   </Link>
                   <Link 
                     href="/news?category=features"
-                    className="block px-4 py-3 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors border border-transparent hover:border-gta-pink group"
+                    className="block w-full text-left px-4 py-3 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors border border-transparent hover:border-gta-pink group"
                   >
                     <div className="flex items-center">
                       <span className="w-3 h-3 bg-gta-pink rounded-full mr-3 group-hover:scale-125 transition-transform"></span>
@@ -401,7 +409,7 @@ export default function ArticlePage() {
                   </Link>
                   <Link 
                     href="/news?category=guides"
-                    className="block px-4 py-3 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors border border-transparent hover:border-gta-green group"
+                    className="block w-full text-left px-4 py-3 bg-gray-900/50 rounded hover:bg-gray-800 transition-colors border border-transparent hover:border-gta-green group"
                   >
                     <div className="flex items-center">
                       <span className="w-3 h-3 bg-gta-green rounded-full mr-3 group-hover:scale-125 transition-transform"></span>

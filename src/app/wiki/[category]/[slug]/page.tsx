@@ -66,6 +66,15 @@ export default function WikiPage() {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [relatedPages, setRelatedPages] = useState<WikiPageData[]>([]);
   
+  // Update document title when page data is loaded
+  useEffect(() => {
+    if (pageData) {
+      document.title = `${pageData.title} | GTA 6 Wiki | vice.city`;
+    } else if (error) {
+      document.title = 'Page Not Found | GTA 6 Wiki | vice.city';
+    }
+  }, [pageData, error]);
+  
   useEffect(() => {
     const fetchWikiPage = async () => {
       try {

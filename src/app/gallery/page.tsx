@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { getOptimizedImageUrl, availableResolutions, phoneResolutions, formatImageFilename } from '@/utils/imageProcessing';
 
 // Image gallery categories
 const categories = [
@@ -14,14 +15,6 @@ const categories = [
   { id: 'icons', name: 'Icons' },
   { id: 'phone', name: 'Phone Backgrounds' },
   { id: 'desktop', name: 'Desktop Backgrounds' }
-];
-
-// Image resolutions for download
-const resolutions = [
-  { id: '720p', name: '720p', width: 1280, height: 720 },
-  { id: '1080p', name: '1080p', width: 1920, height: 1080 },
-  { id: '1440p', name: '1440p', width: 2560, height: 1440 },
-  { id: '4k', name: '4K', width: 3840, height: 2160 }
 ];
 
 // Image gallery items with availability for different resolutions
@@ -297,16 +290,28 @@ export default function Gallery() {
   };
 
   // Handle download image
-  const handleDownload = (imageUrl: string, resolution: string, title: string) => {
-    // Create a temporary link element
+  const handleDownload = (imageUrl: string, resolution: string, title: string, isPhoneResolution = false) => {
+    // Find the resolution data
+    const resData = isPhoneResolution 
+      ? phoneResolutions.find((r) => r.id === resolution)
+      : availableResolutions.find((r) => r.id === resolution);
+    
+    if (!resData) return;
+    
+    // Use our utility function to generate the API URL
+    const filename = formatImageFilename(title, resolution);
+    const apiUrl = getOptimizedImageUrl(imageUrl, {
+      width: resData.width,
+      height: resData.height,
+      format: 'png',
+      download: true,
+      filename
+    });
+    
+    // Use a hidden link to trigger the download
     const link = document.createElement('a');
-    
-    // In a real app, you would generate different resolution versions
-    // For this example, we'll just use the existing image
-    link.href = imageUrl;
-    
-    // Set the download attribute with the filename
-    link.download = `GTA6-${title.replace(/\s+/g, '-')}-${resolution}.png`;
+    link.href = apiUrl;
+    link.target = '_blank'; // Open in new tab in case the image is large
     
     // Append the link to the body
     document.body.appendChild(link);
@@ -558,52 +563,62 @@ export default function Gallery() {
           </div>
 
           {/* Gallery Grid */}
-          <div id="gallery-grid" className="relative">
-            {isLoading && (
-              <div className="absolute inset-0 bg-black/20 backdrop-blur-sm z-10 rounded-lg flex items-center justify-center">
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 border-4 border-gta-blue border-t-transparent rounded-full animate-spin"></div>
-                  <p className="mt-2 text-white">Loading images...</p>
-                </div>
-              </div>
-            )}
-            
-            {sortedItems.length === 0 ? (
-              <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-8 text-center border border-gray-700 animate-fadeInUp" style={{ animationDelay: '0.6s' }}>
-                <p className="text-gray-300 text-lg">No images found matching your criteria.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {sortedItems.map((item, index) => (
-                  <div
-                    key={item.id}
-                    className="relative group bg-gray-800/60 backdrop-blur-sm rounded-lg overflow-hidden border border-gray-700/80 hover:border-gta-pink transition-all hover:shadow-xl hover:shadow-gta-pink/10 hover:-translate-y-1 animate-fadeInUp"
-                    style={{ animationDelay: `${0.6 + index * 0.05}s` }}
-                  >
-                    <button onClick={() => handleImageClick(item.id)} className="block w-full">
-                      <div className="relative aspect-square">
-                        <Image
-                          src={item.image}
-                          alt={item.title}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                          className="object-cover transform group-hover:scale-105 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="absolute bottom-0 left-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                          <h3 className="font-bold text-lg">{item.title}</h3>
-                          <p className="text-sm text-gray-300 line-clamp-2">{item.description}</p>
-                        </div>
-                      </div>
-                      <div className="p-3 flex justify-between items-center">
-                        <span className="text-xs text-gray-400 capitalize">{item.category}</span>
-                        <span className="text-xs px-1.5 py-0.5 bg-gray-900 text-gray-400 rounded">
-                          {item.availableResolutions.length} sizes
-                        </span>
-                      </div>
-                    </button>
+          <div id="gallery-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {isLoading ? (
+              // Loading placeholders
+              Array.from({ length: pageSize }).map((_, index) => (
+                <div 
+                  key={`placeholder-${index}`} 
+                  className="bg-gray-800 rounded-lg overflow-hidden shadow-md animate-pulse"
+                >
+                  <div className="w-full h-48 bg-gray-700"></div>
+                  <div className="p-4">
+                    <div className="h-5 bg-gray-700 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-700 rounded w-1/2"></div>
                   </div>
-                ))}
+                </div>
+              ))
+            ) : sortedItems.length > 0 ? (
+              sortedItems.map((item) => (
+                <div 
+                  key={item.id} 
+                  className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-transform transform hover:scale-[1.02] cursor-pointer"
+                  onClick={() => handleImageClick(item.id)}
+                >
+                  <div className="relative w-full h-48 overflow-hidden">
+                    <Image
+                      src={getOptimizedImageUrl(item.image, { width: 600 })}
+                      alt={item.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover"
+                      loading="lazy"
+                    />
+                    {item.category === 'phone' && (
+                      <div className="absolute top-2 right-2 bg-gta-pink/80 text-white text-xs px-2 py-1 rounded-md shadow-md">
+                        Phone
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-white font-semibold text-lg truncate">{item.title}</h3>
+                    <p className="text-gray-400 text-sm line-clamp-2 mt-1">{item.description}</p>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      <span className="px-2 py-0.5 bg-gray-700 text-gray-300 text-xs rounded">
+                        {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
+                      </span>
+                      {item.availableResolutions.includes('4k') && (
+                        <span className="px-2 py-0.5 bg-gta-pink/80 text-white text-xs rounded">
+                          4K
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full bg-gray-800/50 backdrop-blur-sm rounded-lg p-8 text-center border border-gray-700">
+                <p className="text-gray-300 text-lg">No images found matching your criteria.</p>
               </div>
             )}
           </div>
@@ -627,57 +642,69 @@ export default function Gallery() {
 
         {/* Lightbox */}
         {selectedImage && selectedImageData && (
-          <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <div className="absolute inset-0" onClick={closeLightbox}></div>
-            <div className="relative z-10 max-w-6xl w-full bg-gray-900 rounded-lg overflow-hidden shadow-2xl">
-              {/* Navigation controls - fixed position and centered vertically */}
-              <div className="absolute top-0 bottom-0 left-0 w-20 flex items-center justify-center z-20">
-                {selectedImageIndex > 0 && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedImage(sortedItems[selectedImageIndex - 1].id);
-                    }}
-                    className="bg-black/70 hover:bg-gta-pink/80 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors"
-                    aria-label="Previous image"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                )}
+          <div 
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+            onClick={closeLightbox}
+          >
+            <div 
+              className="relative w-full max-w-6xl bg-gray-900 rounded-lg overflow-hidden shadow-2xl animate-fadeIn"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Navigation buttons */}
+              <div className="absolute left-0 inset-y-0 flex items-center z-10">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const currentIndex = sortedItems.findIndex(item => item.id === selectedImage);
+                    if (currentIndex > 0) {
+                      setSelectedImage(sortedItems[currentIndex - 1].id);
+                    }
+                  }}
+                  className={`bg-black/50 hover:bg-black/80 text-white p-2 rounded-r-lg transition-colors ${
+                    sortedItems.findIndex(item => item.id === selectedImage) === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  disabled={sortedItems.findIndex(item => item.id === selectedImage) === 0}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
               </div>
-              <div className="absolute top-0 bottom-0 right-0 w-20 flex items-center justify-center z-20">
-                {selectedImageIndex < sortedItems.length - 1 && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedImage(sortedItems[selectedImageIndex + 1].id);
-                    }}
-                    className="bg-black/70 hover:bg-gta-pink/80 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors"
-                    aria-label="Next image"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                )}
+              
+              <div className="absolute right-0 inset-y-0 flex items-center z-10">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const currentIndex = sortedItems.findIndex(item => item.id === selectedImage);
+                    if (currentIndex < sortedItems.length - 1) {
+                      setSelectedImage(sortedItems[currentIndex + 1].id);
+                    }
+                  }}
+                  className={`bg-black/50 hover:bg-black/80 text-white p-2 rounded-l-lg transition-colors ${
+                    sortedItems.findIndex(item => item.id === selectedImage) === sortedItems.length - 1 ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  disabled={sortedItems.findIndex(item => item.id === selectedImage) === sortedItems.length - 1}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
-
-              <div className="relative aspect-video">
+              
+              <div className="relative h-[70vh] bg-black/30">
                 <Image
-                  src={selectedImageData.image}
+                  src={getOptimizedImageUrl(selectedImageData.image, { 
+                    width: 1920,
+                    height: 1080,
+                  })}
                   alt={selectedImageData.title}
                   fill
+                  sizes="100vw"
                   className="object-contain"
                   priority
                 />
-                {/* Image counter overlay */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-3 py-1 rounded-full">
-                  {selectedImageIndex + 1} / {sortedItems.length}
-                </div>
               </div>
-              
+
               <div className="p-6 bg-gradient-to-b from-gray-900 to-gray-800">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                   <div>
@@ -697,23 +724,51 @@ export default function Gallery() {
                     <h4 className="text-white font-semibold">Download Options</h4>
                     
                     {selectedImageData.availableResolutions.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-2">
-                        {selectedImageData.availableResolutions.map((resolution) => {
-                          const resData = resolutions.find(r => r.id === resolution);
-                          return (
-                            <button
-                              key={resolution}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDownload(selectedImageData.image, resolution, selectedImageData.title);
-                              }}
-                              className="px-3 py-2 bg-gta-blue/90 hover:bg-gta-blue text-white text-sm rounded flex items-center justify-between transition-colors shadow-sm shadow-black/30"
-                            >
-                              <span className="font-medium">{resData?.name}</span>
-                              <span className="bg-black/30 text-white text-xs px-1.5 py-0.5 rounded ml-1">{resData?.width}×{resData?.height}</span>
-                            </button>
-                          );
-                        })}
+                      <div className="flex flex-col gap-3">
+                        {/* Show standard resolutions */}
+                        <div>
+                          <h5 className="text-sm text-gray-300 mb-2">Standard Resolutions</h5>
+                          <div className="grid grid-cols-2 gap-2">
+                            {selectedImageData.availableResolutions.map((resolution) => {
+                              const resData = availableResolutions.find((r) => r.id === resolution);
+                              return (
+                                <button
+                                  key={resolution}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownload(selectedImageData.image, resolution, selectedImageData.title);
+                                  }}
+                                  className="px-3 py-2 bg-gta-blue/90 hover:bg-gta-blue text-white text-sm rounded flex items-center justify-between transition-colors shadow-sm shadow-black/30"
+                                >
+                                  <span className="font-medium">{resData?.name}</span>
+                                  <span className="bg-black/30 text-white text-xs px-1.5 py-0.5 rounded ml-1">{resData?.width}×{resData?.height}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        
+                        {/* Show phone resolutions for phone category */}
+                        {selectedImageData.category === 'phone' && (
+                          <div>
+                            <h5 className="text-sm text-gray-300 mb-2">Phone Resolutions</h5>
+                            <div className="grid grid-cols-2 gap-2">
+                              {phoneResolutions.map((resolution) => (
+                                <button
+                                  key={resolution.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownload(selectedImageData.image, resolution.id, selectedImageData.title, true);
+                                  }}
+                                  className="px-3 py-2 bg-gta-pink/90 hover:bg-gta-pink text-white text-sm rounded flex items-center justify-between transition-colors shadow-sm shadow-black/30"
+                                >
+                                  <span className="font-medium">{resolution.name}</span>
+                                  <span className="bg-black/30 text-white text-xs px-1.5 py-0.5 rounded ml-1">{resolution.width}×{resolution.height}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <p className="text-gray-400 text-sm">No download options available</p>
