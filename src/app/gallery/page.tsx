@@ -303,24 +303,17 @@ export default function Gallery() {
     const apiUrl = getOptimizedImageUrl(imageUrl, {
       width: resData.width,
       height: resData.height,
-      format: 'png',
+      format: 'png', // Using PNG for downloads to maintain quality
+      quality: 95,   // High quality for downloads
       download: true,
       filename
     });
     
-    // Use a hidden link to trigger the download
-    const link = document.createElement('a');
-    link.href = apiUrl;
-    link.target = '_blank'; // Open in new tab in case the image is large
+    // Track download attempt for analytics/debugging
+    console.log(`Downloading image: ${title} at ${resolution} resolution`);
     
-    // Append the link to the body
-    document.body.appendChild(link);
-    
-    // Trigger the download
-    link.click();
-    
-    // Remove the link from the body
-    document.body.removeChild(link);
+    // Open download in new tab for better UX with large files
+    window.open(apiUrl, '_blank');
   };
 
   // Copy image link to clipboard
@@ -587,12 +580,13 @@ export default function Gallery() {
                 >
                   <div className="relative w-full h-48 overflow-hidden">
                     <Image
-                      src={getOptimizedImageUrl(item.image, { width: 600 })}
+                      src={item.image}
                       alt={item.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover"
                       loading="lazy"
+                      quality={75}
                     />
                     {item.category === 'phone' && (
                       <div className="absolute top-2 right-2 bg-gta-pink/80 text-white text-xs px-2 py-1 rounded-md shadow-md">
@@ -693,15 +687,13 @@ export default function Gallery() {
               
               <div className="relative h-[70vh] bg-black/30">
                 <Image
-                  src={getOptimizedImageUrl(selectedImageData.image, { 
-                    width: 1920,
-                    height: 1080,
-                  })}
+                  src={selectedImageData.image}
                   alt={selectedImageData.title}
                   fill
                   sizes="100vw"
                   className="object-contain"
                   priority
+                  quality={90}
                 />
               </div>
 

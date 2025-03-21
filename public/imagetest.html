@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .image-test {
+            margin-bottom: 30px;
+        }
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .image-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .image-item img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        .image-info {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image API Test</h1>
+    
+    <div class="test-section">
+        <h2>Direct Image Display Test</h2>
+        <div class="image-test">
+            <h3>Original Image</h3>
+            <div class="image-item">
+                <img src="/images/gta6-0.png" alt="Original Image">
+                <div class="image-info">Original image directly from public folder</div>
+            </div>
+        </div>
+        
+        <div class="image-test">
+            <h3>API Resized Images</h3>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="/api/image?path=/images/gta6-0.png&width=200" alt="200px width">
+                    <div class="image-info">Width: 200px</div>
+                </div>
+                
+                <div class="image-item">
+                    <img src="/api/image?path=/images/gta6-0.png&width=400" alt="400px width">
+                    <div class="image-info">Width: 400px</div>
+                </div>
+                
+                <div class="image-item">
+                    <img src="/api/image?path=/images/gta6-0.png&width=600" alt="600px width">
+                    <div class="image-info">Width: 600px</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="image-test">
+            <h3>Width & Height Tests</h3>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="/api/image?path=/images/gta6-0.png&width=300&height=200" alt="300x200">
+                    <div class="image-info">300px × 200px</div>
+                </div>
+                
+                <div class="image-item">
+                    <img src="/api/image?path=/images/gta6-0.png&width=400&height=300" alt="400x300">
+                    <div class="image-info">400px × 300px</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Download Test</h2>
+        <p>Click the buttons below to test different download sizes:</p>
+        
+        <button onclick="window.open('/api/image?path=/images/gta6-0.png&width=1280&height=720&download=true&filename=test-720p', '_blank')">Download 720p (1280×720)</button>
+        <br>
+        <button onclick="window.open('/api/image?path=/images/gta6-0.png&width=1920&height=1080&download=true&filename=test-1080p', '_blank')">Download 1080p (1920×1080)</button>
+        <br>
+        <button onclick="window.open('/api/image?path=/images/gta6-0.png&width=2560&height=1440&download=true&filename=test-1440p', '_blank')">Download 1440p (2560×1440)</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Format Test</h2>
+        <div class="image-container">
+            <div class="image-item">
+                <img src="/api/image?path=/images/gta6-0.png&width=400&format=webp" alt="WebP Format">
+                <div class="image-info">WebP Format</div>
+            </div>
+            
+            <div class="image-item">
+                <img src="/api/image?path=/images/gta6-0.png&width=400&format=jpg" alt="JPEG Format">
+                <div class="image-info">JPEG Format</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Helper to track loaded images and verify dimensions
+        document.querySelectorAll('.image-item img').forEach(img => {
+            img.onload = function() {
+                const infoDiv = this.nextElementSibling;
+                infoDiv.innerHTML += `<br>Actual size: ${this.naturalWidth}×${this.naturalHeight}px`;
+            };
+        });
+    </script>
+</body>
+</html> 
