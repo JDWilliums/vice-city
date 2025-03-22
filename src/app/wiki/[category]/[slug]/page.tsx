@@ -705,6 +705,108 @@ function getWikiPage(slug) {
                   </div>
                 )}
                 
+                {/* Featured Image and Details - Mobile Only */}
+                {pageData.imageUrl && (
+                  <div className="lg:hidden mb-8 animate-fadeIn">
+                    <div className="bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-700/50 overflow-hidden shadow-xl">
+                      {/* Featured Image */}
+                      <div className="relative aspect-[4/3] overflow-hidden group">
+                        <Image
+                          src={pageData.imageUrl}
+                          alt={pageData.title}
+                          fill
+                          sizes="100vw"
+                          className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-50"></div>
+                      </div>
+                      <div className="p-4 border-t border-gray-700/50">
+                        <h3 className="text-lg font-bold text-white mb-2 flex items-center">
+                          <svg className="w-5 h-5 mr-2 text-gta-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {pageData.title}
+                        </h3>
+                      </div>
+
+                      {/* Details Table - Mobile version */}
+                      {pageData.details && pageData.details.length > 0 && (
+                        <>
+                          <div className="border-t border-gray-700/30"></div>
+                          <div className="p-4 border-b border-gray-700/50 bg-gradient-to-r from-gray-800/80 to-gray-700/50 flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-white flex items-center">
+                              <svg className="w-5 h-5 mr-2 text-gta-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                              </svg>
+                              Details
+                            </h3>
+                            <button 
+                              onClick={() => setDetailsExpanded(!detailsExpanded)}
+                              className="text-gray-400 hover:text-white transition-colors focus:outline-none hover:bg-gray-700/50 p-1.5 rounded-full"
+                              aria-label={detailsExpanded ? "Collapse details" : "Expand details"}
+                            >
+                              <svg 
+                                className={`w-5 h-5 transform transition-transform ${detailsExpanded ? 'rotate-180' : ''}`} 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                          </div>
+                          <div className={`divide-y divide-gray-700/50 ${detailsExpanded ? 'max-h-[400px] overflow-y-auto' : 'max-h-[240px] overflow-y-auto'}`}>
+                            {/* Dynamically generate from Firestore data */}
+                            {pageData.details.map((detail, index) => (
+                              <div 
+                                key={index} 
+                                className="px-4 py-3 flex justify-between items-center hover:bg-gray-700/30 transition-colors"
+                                style={{
+                                  animation: `fadeInTable 0.3s ease-in-out ${index * 0.05}s both`,
+                                  opacity: 0 // Start with 0 opacity, animation will handle the rest
+                                }}
+                              >
+                                <span className="text-sm font-medium text-gray-300">{detail.label}</span>
+                                {detail.type === 'text' && (
+                                  <span className="text-sm text-white">{detail.value}</span>
+                                )}
+                                {detail.type === 'badge' && (
+                                  <span className="text-sm text-white">
+                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                      ${detail.badgeColor === 'green' ? 'bg-green-900/50 text-green-400 border border-green-700/50' : 
+                                      detail.badgeColor === 'red' ? 'bg-red-900/50 text-red-400 border border-red-700/50' : 
+                                      detail.badgeColor === 'blue' ? 'bg-blue-900/50 text-blue-400 border border-blue-700/50' : 
+                                      detail.badgeColor === 'yellow' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700/50' : 
+                                      'bg-gray-900/50 text-gray-400 border border-gray-700/50'}`}>
+                                      {detail.value}
+                                    </span>
+                                  </span>
+                                )}
+                                {detail.type === 'link' && detail.linkHref && (
+                                  <Link 
+                                    href={detail.linkHref} 
+                                    className="text-sm text-gta-blue hover:text-gta-pink transition-colors flex items-center group"
+                                  >
+                                    {detail.value}
+                                    <svg 
+                                      className="w-4 h-4 ml-1 transform transition-transform group-hover:translate-x-1 opacity-0 group-hover:opacity-100" 
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                  </Link>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 {/* Content */}
                 <div className="bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-700/50 overflow-hidden mb-12 animate-fadeIn shadow-xl hover:shadow-gta-blue/10 transition-all duration-300">
                   <div 
