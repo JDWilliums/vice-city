@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/AuthContext';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import WikiEditor from '@/components/wiki/WikiEditor';
 import { getWikiPage, deleteWikiPage, unarchiveWikiPage } from '@/lib/wikiFirestoreService';
 import { ArchiveBoxIcon, ArchiveBoxXMarkIcon } from '@heroicons/react/24/outline';
@@ -54,9 +56,8 @@ export default function EditWikiPage() {
   };
   
   // Handle errors during page update
-  const handleError = (error: Error | string) => {
-    const errorMessage = error instanceof Error ? error.message : error;
-    setErrorMessage(`Error: ${errorMessage}`);
+  const handleError = (error: string) => {
+    setErrorMessage(`Error: ${error}`);
     console.error('Error updating wiki page:', error);
   };
   
@@ -107,27 +108,33 @@ export default function EditWikiPage() {
   // Not logged in or not an admin
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <div className="bg-black/60 backdrop-blur-sm border border-red-500 rounded-lg p-8 max-w-md text-center">
-          <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0H9m3-3a3 3 0 100-6 3 3 0 000 6z"></path>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 19a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v12z"></path>
-          </svg>
-          <h1 className="text-2xl font-bold text-white mb-4">Admin Access Required</h1>
-          <p className="text-gray-300 mb-6">
-            You need to be logged in as an administrator to access this page.
-          </p>
-          <Link href="/login" className="inline-block px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
-            Log In
-          </Link>
+      <div className="min-h-screen flex flex-col relative">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center p-4">
+          <div className="bg-black/60 backdrop-blur-sm border border-red-500 rounded-lg p-8 max-w-md text-center">
+            <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0H9m3-3a3 3 0 100-6 3 3 0 000 6z"></path>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 19a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v12z"></path>
+            </svg>
+            <h1 className="text-2xl font-bold text-white mb-4">Admin Access Required</h1>
+            <p className="text-gray-300 mb-6">
+              You need to be logged in as an administrator to access this page.
+            </p>
+            <Link href="/login" className="inline-block px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
+              Log In
+            </Link>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
   
   return (
-    <div className="space-y-6 pt-4">
-      <main className="container mx-auto px-4">
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      
+      <main className="flex-grow container mx-auto px-4 py-12 mt-16">
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center">
             <Link
@@ -241,12 +248,13 @@ export default function EditWikiPage() {
         <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
           <WikiEditor 
             pageId={pageId}
-            user={user}
+            user={user} 
             onSuccess={handleSuccess}
             onError={(error: Error) => handleError(error.message)}
           />
         </div>
       </main>
+      <Footer />
     </div>
   );
 } 

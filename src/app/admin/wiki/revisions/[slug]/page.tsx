@@ -5,6 +5,8 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/AuthContext';
 import { getWikiPage, getWikiPageRevisions, getWikiRevision, WikiRevision } from '@/lib/wikiFirestoreService';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import RevisionHistory, { RevisionCompare, RevisionView } from '@/components/wiki/RevisionHistory';
 
 export default function WikiRevisionHistoryPage() {
@@ -13,105 +15,142 @@ export default function WikiRevisionHistoryPage() {
   const params = useParams();
   const pageId = params.slug as string;
   
-  const [pageTitle, setPageTitle] = useState('');
-  const [revisions, setRevisions] = useState<WikiRevision[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [revisions, setRevisions] = useState<WikiRevision[]>([]);
+  const [pageTitle, setPageTitle] = useState<string>('');
+  
+  // States for viewing and comparing revisions
   const [viewingRevision, setViewingRevision] = useState<WikiRevision | null>(null);
   const [comparingRevisions, setComparingRevisions] = useState<{
     original: WikiRevision | null;
     updated: WikiRevision | null;
   }>({ original: null, updated: null });
-
-  // Load page info and revision history
+  
+  // Load revisions data
   useEffect(() => {
-    const loadPageData = async () => {
-      setLoading(true);
+    async function loadRevisionsData() {
+      if (!pageId) return;
+      
       try {
-        // Get page title
+        setLoading(true);
+        setError(null);
+        
+        // Get the page details to show the title
         const pageData = await getWikiPage(pageId);
         if (pageData) {
           setPageTitle(pageData.title);
         }
         
-        // Get revision history
-        const history = await getWikiPageRevisions(pageId);
-        setRevisions(history);
-      } catch (err) {
-        console.error('Error loading revision history:', err);
+        // Get all revisions for this page
+        const revisionsData = await getWikiPageRevisions(pageId);
+        
+        // Sort revisions by timestamp descending (newest first)
+        const sortedRevisions = [...revisionsData].sort((a, b) => {
+          const timeA = a.timestamp.toDate().getTime();
+          const timeB = b.timestamp.toDate().getTime();
+          return timeB - timeA; // Descending order
+        });
+        
+        setRevisions(sortedRevisions);
+      } catch (error) {
+        console.error('Error loading revisions:', error);
         setError('Failed to load revision history. Please try again later.');
       } finally {
         setLoading(false);
       }
-    };
+    }
     
-    loadPageData();
+    loadRevisionsData();
   }, [pageId]);
   
-  // Handler for viewing a specific revision
+  // Handle viewing a specific revision
   const handleViewRevision = async (revisionId: string) => {
     try {
-      setLoading(true);
       const revision = await getWikiRevision(revisionId);
-      if (revision) {
-        setViewingRevision(revision);
-      } else {
-        setError('Revision not found');
-      }
-    } catch (err) {
-      console.error('Error loading revision:', err);
-      setError('Failed to load revision. Please try again later.');
-    } finally {
-      setLoading(false);
+      setViewingRevision(revision);
+      setComparingRevisions({ original: null, updated: null });
+    } catch (error) {
+      console.error('Error loading revision:', error);
+      setError('Failed to load the selected revision.');
     }
   };
   
-  // Handler for comparing two revisions
-  const handleCompareRevisions = (originalId: string, updatedId: string) => {
-    const original = revisions.find(rev => rev.id === originalId) || null;
-    const updated = revisions.find(rev => rev.id === updatedId) || null;
-    
-    setComparingRevisions({ original, updated });
+  // Handle comparing two revisions
+  const handleCompareRevisions = async (id1: string, id2: string) => {
+    try {
+      const [revision1, revision2] = await Promise.all([
+        getWikiRevision(id1),
+        getWikiRevision(id2)
+      ]);
+      
+      // Determine which is older (original) and which is newer (updated)
+      if (revision1 && revision2) {
+        const time1 = revision1.timestamp.toDate().getTime();
+        const time2 = revision2.timestamp.toDate().getTime();
+        
+        if (time1 < time2) {
+          setComparingRevisions({
+            original: revision1,
+            updated: revision2
+          });
+        } else {
+          setComparingRevisions({
+            original: revision2,
+            updated: revision1
+          });
+        }
+        
+        setViewingRevision(null);
+      }
+    } catch (error) {
+      console.error('Error loading revisions for comparison:', error);
+      setError('Failed to load the selected revisions for comparison.');
+    }
   };
   
-  // Handler for restoring a revision
-  const handleRestoreRevision = () => {
-    // Implementation would depend on your wiki system's API
-    alert('Restore functionality would be implemented here');
-    console.log('Restoring revision:', viewingRevision);
-    handleClose();
-  };
-  
-  // Handler for closing revision view or comparison
+  // Close revision view or comparison
   const handleClose = () => {
     setViewingRevision(null);
     setComparingRevisions({ original: null, updated: null });
   };
   
+  // Restore a revision (placeholder for future implementation)
+  const handleRestoreRevision = () => {
+    alert('Restore functionality will be implemented in a future update.');
+    handleClose();
+  };
+  
   // Not logged in or not an admin
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <div className="bg-black/60 backdrop-blur-sm border border-red-500 rounded-lg p-8 max-w-md text-center">
-          <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0H9m3-3a3 3 0 100-6 3 3 0 000 6z"></path>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 19a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v12z"></path>
-          </svg>
-          <h1 className="text-2xl font-bold text-white mb-4">Admin Access Required</h1>
-          <p className="text-gray-300 mb-6">
-            You need to be logged in as an administrator to access this page.
-          </p>
-          <Link href="/login" className="inline-block px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
-            Log In
-          </Link>
+      <div className="min-h-screen flex flex-col relative">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center p-4">
+          <div className="bg-black/60 backdrop-blur-sm border border-red-500 rounded-lg p-8 max-w-md text-center">
+            <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0H9m3-3a3 3 0 100-6 3 3 0 000 6z"></path>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 19a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v12z"></path>
+            </svg>
+            <h1 className="text-2xl font-bold text-white mb-4">Admin Access Required</h1>
+            <p className="text-gray-300 mb-6">
+              You need to be logged in as an administrator to access this page.
+            </p>
+            <Link href="/login" className="inline-block px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg transition-all hover:-translate-y-1">
+              Log In
+            </Link>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
   
   return (
-    <div className="space-y-6 pt-4">
-      <main className="container mx-auto px-4">
+    <div className="min-h-screen flex flex-col bg-gray-900">
+      <Navbar />
+      
+      <main className="flex-grow container mx-auto px-4 py-12 mt-16">
         <div className="mb-8 flex items-center">
           <Link
             href="/admin/wiki"
@@ -201,6 +240,8 @@ export default function WikiRevisionHistoryPage() {
           </div>
         )}
       </main>
+      
+      <Footer />
     </div>
   );
 } 
