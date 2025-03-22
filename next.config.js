@@ -62,7 +62,8 @@ const nextConfig = {
   // Experimental features
   experimental: {
     // Valid experimental options only
-    largePageDataBytes: 128 * 1000, // 128KB
+    largePageDataBytes: 800 * 1000, // Increased from 128KB to 800KB
+    serverComponentsExternalPackages: ['firebase-admin'],
   },
 }
 
