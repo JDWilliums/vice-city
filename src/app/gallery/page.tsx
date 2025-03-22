@@ -15,6 +15,7 @@ export default function Gallery() {
   const [copySuccess, setCopySuccess] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const pageSize = 12; // Number of items per page
 
   // Fetch gallery items with pagination and filtering
@@ -36,6 +37,7 @@ export default function Gallery() {
   // Handle image click for lightbox
   const handleImageClick = (id: number) => {
     setSelectedImage(id);
+    setImageLoading(true);
     // When opening the lightbox, scroll to the top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -43,6 +45,7 @@ export default function Gallery() {
   // Close lightbox
   const closeLightbox = () => {
     setSelectedImage(null);
+    setImageLoading(true);
   };
 
   // Handle download image
@@ -467,7 +470,14 @@ export default function Gallery() {
                   className="object-contain"
                   priority
                   quality={90}
+                  onLoadingComplete={() => setImageLoading(false)}
                 />
+                {/* Loading indicator */}
+                {imageLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gta-pink"></div>
+                  </div>
+                )}
               </div>
 
               <div className="p-6 bg-gradient-to-b from-gray-900 to-gray-800">
@@ -572,9 +582,12 @@ export default function Gallery() {
                   e.stopPropagation();
                   closeLightbox();
                 }}
-                className="absolute top-2 right-2 bg-black/70 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-gta-pink transition-colors"
+                className="absolute top-4 right-4 bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-gta-pink transition-colors z-50"
+                aria-label="Close lightbox"
               >
-                ✕
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
               </button>
             </div>
           </div>
