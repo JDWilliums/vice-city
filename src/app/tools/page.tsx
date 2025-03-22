@@ -144,26 +144,12 @@ export default function ToolsPage() {
             </Link>
           </div>
           
-          {/* User Management */}
-          <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:border-gta-blue transition-colors">
-            <h2 className="text-xl font-bold text-white mb-4">User Management</h2>
-            <p className="text-gray-400 mb-4">Manage users, roles, and permissions.</p>
-            <Link href="/tools/users" className="px-4 py-2 bg-gta-blue text-white rounded hover:bg-blue-600 transition-colors inline-block">
-              Manage Users
-            </Link>
-          </div>
           
-          {/* Content Moderation */}
-          <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:border-gta-green transition-colors">
-            <h2 className="text-xl font-bold text-white mb-4">Content Moderation</h2>
-            <p className="text-gray-400 mb-4">Review and moderate user-generated content.</p>
-            <Link href="/tools/moderation" className="px-4 py-2 bg-gta-green text-white rounded hover:bg-green-600 transition-colors inline-block">
-              Moderate Content
-            </Link>
-          </div>
+          
+        
 
           {/* News Management */}
-          <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:border-gta-pink transition-colors">
+          <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:border-gta-blue transition-colors">
             <h2 className="text-xl font-bold text-white mb-4">News Management</h2>
             <p className="text-gray-400 mb-4">Create, edit, and manage news content.</p>
             <Link href="/admin/news" className="px-4 py-2 bg-gta-pink text-white rounded hover:bg-pink-600 transition-colors inline-block">
