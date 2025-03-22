@@ -38,6 +38,38 @@ const CATEGORY_IMAGES = {
   missions: [
     '/images/gta6-8.png',
     '/images/gta6-7.png'
+  ],
+  activities: [
+    '/images/wiki/sample3.jpg',
+    '/images/wiki/sample5.jpg',
+    '/images/gta6-6.png'
+  ],
+  collectibles: [
+    '/images/wiki/sample2.jpg',
+    '/images/wiki/sample4.jpg',
+    '/images/gta6-9.png'
+  ],
+  'gameplay-mechanics': [
+    '/images/wiki/sample6.jpg',
+    '/images/gta6-10.png',
+    '/images/gta6-11.png'
+  ],
+  updates: [
+    '/images/wiki/sample1.jpg',
+    '/images/gta6-12.png'
+  ],
+  gangs: [
+    '/images/wiki/sample3.jpg',
+    '/images/gta6-13.png',
+    '/images/gta6-14.png'
+  ],
+  media: [
+    '/images/wiki/sample5.jpg',
+    '/images/gta6-15.png'
+  ],
+  misc: [
+    '/images/wiki/sample4.jpg',
+    '/images/gta6-16.png'
   ]
 };
 
