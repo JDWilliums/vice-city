@@ -73,23 +73,39 @@ export async function GET(request: NextRequest) {
       if (resolution) {
         if (DEBUG) console.log(`[Image API] Looking for image in resolution folder: ${resolution}`);
         
-        // Look for the file in the resolution directory with the SAME filename
-        // e.g., /720p/imagename.png (keeping the original filename)
-        const resolutionPath = path.join(resolution, baseFilename);
-        const fullResolutionPath = path.join(projectRoot, 'public', resolutionPath);
+        // First look in the original directory structure with a resolution subdirectory
+        // This structure is: /images/gallery/720p/image.png
+        const originalDirWithResolution = path.join(baseDir, resolution, baseFilename);
+        const fullOriginalDirWithResolutionPath = path.join(projectRoot, 'public', originalDirWithResolution);
         
         if (DEBUG) {
-          console.log(`[Image API] Checking resolution path: ${fullResolutionPath}`);
-          console.log(`[Image API] Path exists: ${fs.existsSync(fullResolutionPath)}`);
+          console.log(`[Image API] Checking original directory with resolution path: ${fullOriginalDirWithResolutionPath}`);
+          console.log(`[Image API] Path exists: ${fs.existsSync(fullOriginalDirWithResolutionPath)}`);
         }
         
         try {
-          if (fs.existsSync(fullResolutionPath)) {
-            fullImagePath = fullResolutionPath;
+          if (fs.existsSync(fullOriginalDirWithResolutionPath)) {
+            fullImagePath = fullOriginalDirWithResolutionPath;
             fileFound = true;
-            if (DEBUG) console.log(`[Image API] Found image in resolution folder: ${resolutionPath}`);
+            if (DEBUG) console.log(`[Image API] Found image in original directory with resolution subfolder: ${originalDirWithResolution}`);
           } else {
-            if (DEBUG) console.log(`[Image API] Not found in resolution folder: ${resolutionPath}`);
+            // Second, try the top-level resolution directory 
+            // This structure is: /720p/image.png
+            const resolutionPath = path.join(resolution, baseFilename);
+            const fullResolutionPath = path.join(projectRoot, 'public', resolutionPath);
+            
+            if (DEBUG) {
+              console.log(`[Image API] Checking resolution root path: ${fullResolutionPath}`);
+              console.log(`[Image API] Path exists: ${fs.existsSync(fullResolutionPath)}`);
+            }
+            
+            if (fs.existsSync(fullResolutionPath)) {
+              fullImagePath = fullResolutionPath;
+              fileFound = true;
+              if (DEBUG) console.log(`[Image API] Found image in resolution folder: ${resolutionPath}`);
+            } else {
+              if (DEBUG) console.log(`[Image API] Not found in any resolution location`);
+            }
           }
         } catch (err: any) {
           console.error(`[Image API] Error checking resolution path: ${err}`);
@@ -116,7 +132,12 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ 
               error: 'Image not found',
               path: cleanImagePath,
-              fullPath: originalPath 
+              fullPath: originalPath,
+              searched: [
+                originalPath,
+                resolution ? path.join(projectRoot, 'public', baseDir, resolution, baseFilename) : null,
+                resolution ? path.join(projectRoot, 'public', resolution, baseFilename) : null,
+              ].filter(Boolean)
             }, { status: 404 });
           }
         } catch (err: any) {

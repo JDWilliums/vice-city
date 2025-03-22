@@ -7,10 +7,9 @@
  * 
  * This function generates a URL to fetch an image from resolution-specific folders.
  * It will look for the image in the following locations, in order:
- * 1. /{resolution}/{filename} - Direct in resolution folder
- * 2. /{resolution}/{original-path}/{filename} - Resolution folder with original path
- * 3. /{original-path}/{resolution}/{filename} - Original path with resolution subfolder
- * 4. /{original-path}/{filename} - Original path (fallback)
+ * 1. /{original-path}/{resolution}/{filename} - Original path with resolution subfolder
+ * 2. /{resolution}/{filename} - Direct in resolution folder
+ * 3. /{original-path}/{filename} - Original path (fallback)
  * 
  * @param imagePath Path to the original image
  * @param resolution Resolution identifier (e.g., '1080p')
