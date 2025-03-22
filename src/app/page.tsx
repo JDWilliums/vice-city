@@ -150,6 +150,19 @@ export default function HomePage() {
     }).format(timestamp);
   };
 
+  // Process image URL to ensure it's valid
+  const getProcessedImageUrl = (url: string): string => {
+    if (!url) return '/images/gta6-1.png'; // Default fallback image
+    
+    // If URL already starts with http(s) or / then it's already properly formatted
+    if (url.startsWith('http') || url.startsWith('/')) {
+      return url;
+    }
+    
+    // Otherwise, add leading slash if needed
+    return url.startsWith('images/') ? `/${url}` : `/images/${url}`;
+  };
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       <Head>
@@ -363,11 +376,16 @@ export default function HomePage() {
                   <div key={article.id} className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
                     <div className="h-40 sm:h-48 relative overflow-hidden">
                       <Image 
-                        src={article.imageUrl} 
+                        src={getProcessedImageUrl(article.imageUrl)} 
                         alt={article.title} 
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                        onError={(e) => {
+                          // Fallback to default image if loading fails
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/images/gta6-1.png';
+                        }}
                       />
                     </div>
                     <div className="p-4 md:p-6">
