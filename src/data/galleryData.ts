@@ -121,96 +121,258 @@ export const galleryItems = [
   },
   {
     id: 13,
-    title: 'Coming 2025 with Background',
-    category: 'official',
-    image: '/images/gallery/gtavi-coming2025-bg.png',
-    description: 'Coming 2025 announcement with stylish background',
-    availableResolutions: ['720p', '1080p'],
+    title: 'Yacht Scene',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame2072.png',
+    description: 'Luxury yacht docked in the harbor of Vice City',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   },
   {
     id: 14,
-    title: 'Coming 2025 Banner',
-    category: 'official',
-    image: '/images/gallery/coming2025-banner.png',
-    description: 'Wide banner announcing GTA VI release in 2025',
-    availableResolutions: ['720p', '1080p', '1440p'],
+    title: 'Sunset Waterfront',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame2034.png',
+    description: 'Stunning sunset over the Vice City waterfront',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   },
   {
     id: 15,
-    title: 'Vice City Background',
-    category: 'desktop',
-    image: '/images/gallery/background.png',
-    description: 'Stylish Vice City themed background for desktop use',
-    availableResolutions: ['720p', '1080p', '1440p'],
+    title: 'Nighttime City Glow',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame2025.png',
+    description: 'Vice City glowing with lights at night',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   },
   {
     id: 16,
-    title: 'Background with Palm Trees',
-    category: 'desktop',
-    image: '/images/gallery/background-palms.png',
-    description: 'Vice City background featuring tropical palm trees silhouette',
-    availableResolutions: ['720p', '1080p', '1440p'],
+    title: 'Beachfront Property',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1978.png',
+    description: 'Luxury beachfront properties along Vice City coast',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   },
   {
     id: 17,
-    title: 'Official Artwork',
-    category: 'official',
-    image: '/images/gallery/artwork.png',
-    description: 'Official GTA VI artwork featuring Vice City scenery',
+    title: 'Downtown Nightclub',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1955.png',
+    description: 'Vibrant nightclub scene in downtown Vice City',
     availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   },
   {
     id: 18,
-    title: 'Artwork No Text',
-    category: 'desktop',
-    image: '/images/gallery/artwork-no-text.png',
-    description: 'Clean version of the official artwork without text overlay',
+    title: 'Beach Party',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1911.png',
+    description: 'Lively beach party scene with crowds enjoying the atmosphere',
     availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   },
   {
     id: 19,
-    title: 'Artwork No Background',
-    category: 'desktop',
-    image: '/images/gallery/artwork-no-bg.png',
-    description: 'Official artwork with transparent background',
-    availableResolutions: ['720p', '1080p', '1440p'],
+    title: 'Tropical Street View',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1898.png',
+    description: 'Tropical street view with palm trees lining the road',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   },
   {
     id: 20,
-    title: 'Artwork Background',
-    category: 'desktop',
-    image: '/images/gallery/artwork-bg.png',
-    description: 'Artwork background with gradient color styling',
+    title: 'Sunset Drive',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1878.png',
+    description: 'Driving into the sunset on a Vice City road',
     availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   },
   {
     id: 21,
-    title: 'Alternative Artwork Background',
-    category: 'desktop',
-    image: '/images/gallery/artwork-bg-2.png',
-    description: 'Alternative styling for the artwork background with different color tones',
+    title: 'Waterfront Restaurant',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1794.png',
+    description: 'Upscale waterfront restaurant with tropical ambiance',
     availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   },
   {
     id: 22,
-    title: 'Trailer Teaser',
+    title: 'Harbor View',
     category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1782.png',
+    description: 'Panoramic view of the Vice City harbor',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 23,
+    title: 'Tropical Paradise',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1699.png',
+    description: 'Tropical paradise setting with pristine beaches',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 24,
+    title: 'City Skyline',
+    category: 'desktop',
+    image: '/images/gallery/trailer1_frame1633.png',
+    description: 'Impressive Vice City skyline with modern architecture',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 25,
+    title: 'Coastal Highway Sunset',
+    category: 'desktop',
+    image: '/images/gallery/trailer1_frame1620.png',
+    description: 'Breathtaking sunset view from the coastal highway',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 26,
+    title: 'Beach Boardwalk',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1547.png',
+    description: 'Bustling boardwalk along the beach area',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 27,
+    title: 'Ocean Drive',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1517.png',
+    description: 'The iconic Ocean Drive in Vice City',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 28,
+    title: 'Tropical Garden',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1472.png',
+    description: 'Lush tropical garden with exotic plants',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 29,
+    title: 'Urban Intersection',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1451.png',
+    description: 'Busy urban intersection in downtown Vice City',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 30,
+    title: 'Nighttime Drive',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1414.png',
+    description: 'Atmospheric nighttime drive through the city streets',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 31,
+    title: 'Beach Aerial View',
+    category: 'desktop',
+    image: '/images/gallery/trailer1_frame1376.png',
+    description: 'Stunning aerial view of Vice City beaches',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 32,
+    title: 'Palm-Lined Boulevard',
+    category: 'desktop',
+    image: '/images/gallery/trailer1_frame1366.png',
+    description: 'Beautiful boulevard lined with palm trees',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 33,
+    title: 'Nightclub Interior',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1286.png',
+    description: 'Detailed view of a Vice City nightclub interior',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 34,
+    title: 'Roadside Motel',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1270.png',
+    description: 'Vintage roadside motel with neon signage',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 35,
+    title: 'Street Corner',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1207.png',
+    description: 'Typical Vice City street corner with local flavor',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 36,
+    title: 'Downtown Shopping',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1184.png',
+    description: 'Downtown shopping district with pedestrians',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 37,
+    title: 'Pool Party',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame1078.png',
+    description: 'Exclusive pool party at a luxury mansion',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 38,
+    title: 'Marina View',
+    category: 'desktop',
+    image: '/images/gallery/trailer1_frame1028.png',
+    description: 'Scenic marina with luxury boats and yachts',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 39,
+    title: 'Residential Street',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame0981.png',
+    description: 'Quiet residential street in a Vice City suburb',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 40,
+    title: 'Trailer Teaser',
+    category: 'official',
     image: '/images/gallery/trailer1-teaser.png',
     description: 'A teaser frame from the official GTA VI trailer',
     availableResolutions: ['720p', '1080p', '1440p'],
     date: '2024-03-20'
   },
   {
-    id: 23,
+    id: 41,
     title: 'Trailer Teaser Square',
     category: 'phone',
     image: '/images/gallery/trailer1-teaser-sq.png',
@@ -219,65 +381,83 @@ export const galleryItems = [
     date: '2024-03-20'
   },
   {
-    id: 24,
-    title: 'Artwork Sky Element',
-    category: 'desktop',
-    image: '/images/gallery/artwork-sky.png',
-    description: 'Isolated sky element from the official artwork',
-    availableResolutions: ['720p', '1080p'],
-    date: '2024-03-20'
-  },
-  {
-    id: 25,
-    title: 'Artwork Street Element',
-    category: 'desktop',
-    image: '/images/gallery/artwork-street.png',
-    description: 'Isolated street element from the official artwork',
-    availableResolutions: ['720p', '1080p'],
-    date: '2024-03-20'
-  },
-  {
-    id: 26,
-    title: 'Artwork Trees Element 1',
-    category: 'desktop',
-    image: '/images/gallery/artwork-trees1.png',
-    description: 'Tree elements from the official artwork, part 1',
-    availableResolutions: ['720p', '1080p'],
-    date: '2024-03-20'
-  },
-  {
-    id: 27,
-    title: 'Artwork Trees Element 2',
-    category: 'desktop',
-    image: '/images/gallery/artwork-trees2.png',
-    description: 'Tree elements from the official artwork, part 2',
-    availableResolutions: ['720p', '1080p'],
-    date: '2024-03-20'
-  },
-  {
-    id: 28,
-    title: 'Artwork Trees Element 3',
-    category: 'desktop',
-    image: '/images/gallery/artwork-trees3.png',
-    description: 'Tree elements from the official artwork, part 3',
-    availableResolutions: ['720p', '1080p'],
-    date: '2024-03-20'
-  },
-  {
-    id: 29,
-    title: 'City Life',
+    id: 42,
+    title: 'Car Chase',
     category: 'screenshots',
-    image: '/images/gallery/trailer1_frame0981.png',
-    description: 'Bustling city life in Vice City with dynamic environment',
+    image: '/images/gallery/trailer1_frame0935.png',
+    description: 'Intense car chase through Vice City streets',
     availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   },
   {
-    id: 30,
-    title: 'Beach Party',
+    id: 43,
+    title: 'Highway Pursuit',
     category: 'screenshots',
-    image: '/images/gallery/trailer1_frame0935.png',
-    description: 'Lively beach party scene with vibrant atmosphere',
+    image: '/images/gallery/trailer1_frame0933.png',
+    description: 'High-speed pursuit on the Vice City highway',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 44,
+    title: 'City Alleyway',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame0909.png',
+    description: 'Atmospheric alleyway in the urban district',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 45,
+    title: 'Swamp Wilderness',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame0313.png',
+    description: 'Mysterious swamp wilderness outside of Vice City',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 46,
+    title: 'Rural Landscape',
+    category: 'desktop',
+    image: '/images/gallery/trailer1_frame0292.png',
+    description: 'Scenic rural landscape in the outskirts of Vice City',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 47,
+    title: 'Wildlife Encounter',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame0239.png',
+    description: 'Close encounter with wildlife in the natural habitat',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 48,
+    title: 'Coastal Sunset',
+    category: 'desktop',
+    image: '/images/gallery/trailer1_frame0210.png',
+    description: 'Breathtaking coastal sunset with silhouetted skyline',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 49,
+    title: 'Urban Exploration',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame0162.png',
+    description: 'Exploring the urban landscape of Vice City',
+    availableResolutions: ['720p', '1080p', '1440p', '4k'],
+    date: '2024-03-20'
+  },
+  {
+    id: 50,
+    title: 'Boat Chase',
+    category: 'screenshots',
+    image: '/images/gallery/trailer1_frame0084.png',
+    description: 'Thrilling boat chase through Vice City waters',
     availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
   }
