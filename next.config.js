@@ -59,11 +59,25 @@ const nextConfig = {
     },
   },
   
+  // Exclude large files from serverless function bundling
+  
   // Experimental features
   experimental: {
     // Valid experimental options only
     largePageDataBytes: 4.5 * 1024 * 1024, // Increased to 2MB (from 800KB)
     serverComponentsExternalPackages: ['firebase-admin'],
+    outputFileTracingExcludes: {
+      '/api/image': [
+        'public/**/*',
+        '**/node_modules/sharp/**/*'
+      ],
+    },
+    // Disable tracing of image files for the image API
+    outputFileTracingIncludes: {
+      '/api/image': [
+        '!public/**/*'
+      ]
+    }
   },
 }
 

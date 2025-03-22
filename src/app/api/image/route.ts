@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
+import { createReadStream } from 'fs';
+import { stat } from 'fs/promises';
 
 // Debug flag
 const DEBUG = true;
@@ -104,11 +106,8 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // Read the image file directly from the found path
-      const fileBuffer = fs.readFileSync(fullImagePath);
-      
-      // Get the file stats for size information
-      const fileStats = fs.statSync(fullImagePath);
+      // Get the file stats for size information and headers
+      const fileStats = await stat(fullImagePath);
       
       // Log file details for debugging
       if (DEBUG) {
@@ -116,23 +115,31 @@ export async function GET(request: NextRequest) {
         console.log(`[Image API] File size: ${(fileStats.size / 1024).toFixed(2)}KB`);
       }
       
-      // Prepare the response
-      const response = new NextResponse(fileBuffer);
+      // Prepare headers for response
+      const headers = new Headers();
       
       // Set content type
       const contentTypeExt = fileExt.substring(1).toLowerCase();
-      response.headers.set('Content-Type', `image/${contentTypeExt === 'jpg' ? 'jpeg' : contentTypeExt}`);
+      headers.set('Content-Type', `image/${contentTypeExt === 'jpg' ? 'jpeg' : contentTypeExt}`);
       
       // Set download headers if requested
       if (download) {
-        response.headers.set('Content-Disposition', `attachment; filename="${filename}${fileExt}"`);
+        headers.set('Content-Disposition', `attachment; filename="${filename}${fileExt}"`);
         if (DEBUG) console.log(`[Image API] Serving as download: ${filename}${fileExt}`);
       }
       
       // Set caching headers
-      response.headers.set('Cache-Control', 'public, max-age=31536000');
+      headers.set('Cache-Control', 'public, max-age=31536000');
+      headers.set('Content-Length', fileStats.size.toString());
       
-      return response;
+      // Create a ReadableStream from the file
+      const stream = createReadStream(fullImagePath);
+      
+      // Create a new Response with the stream
+      return new Response(stream as any, {
+        headers,
+        status: 200,
+      });
     } catch (error) {
       console.error(`[Image API] Error serving image:`, error);
       return NextResponse.json(
