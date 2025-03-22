@@ -9,5 +9,11 @@
     "domains": ["localhost", "vice.city"],
     "minimumCacheTTL": 60,
     "formats": ["image/webp", "image/avif"]
+  },
+  "functions": {
+    "src/app/api/image/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
   }
 } 

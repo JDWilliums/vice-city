@@ -59,8 +59,6 @@ const nextConfig = {
     },
   },
   
-  // Exclude large files from serverless function bundling
-  
   // Experimental features
   experimental: {
     // Valid experimental options only
@@ -68,16 +66,9 @@ const nextConfig = {
     serverComponentsExternalPackages: ['firebase-admin'],
     outputFileTracingExcludes: {
       '/api/image': [
-        'public/**/*',
         '**/node_modules/sharp/**/*'
       ],
     },
-    // Disable tracing of image files for the image API
-    outputFileTracingIncludes: {
-      '/api/image': [
-        '!public/**/*'
-      ]
-    }
   },
 }
 
