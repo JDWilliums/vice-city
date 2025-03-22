@@ -43,39 +43,7 @@ next-env.d.ts
 *.swp
 *.swo
 
-# Image files and generated content
-/public/images/gallery/
-/public/unprocessed-images/
-/public/processed-images/
-/public/images/**/720p/
-/public/images/**/1080p/
-/public/images/**/1440p/
-/public/images/**/4k/
-/public/images/**/*-720p.*
-/public/images/**/*-1080p.*
-/public/images/**/*-1440p.*
-/public/images/**/*-4k.*
 
-# Large image files 
-/public/images/gta6-*.png
-/public/images/trailer1*.png
-/public/images/trailer1-teaser*.png
-/public/images/artwork*.png
-/public/images/background*.png
-/public/images/coming2025*.png
-/public/images/gtavi-*.png
-/public/images/*map.jpg
-/public/images/wiki-background.jpg
-/public/images/vice-sign.png
-/public/images/evolution.png
-
-# Large files in root
-*.jpg
-*.png
-*.webp
-gta5map.png
-gta6-background.jpg
-vice-city.png
 
 # Generated files
 /scripts/generate-images.sh
