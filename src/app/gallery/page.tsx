@@ -60,37 +60,27 @@ export default function Gallery() {
       
       console.log(`Downloading image: ${imageUrl} at ${resolution} (${resolutionData.width}x${resolutionData.height})`);
       
-      // Extract base image path by removing any existing resolution folder prefix
-      let baseImagePath = imageUrl;
-      const resolutionPattern = /^\/(720p|1080p|1440p|4k|iphone|android|ipad)\//;
-      const match = imageUrl.match(resolutionPattern);
+      // Extract the filename only from the path
+      const filename = imageUrl.split('/').pop() || 'image.png';
       
-      if (match) {
-        // Remove the resolution folder prefix to get the base image path
-        baseImagePath = imageUrl.substring(match[0].length);
-        // Ensure it has a leading slash for proper API handling
-        baseImagePath = `/${baseImagePath}`;
-        
-        console.log(`Image is in resolution folder ${match[1]}, using base path: ${baseImagePath}`);
-      }
+      // Clean extension from filename
+      const fileExtension = filename.substring(filename.lastIndexOf('.'));
+      const baseFilename = filename.substring(0, filename.lastIndexOf('.'));
       
-      // Generate a proper filename for download
-      const downloadFilename = formatImageFilename(baseImagePath, resolution);
+      // Format download filename with resolution
+      const downloadFilename = `${baseFilename}-${resolution}${fileExtension}`;
       
-      // Generate a download URL for the pre-sized image from the resolution folder
-      const downloadUrl = getImageUrl(
-        baseImagePath, // Use the base image path without resolution prefix
-        resolution,    // This points to the resolution folder (e.g., "720p", "1080p", etc.)
-        true,          // Request download
-        downloadFilename
-      );
+      console.log(`Using filename: ${filename} -> ${downloadFilename}`);
       
-      console.log(`Download URL: ${downloadUrl}`);
+      // Generate a direct URL to the image in the resolution folder
+      const downloadUrl = `/${resolution}/${filename}`;
+      
+      console.log(`Direct download URL: ${downloadUrl}`);
       
       // Create a temporary anchor element and trigger download
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = `${downloadFilename}${baseImagePath.slice(baseImagePath.lastIndexOf('.'))}`;
+      link.download = downloadFilename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
