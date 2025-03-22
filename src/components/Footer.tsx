@@ -44,14 +44,14 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/wiki" className="text-gray-300 hover:text-gta-pink transition-colors flex items-center group">
-                  <span className="w-1 h-0 group-hover:h-4 bg-gta-pink mr-2 transition-all duration-200"></span>
+                <Link href="/wiki" className="text-gray-300 hover:text-gta-blue transition-colors flex items-center group">
+                  <span className="w-1 h-0 group-hover:h-4 bg-gta-blue mr-2 transition-all duration-200"></span>
                   Wiki
                 </Link>
               </li>
               <li>
-                <Link href="/news" className="text-gray-300 hover:text-gta-green transition-colors flex items-center group">
-                  <span className="w-1 h-0 group-hover:h-4 bg-gta-green mr-2 transition-all duration-200"></span>
+                <Link href="/news" className="text-gray-300 hover:text-gta-blue transition-colors flex items-center group">
+                  <span className="w-1 h-0 group-hover:h-4 bg-gta-blue mr-2 transition-all duration-200"></span>
                   News & Updates
                 </Link>
               </li>
@@ -63,26 +63,26 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4 text-gta-pink">Content</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/wiki/characters" className="text-gray-300 hover:text-gta-pink transition-colors flex items-center group">
-                  <span className="w-1 h-0 group-hover:h-4 bg-gta-pink mr-2 transition-all duration-200"></span>
+                <Link href="/wiki/characters" className="text-gray-300 hover:text-gta-blue transition-colors flex items-center group">
+                  <span className="w-1 h-0 group-hover:h-4 bg-gta-blue mr-2 transition-all duration-200"></span>
                   Characters
                 </Link>
               </li>
               <li>
-                <Link href="/wiki/missions" className="text-gray-300 hover:text-gta-pink transition-colors flex items-center group">
-                  <span className="w-1 h-0 group-hover:h-4 bg-gta-pink mr-2 transition-all duration-200"></span>
+                <Link href="/wiki/missions" className="text-gray-300 hover:text-gta-blue transition-colors flex items-center group">
+                  <span className="w-1 h-0 group-hover:h-4 bg-gta-blue mr-2 transition-all duration-200"></span>
                   Missions
                 </Link>
               </li>
               <li>
-                <Link href="/wiki/vehicles" className="text-gray-300 hover:text-gta-pink transition-colors flex items-center group">
-                  <span className="w-1 h-0 group-hover:h-4 bg-gta-pink mr-2 transition-all duration-200"></span>
+                <Link href="/wiki/vehicles" className="text-gray-300 hover:text-gta-blue transition-colors flex items-center group">
+                  <span className="w-1 h-0 group-hover:h-4 bg-gta-blue mr-2 transition-all duration-200"></span>
                   Vehicles
                 </Link>
               </li>
               <li>
-                <Link href="/wiki/weapons" className="text-gray-300 hover:text-gta-pink transition-colors flex items-center group">
-                  <span className="w-1 h-0 group-hover:h-4 bg-gta-pink mr-2 transition-all duration-200"></span>
+                <Link href="/wiki/weapons" className="text-gray-300 hover:text-gta-blue transition-colors flex items-center group">
+                  <span className="w-1 h-0 group-hover:h-4 bg-gta-blue mr-2 transition-all duration-200"></span>
                   Weapons
                 </Link>
               </li>
@@ -91,13 +91,25 @@ const Footer = () => {
 
           {/* Community */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-gta-pink">Connect</h3>
+            <h3 className="text-lg font-bold mb-4 text-gta-pink">Info</h3>
             <ul className="space-y-2">
               
               <li>
-                <Link href="/contact" className="text-gray-300 hover:text-gta-green transition-colors flex items-center group">
-                  <span className="w-1 h-0 group-hover:h-4 bg-gta-green mr-2 transition-all duration-200"></span>
+                <Link href="/contact" className="text-gray-300 hover:text-gta-blue transition-colors flex items-center group">
+                  <span className="w-1 h-0 group-hover:h-4 bg-gta-blue mr-2 transition-all duration-200"></span>
                   Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-gray-300 hover:text-gta-blue transition-colors flex items-center group">
+                  <span className="w-1 h-0 group-hover:h-4 bg-gta-blue mr-2 transition-all duration-200"></span>
+                  Terms & Conditions
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-gray-300 hover:text-gta-blue transition-colors flex items-center group">
+                  <span className="w-1 h-0 group-hover:h-4 bg-gta-blue mr-2 transition-all duration-200"></span>
+                  Privacy Policy
                 </Link>
               </li>
             </ul>
