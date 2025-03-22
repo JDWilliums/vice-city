@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Head from 'next/head';
+import { NewsArticleFirestore, getAllNewsArticles } from '@/lib/newsFirestoreService';
 
 // GTA 6 estimated release date (Fall 2025)
 const RELEASE_DATE = new Date('2025-12-01T00:00:00');
@@ -44,6 +45,10 @@ export default function HomePage() {
   // Simplified image transition state
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
+  
+  // State for news articles
+  const [latestArticles, setLatestArticles] = useState<NewsArticleFirestore[]>([]);
+  const [isLoadingArticles, setIsLoadingArticles] = useState<boolean>(true);
   
   // Update countdown
   useEffect(() => {
@@ -113,6 +118,37 @@ export default function HomePage() {
       clearInterval(interval);
     };
   }, []);
+
+  // Fetch latest news articles
+  useEffect(() => {
+    async function fetchLatestArticles() {
+      try {
+        setIsLoadingArticles(true);
+        const articles = await getAllNewsArticles(false);
+        // Get the 3 most recent articles
+        setLatestArticles(articles.slice(0, 3));
+      } catch (error) {
+        console.error('Error fetching latest articles:', error);
+      } finally {
+        setIsLoadingArticles(false);
+      }
+    }
+
+    fetchLatestArticles();
+  }, []);
+
+  // Format date
+  const formatDate = (date: any) => {
+    if (!date) return 'Unknown date';
+    
+    const timestamp = typeof date === 'object' && date.toDate ? date.toDate() : new Date(date);
+    
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(timestamp);
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
@@ -313,76 +349,42 @@ export default function HomePage() {
               <span className="text-white">Latest Updates</span>
             </h2>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto animate-fadeInUp">
-              <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
-                <div className="h-40 sm:h-48 relative overflow-hidden">
-                  <Image 
-                    src="/images/gta6-1.png" 
-                    alt="GTA 6 Update" 
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-                  />
-                </div>
-                <div className="p-4 md:p-6">
-                  <div className="text-xs text-gray-400 mb-2">March 15, 2024</div>
-                  <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 group-hover:text-gta-blue transition-colors">Rockstar Confirms Dual Protagonist System</h3>
-                  <p className="text-gray-300 text-sm md:text-base mb-3 md:mb-4">New details emerge about the game's protagonists, Lucia and Jason, in this exciting update.</p>
-                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center text-sm md:text-base">
-                    Read More
-                    <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
+            {isLoadingArticles ? (
+              <div className="flex justify-center items-center py-10">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gta-blue"></div>
               </div>
-              
-              <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
-                <div className="h-40 sm:h-48 relative overflow-hidden">
-                  <Image 
-                    src="/images/gta6-2.png" 
-                    alt="GTA 6 Update" 
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-                  />
-                </div>
-                <div className="p-4 md:p-6">
-                  <div className="text-xs text-gray-400 mb-2">February 28, 2024</div>
-                  <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 group-hover:text-gta-blue transition-colors">Map Size Reportedly Largest in GTA History</h3>
-                  <p className="text-gray-300 text-sm md:text-base mb-3 md:mb-4">Insiders claim the new Vice City map will be significantly larger than previous GTA worlds.</p>
-                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center text-sm md:text-base">
-                    Read More
-                    <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
+            ) : latestArticles.length === 0 ? (
+              <div className="text-center text-gray-400">
+                <p>No articles found</p>
               </div>
-              
-              <div className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
-                <div className="h-40 sm:h-48 relative overflow-hidden">
-                  <Image 
-                    src="/images/gta6-3.png" 
-                    alt="GTA 6 Update" 
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-                  />
-                </div>
-                <div className="p-4 md:p-6">
-                  <div className="text-xs text-gray-400 mb-2">January 19, 2024</div>
-                  <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 group-hover:text-gta-blue transition-colors">New Game Mechanics Revealed</h3>
-                  <p className="text-gray-300 text-sm md:text-base mb-3 md:mb-4">Rockstar shares insights on new gameplay features including enhanced stealth and dynamic weather.</p>
-                  <Link href="/news" className="text-gta-blue hover:underline inline-flex items-center text-sm md:text-base">
-                    Read More
-                    <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto animate-fadeInUp">
+                {latestArticles.map((article) => (
+                  <div key={article.id} className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
+                    <div className="h-40 sm:h-48 relative overflow-hidden">
+                      <Image 
+                        src={article.imageUrl} 
+                        alt={article.title} 
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                      />
+                    </div>
+                    <div className="p-4 md:p-6">
+                      <div className="text-xs text-gray-400 mb-2">{formatDate(article.createdAt)}</div>
+                      <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 group-hover:text-gta-blue transition-colors">{article.title}</h3>
+                      <p className="text-gray-300 text-sm md:text-base mb-3 md:mb-4">{article.excerpt}</p>
+                      <Link href={`/news/${article.slug}`} className="text-gta-blue hover:underline inline-flex items-center text-sm md:text-base">
+                        Read More
+                        <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
             
             <div className="mt-8 md:mt-12 text-center animate-fadeInUp">
               <Link href="/news" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-base md:text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-green/20 transition-all hover:-translate-y-1">

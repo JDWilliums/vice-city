@@ -64,25 +64,7 @@ export default function LoginPage() {
     }
   };
 
-  // Handle Discord sign in
-  const handleDiscordSignIn = async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage('');
-      await signInWithDiscord();
-      
-      // If user was redirected from another page, try to go back there
-      if (isRedirected) {
-        router.back();
-      } else {
-        router.push('/');
-      }
-    } catch (error) {
-      handleAuthError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
 
   // Handle email/password sign in
   const handleEmailSignIn = async (e: React.FormEvent) => {
@@ -187,12 +169,7 @@ export default function LoginPage() {
               disabled={isLoading}
               isLoading={isLoading}
             />
-            <AuthButton 
-              provider="discord" 
-              onClick={handleDiscordSignIn}
-              disabled={isLoading}
-              isLoading={isLoading}
-            />
+            
           </div>
           
           {/* Divider */}

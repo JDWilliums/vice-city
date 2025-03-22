@@ -35,19 +35,7 @@ export default function RegisterPage() {
     }
   };
 
-  // Handle Discord sign in
-  const handleDiscordSignIn = async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage('');
-      await signInWithDiscord();
-      router.push('/'); // Redirect to home page after successful registration
-    } catch (error) {
-      handleAuthError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
 
   // Handle email/password registration
   const handleEmailRegistration = async (e: React.FormEvent) => {
@@ -157,12 +145,7 @@ export default function RegisterPage() {
               disabled={isLoading}
               isLoading={isLoading}
             />
-            <AuthButton 
-              provider="discord" 
-              onClick={handleDiscordSignIn}
-              disabled={isLoading}
-              isLoading={isLoading}
-            />
+            
           </div>
           
           {/* Divider */}
