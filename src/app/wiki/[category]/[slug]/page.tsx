@@ -739,6 +739,7 @@ function getWikiPage(slug) {
                             src={imageUrl}
                             alt={`${pageData.title} - Image ${index + 1}`}
                             fill
+                            sizes="(max-width: 768px) 50vw, 25vw"
                             className="object-cover transition-transform duration-700 group-hover:scale-110"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -810,10 +811,11 @@ function getWikiPage(slug) {
                           src={pageData.imageUrl}
                           alt={pageData.title}
                           fill
+                          sizes="(max-width: 1024px) 100vw, 33vw"
                           className="object-cover transition-transform duration-1000 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-50"></div>
-            </div>
+                      </div>
                       <div className="p-4 border-t border-gray-700/50">
                         <h3 className="text-lg font-bold text-white mb-2 flex items-center">
                           <svg className="w-5 h-5 mr-2 text-gta-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -934,6 +936,7 @@ function getWikiPage(slug) {
                         src={page.imageUrl}
                         alt={page.title}
                         fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-700"
                       />
                           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"></div>

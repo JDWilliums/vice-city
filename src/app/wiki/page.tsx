@@ -306,6 +306,7 @@ export default function WikiHomePage() {
             src="/images/gta6-3.png" 
             alt="Vice City" 
             fill 
+            sizes="100vw"
             className="object-cover object-center opacity-90"
             priority
           />
@@ -366,6 +367,7 @@ export default function WikiHomePage() {
                                 src={searchResults[0].imageUrl} 
                                 alt={searchResults[0].title} 
                                 fill 
+                                sizes="64px"
                                 className="object-cover"
                               />
                             </div>
@@ -472,6 +474,7 @@ export default function WikiHomePage() {
                     src={getLocalImageUrl(category.id)} 
                     alt={category.title} 
                     fill 
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover blur-sm"
                   />
                 </div>
@@ -525,6 +528,7 @@ export default function WikiHomePage() {
                           src={page.imageUrl}
                           alt={page.title}
                           fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="object-cover transform group-hover:scale-105 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
@@ -590,6 +594,7 @@ export default function WikiHomePage() {
                               src={page.imageUrl}
                               alt={page.title}
                               fill
+                              sizes="64px"
                               className="object-cover group-hover:scale-110 transition-transform duration-300"
                             />
                           </div>

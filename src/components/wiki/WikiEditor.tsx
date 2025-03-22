@@ -829,6 +829,7 @@ export default function WikiEditor({
                   src={previewImage} 
                   alt="Image preview" 
                   fill 
+                  sizes="128px"
                   style={{ objectFit: 'cover' }}
                   className="rounded-md" 
                   onError={(e) => {
@@ -857,6 +858,7 @@ export default function WikiEditor({
                       src={url} 
                       alt={`Gallery image ${index + 1}`} 
                       fill 
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       style={{ objectFit: 'cover' }}
                       className="rounded-t-md" 
                       onError={(e) => {

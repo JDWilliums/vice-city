@@ -233,6 +233,7 @@ export default function Gallery() {
               src="/images/gta6-0.png" 
               alt="Gallery Background" 
               fill 
+              sizes="100vw"
               className="object-cover object-center opacity-100"
               priority
             />

@@ -210,6 +210,7 @@ export default function ImageUploader({
               src={imageUrl} 
               alt="Uploaded image" 
               fill 
+              sizes="100%"
               style={{ objectFit: 'cover' }}
               className="rounded-md" 
             />
@@ -376,6 +377,7 @@ export function MultipleImageUploader({
                   src={url} 
                   alt={`Gallery image ${index + 1}`} 
                   fill 
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
                   style={{ objectFit: 'cover' }}
                   className="rounded-md" 
                 />

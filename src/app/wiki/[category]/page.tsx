@@ -198,6 +198,7 @@ export default function WikiCategoryPage() {
             src={categoryBgImage}
             alt={categoryInfo.title}
             fill
+            sizes="100vw"
             className="object-cover object-center opacity-40"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-gray-900/80 via-transparent to-gray-900/80"></div>
