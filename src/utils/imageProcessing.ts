@@ -7,8 +7,8 @@
  * 
  * This function generates a URL to fetch an image from resolution-specific folders.
  * It will look for the image in the following locations, in order:
- * 1. /{original-path}/{resolution}/{filename} - Original path with resolution subfolder
- * 2. /{resolution}/{filename} - Direct in resolution folder
+ * 1. /{resolution}/{filename} - Top-level resolution folder (e.g., /720p/image.png)
+ * 2. /{original-path}/{resolution}/{filename} - Original path with resolution subfolder
  * 3. /{original-path}/{filename} - Original path (fallback)
  * 
  * @param imagePath Path to the original image
@@ -29,11 +29,18 @@ export const getImageUrl = (
   // Clean the path (keep leading slash for API parameter)
   const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
   
+  // If path already contains the resolution, don't add it again
+  const alreadyHasResolution = resolution && cleanPath.startsWith(`/${resolution}/`);
+  
   // Construct the API URL
   const params = new URLSearchParams();
   params.append('path', cleanPath);
   
-  if (resolution) params.append('resolution', resolution);
+  // Only add resolution if it's not already in the path
+  if (resolution && !alreadyHasResolution) {
+    params.append('resolution', resolution);
+  }
+  
   if (download) params.append('download', 'true');
   if (filename) params.append('filename', filename);
   
