@@ -60,18 +60,26 @@ export default function Gallery() {
       
       console.log(`Downloading image: ${imageUrl} at ${resolution} (${resolutionData.width}x${resolutionData.height})`);
       
+      // Generate a proper filename for download
+      const downloadFilename = formatImageFilename(imageUrl, resolution);
+      
       // Generate a download URL for the pre-sized image from the resolution folder
       const downloadUrl = getImageUrl(
         imageUrl,
         resolution,  // This points to the resolution folder (e.g., "720p", "1080p", etc.)
         true,        // Request download
-        formatImageFilename(imageUrl, resolution)
+        downloadFilename
       );
       
       console.log(`Download URL: ${downloadUrl}`);
       
-      // Open in a new tab for better handling of large files
-      window.open(downloadUrl, '_blank');
+      // Create a temporary anchor element and trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${downloadFilename}${imageUrl.slice(imageUrl.lastIndexOf('.'))}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error('Error generating download URL:', error);
     }
