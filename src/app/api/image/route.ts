@@ -49,39 +49,25 @@ export async function GET(request: NextRequest) {
       let fullImagePath = path.join(process.cwd(), 'public', cleanImagePath);
       let fileFound = false;
       
-      // If resolution is specified, look in the resolution folder
+      // If resolution is specified, look in the resolution folder with the same filename
       if (resolution) {
         if (DEBUG) console.log(`[Image API] Looking for image in resolution folder: ${resolution}`);
         
-        // First priority: Check for a file with the resolution in the name in the resolution folder
-        // e.g., /720p/imagename-720p.png
-        const resolutionFilename = `${filenameWithoutExt}-${resolution}${fileExt}`;
-        const resolutionNamePath = path.join(resolution, resolutionFilename);
-        const fullResolutionNamePath = path.join(process.cwd(), 'public', resolutionNamePath);
+        // Look for the file in the resolution directory with the SAME filename
+        // e.g., /720p/imagename.png (keeping the original filename)
+        const resolutionPath = path.join(resolution, baseFilename);
+        const fullResolutionPath = path.join(process.cwd(), 'public', resolutionPath);
         
-        if (fs.existsSync(fullResolutionNamePath)) {
-          fullImagePath = fullResolutionNamePath;
+        if (fs.existsSync(fullResolutionPath)) {
+          fullImagePath = fullResolutionPath;
           fileFound = true;
-          if (DEBUG) console.log(`[Image API] Found in resolution folder with resolution suffix: ${resolutionNamePath}`);
+          if (DEBUG) console.log(`[Image API] Found image in resolution folder: ${resolutionPath}`);
         } else {
-          if (DEBUG) console.log(`[Image API] Not found with resolution in name: ${resolutionNamePath}`);
-          
-          // Second try: direct path in the resolution folder
-          // e.g., /720p/imagename.png (keeping the same filename)
-          const resolutionPath = path.join(resolution, baseFilename);
-          const fullResolutionPath = path.join(process.cwd(), 'public', resolutionPath);
-          
-          if (fs.existsSync(fullResolutionPath)) {
-            fullImagePath = fullResolutionPath;
-            fileFound = true;
-            if (DEBUG) console.log(`[Image API] Found image in resolution folder: ${resolutionPath}`);
-          } else {
-            if (DEBUG) console.log(`[Image API] Not found in resolution folder with same name: ${resolutionPath}`);
-          }
+          if (DEBUG) console.log(`[Image API] Not found in resolution folder: ${resolutionPath}`);
         }
       }
       
-      // If no resolution-specific image was found, check if the original image exists
+      // If no resolution-specific image was found, use the original image
       if (!fileFound) {
         // Standard path = /images/image.png
         const originalPath = path.join(process.cwd(), 'public', cleanImagePath);
@@ -90,19 +76,8 @@ export async function GET(request: NextRequest) {
           fileFound = true;
           if (DEBUG) console.log(`[Image API] Using original image: ${cleanImagePath}`);
         } else {
-          // Last attempt: Try with resolution suffix in the images folder
-          // e.g., /images/imagename-720p.png
-          const fallbackPath = path.join(baseDir, `${filenameWithoutExt}-${resolution}${fileExt}`);
-          const fullFallbackPath = path.join(process.cwd(), 'public', fallbackPath);
-          
-          if (fs.existsSync(fullFallbackPath)) {
-            fullImagePath = fullFallbackPath;
-            fileFound = true;
-            if (DEBUG) console.log(`[Image API] Found original image with resolution suffix: ${fallbackPath}`);
-          } else {
-            if (DEBUG) console.log(`[Image API] Image not found in any location: ${cleanImagePath}`);
-            return NextResponse.json({ error: 'Image not found' }, { status: 404 });
-          }
+          if (DEBUG) console.log(`[Image API] Image not found in any location: ${cleanImagePath}`);
+          return NextResponse.json({ error: 'Image not found' }, { status: 404 });
         }
       }
       
