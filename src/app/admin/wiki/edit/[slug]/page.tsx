@@ -56,8 +56,9 @@ export default function EditWikiPage() {
   };
   
   // Handle errors during page update
-  const handleError = (error: string) => {
-    setErrorMessage(`Error: ${error}`);
+  const handleError = (error: Error | string) => {
+    const errorMessage = error instanceof Error ? error.message : error;
+    setErrorMessage(`Error: ${errorMessage}`);
     console.error('Error updating wiki page:', error);
   };
   
@@ -250,7 +251,7 @@ export default function EditWikiPage() {
             pageId={pageId}
             user={user} 
             onSuccess={handleSuccess}
-            onError={(error: Error) => handleError(error.message)}
+            onError={handleError}
           />
         </div>
       </main>
