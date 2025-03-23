@@ -14,6 +14,12 @@ module.exports = {
         'gta-purple': '#AC52FF',
         'gta-yellow': '#FFE552',
         'gta-red': '#FF5252',
+        'gta-orange': '#FFAD6B',
+        'gta-teal': '#6BFFD3',
+        'gta-lime': '#ADFF6B',
+        'gta-crimson': '#D73333',
+        'gta-indigo': '#A66BFF',
+        'gta-gray': '#BBBBBB',
         'dark-bg': '#121212',
         'map-bg': '#0fa8d2'
       },
