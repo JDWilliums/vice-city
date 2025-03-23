@@ -461,7 +461,13 @@ export default function WikiHomePage() {
                       category.id === 'locations' ? '#56FF52' : 
                       category.id === 'vehicles' ? '#FFE552' : 
                       category.id === 'weapons' ? '#FF5252' : 
-                      category.id === 'activities' ? '#AC52FF' : '#F152FF'
+                      category.id === 'activities' ? '#AC52FF' : 
+                      category.id === 'collectibles' ? '#FFAD6B' :
+                      category.id === 'gameplay-mechanics' ? '#68FFD3' : 
+                      category.id === 'updates' ? '#ADFF6B' :
+                      category.id === 'gangs' ? '#D73333' : 
+                      category.id === 'media' ? '#A66BFF' : 
+                      category.id === 'misc' ? '#BBBBBB' : '#F152FF'
                   }}
                 ></div>
                 
