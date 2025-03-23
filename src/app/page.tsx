@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
@@ -36,6 +36,24 @@ const GTA6_IMAGES = [
   '/images/gta6-20.png',
 ];
 
+// Preload the first image to improve LCP
+const preloadMainImage = () => {
+  if (typeof window !== 'undefined') {
+    const preloadLink = document.createElement('link');
+    preloadLink.rel = 'preload';
+    preloadLink.as = 'image';
+    preloadLink.href = GTA6_IMAGES[0];
+    document.head.appendChild(preloadLink);
+    
+    // Also preload the logo which is a potential LCP candidate
+    const logoPreload = document.createElement('link');
+    logoPreload.rel = 'preload';
+    logoPreload.as = 'image';
+    logoPreload.href = '/images/gta6-logo.png';
+    document.head.appendChild(logoPreload);
+  }
+};
+
 export default function HomePage() {
   const [days, setDays] = useState<number>(0);
   const [hours, setHours] = useState<number>(0);
@@ -50,9 +68,53 @@ export default function HomePage() {
   const [latestArticles, setLatestArticles] = useState<NewsArticleFirestore[]>([]);
   const [isLoadingArticles, setIsLoadingArticles] = useState<boolean>(true);
   
-  // Update countdown
+  // YouTube facade state
+  const [youtubeLoaded, setYoutubeLoaded] = useState<boolean>(false);
+  
+  // Memoized date formatter to avoid recreating it on each render
+  const formatDate = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+    
+    return (date: any) => {
+      if (!date) return 'Unknown date';
+      const timestamp = typeof date === 'object' && date.toDate ? date.toDate() : new Date(date);
+      return formatter.format(timestamp);
+    };
+  }, []);
+
+  // Memoized image URL processor
+  const getProcessedImageUrl = useCallback((url: string): string => {
+    if (!url) return '/images/gta6-1.png'; // Default fallback image
+    
+    // If URL already starts with http(s) or / then it's already properly formatted
+    if (url.startsWith('http') || url.startsWith('/')) {
+      return url;
+    }
+    
+    // Otherwise, add leading slash if needed
+    return url.startsWith('images/') ? `/${url}` : `/images/${url}`;
+  }, []);
+
+  // Update countdown - optimized to reduce main thread usage
   useEffect(() => {
-    const updateCountdown = () => {
+    let animationFrameId: number;
+    let lastUpdate = 0;
+    let cachedDays = 0;
+    let cachedHours = 0;
+    let cachedMinutes = 0;
+    let cachedSeconds = 0;
+    
+    const updateCountdown = (timestamp: number) => {
+      // Throttle updates to once per second to reduce CPU usage
+      if (timestamp - lastUpdate < 1000) {
+        animationFrameId = requestAnimationFrame(updateCountdown);
+        return;
+      }
+      
       const now = new Date();
       const difference = RELEASE_DATE.getTime() - now.getTime();
       
@@ -71,20 +133,48 @@ export default function HomePage() {
       const m = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
       const s = Math.floor((difference % (1000 * 60)) / 1000);
       
-      setDays(d);
-      setHours(h);
-      setMinutes(m);
-      setSeconds(s);
+      // Only update state if values have changed
+      if (d !== cachedDays) {
+        setDays(d);
+        cachedDays = d;
+      }
+      
+      if (h !== cachedHours) {
+        setHours(h);
+        cachedHours = h;
+      }
+      
+      if (m !== cachedMinutes) {
+        setMinutes(m);
+        cachedMinutes = m;
+      }
+      
+      if (s !== cachedSeconds) {
+        setSeconds(s);
+        cachedSeconds = s;
+      }
+      
+      lastUpdate = timestamp;
+      animationFrameId = requestAnimationFrame(updateCountdown);
     };
     
-    // Update immediately and then every second
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
+    // Start the animation frame loop
+    animationFrameId = requestAnimationFrame(updateCountdown);
     
-    return () => clearInterval(interval);
+    return () => {
+      // Clean up
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, []);
   
-  // Simplified image transition logic
+  // Preload critical images on mount
+  useEffect(() => {
+    preloadMainImage();
+  }, []);
+  
+  // Simplified image transition logic with more reliable transitions
   useEffect(() => {
     let isMounted = true;
     
@@ -117,51 +207,36 @@ export default function HomePage() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, []); // Empty dependency array to ensure it only runs once on mount
 
-  // Fetch latest news articles
+  // Defer loading articles to improve initial page load time
   useEffect(() => {
-    async function fetchLatestArticles() {
+    // Don't start fetching articles immediately
+    let mounted = true;
+    const loadArticlesAfterDelay = setTimeout(async () => {
+      if (!mounted) return;
+      
       try {
         setIsLoadingArticles(true);
         const articles = await getAllNewsArticles(false);
         // Get the 3 most recent articles
-        setLatestArticles(articles.slice(0, 3));
+        if (mounted) {
+          setLatestArticles(articles.slice(0, 3));
+        }
       } catch (error) {
         console.error('Error fetching latest articles:', error);
       } finally {
-        setIsLoadingArticles(false);
+        if (mounted) {
+          setIsLoadingArticles(false);
+        }
       }
-    }
+    }, 1500); // Delay article loading to prioritize critical content
 
-    fetchLatestArticles();
+    return () => {
+      mounted = false;
+      clearTimeout(loadArticlesAfterDelay);
+    };
   }, []);
-
-  // Format date
-  const formatDate = (date: any) => {
-    if (!date) return 'Unknown date';
-    
-    const timestamp = typeof date === 'object' && date.toDate ? date.toDate() : new Date(date);
-    
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    }).format(timestamp);
-  };
-
-  // Process image URL to ensure it's valid
-  const getProcessedImageUrl = (url: string): string => {
-    if (!url) return '/images/gta6-1.png'; // Default fallback image
-    
-    // If URL already starts with http(s) or / then it's already properly formatted
-    if (url.startsWith('http') || url.startsWith('/')) {
-      return url;
-    }
-    
-    // Otherwise, add leading slash if needed
-    return url.startsWith('images/') ? `/${url}` : `/images/${url}`;
-  };
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
@@ -176,18 +251,26 @@ export default function HomePage() {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://vice.city" />
         <meta property="og:image" content="https://vice.city/images/gta6-logo.png" />
+        
+        {/* Preload critical fonts if you have any custom fonts */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* Preconnect to domains for potential third-party resources */}
+        <link rel="preconnect" href="https://www.youtube.com" />
       </Head>
       
       <Navbar transparent={true} />
       
-      {/* Background Images with simpler fade effect */}
+      {/* Background Images with optimized loading for LCP */}
       <div className="fixed inset-0 z-0">
         {GTA6_IMAGES.map((image, index) => (
           <div 
             key={image}
-            className={`absolute inset-0 transition-opacity duration-1500 ${
+            className={`absolute inset-0 transition-opacity duration-1000 ${
               index === activeImageIndex ? (isTransitioning ? 'opacity-0' : 'opacity-100') : 'opacity-0'
             }`}
+            style={{ willChange: 'opacity' }}
           >
             <Image 
               src={image}
@@ -196,6 +279,9 @@ export default function HomePage() {
               className="object-cover object-center"
               priority={index === 0}
               sizes="100vw"
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "auto"}
+              unoptimized={index !== 0} // Skip optimization for non-critical images
             />
           </div>
         ))}
@@ -203,10 +289,12 @@ export default function HomePage() {
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/60 z-10"></div>
         
-        {/* Animated Gradients */}
+        {/* Optimized animated gradients with reduced painting costs */}
         <div className="absolute inset-0 z-5 opacity-40">
-          <div className="absolute top-0 -left-1/3 w-2/3 h-2/3 bg-gta-pink opacity-30 rounded-full blur-[150px] animate-pulse"></div>
-          <div className="absolute bottom-0 -right-1/3 w-2/3 h-2/3 bg-gta-blue opacity-30 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-0 -left-1/3 w-2/3 h-2/3 bg-gta-pink opacity-30 rounded-full blur-[150px] animate-pulse"
+               style={{ willChange: 'opacity' }}></div>
+          <div className="absolute bottom-0 -right-1/3 w-2/3 h-2/3 bg-gta-blue opacity-30 rounded-full blur-[150px] animate-pulse"
+               style={{ willChange: 'opacity', animationDelay: '2s' }}></div>
         </div>
       </div>
       
@@ -217,24 +305,24 @@ export default function HomePage() {
               GTA VI Countdown
             </h1>
             
-            {/* Countdown Timer */}
+            {/* Countdown Timer - with CSS animation classes instead of inline styles */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-4xl mx-auto mb-4">
-              <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-4 md:p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
+              <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-4 md:p-6 animate-fadeInUp-1">
                 <div className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-1">{days}</div>
                 <div className="text-gray-400 uppercase tracking-wider text-xs sm:text-sm">Days</div>
               </div>
               
-              <div className="bg-black/60 backdrop-blur-sm border border-gta-pink/30 rounded-lg p-4 md:p-6 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
+              <div className="bg-black/60 backdrop-blur-sm border border-gta-pink/30 rounded-lg p-4 md:p-6 animate-fadeInUp-2">
                 <div className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-1">{hours}</div>
                 <div className="text-gray-400 uppercase tracking-wider text-xs sm:text-sm">Hours</div>
               </div>
               
-              <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-4 md:p-6 animate-fadeInUp" style={{ animationDelay: '0.6s' }}>
+              <div className="bg-black/60 backdrop-blur-sm border border-gta-blue/30 rounded-lg p-4 md:p-6 animate-fadeInUp-3">
                 <div className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-1">{minutes}</div>
                 <div className="text-gray-400 uppercase tracking-wider text-xs sm:text-sm">Minutes</div>
               </div>
               
-              <div className="bg-black/60 backdrop-blur-sm border border-gta-pink/30 rounded-lg p-4 md:p-6 animate-fadeInUp" style={{ animationDelay: '0.8s' }}>
+              <div className="bg-black/60 backdrop-blur-sm border border-gta-pink/30 rounded-lg p-4 md:p-6 animate-fadeInUp-4">
                 <div className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-1">{seconds}</div>
                 <div className="text-gray-400 uppercase tracking-wider text-xs sm:text-sm">Seconds</div>
               </div>
@@ -244,22 +332,23 @@ export default function HomePage() {
               (Countdown to the end of Fall, actual release date is currently unknown)
             </p>
             
-            {/* GTA 6 Logo */}
-            <div className="relative flex justify-center mb-10 md:mb-16 animate-fadeInUp" style={{ animationDelay: '1s' }}>
+            {/* GTA 6 Logo - optimized for better LCP */}
+            <div className="relative flex justify-center mb-10 md:mb-16 animate-fadeInUp-5">
               <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[150px] opacity-5 animate-pulse"></div>
               <Image 
                 src="/images/gta6-logo.png" 
                 alt="GTA 6 Logo" 
                 width={600} 
                 height={300} 
-                className="w-full max-w-2xl h-auto relative"
+                className="w-full max-w-2xl h-auto relative" 
                 priority
                 sizes="(max-width: 640px) 90vw, (max-width: 768px) 80vw, 600px"
+                fetchPriority="high"
               />
             </div>
             
-            {/* Call to Action */}
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center mb-10 md:mb-16 animate-fadeInUp px-4" style={{ animationDelay: '1.2s' }}>
+            {/* Call to Action - now using CSS classes for animation delays */}
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center mb-10 md:mb-16 animate-fadeInUp-6 px-4">
               <Link href="/news" className="px-6 md:px-8 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-base md:text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1 w-full sm:w-auto">
                 Latest News
               </Link>
@@ -337,15 +426,46 @@ export default function HomePage() {
             
             <div className="max-w-4xl mx-auto animate-fadeInUp">
               <div className="relative aspect-video overflow-hidden rounded-lg border border-gray-800 shadow-2xl bg-black">
-                <iframe 
-                  className="absolute top-0 left-0 w-full h-full"
-                  src="https://www.youtube.com/embed/QdBZY2fkU-0" 
-                  title="Grand Theft Auto VI Trailer 1" 
-                  frameBorder="0" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                  referrerPolicy="strict-origin-when-cross-origin" 
-                  allowFullScreen
-                ></iframe>
+                {!youtubeLoaded ? (
+                  <div 
+                    className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer group"
+                    onClick={() => setYoutubeLoaded(true)}
+                    aria-label="Load YouTube video: Grand Theft Auto VI Trailer 1"
+                  >
+                    {/* Thumbnail with play button overlay */}
+                    <div className="relative w-full h-full">
+                      <Image 
+                        src="/images/gta6-0.png" 
+                        alt="GTA 6 Trailer Thumbnail" 
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        priority
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/60 transition-all">
+                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gta-pink/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2 md:p-3 text-center">
+                      <p className="text-white text-sm md:text-base">Click to play GTA VI Trailer 1</p>
+                      <p className="text-xs text-gray-400">Video will load from YouTube</p>
+                    </div>
+                  </div>
+                ) : (
+                  <iframe 
+                    className="absolute top-0 left-0 w-full h-full"
+                    src="https://www.youtube.com/embed/QdBZY2fkU-0?autoplay=1" 
+                    title="Grand Theft Auto VI Trailer 1" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    referrerPolicy="strict-origin-when-cross-origin" 
+                    allowFullScreen
+                  ></iframe>
+                )}
               </div>
               
               <div className="mt-6 md:mt-8 text-center text-gray-400 animate-fadeInUp">
@@ -355,8 +475,8 @@ export default function HomePage() {
           </div>
         </section>
         
-        {/* Updates Section */}
-        <section className="flex items-center relative py-12 md:py-20">
+        {/* Updates Section - Optimized for performance */}
+        <section className="flex items-center relative py-12 md:py-20 content-visibility-auto">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-8 md:mb-12 text-center animate-fadeInUp">
               <span className="text-white">Latest Updates</span>
@@ -375,12 +495,16 @@ export default function HomePage() {
                 {latestArticles.map((article) => (
                   <div key={article.id} className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
                     <div className="h-40 sm:h-48 relative overflow-hidden">
+                      {/* Reduced image load cost with loading="lazy" */}
                       <Image 
                         src={getProcessedImageUrl(article.imageUrl)} 
                         alt={article.title} 
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                        loading="lazy"
+                        decoding="async"
+                        unoptimized={true}
                         onError={(e) => {
                           // Fallback to default image if loading fails
                           const target = e.target as HTMLImageElement;
@@ -391,9 +515,10 @@ export default function HomePage() {
                     <div className="p-4 md:p-6">
                       <div className="text-xs text-gray-400 mb-2">{formatDate(article.createdAt)}</div>
                       <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 group-hover:text-gta-blue transition-colors">{article.title}</h3>
-                      <p className="text-gray-300 text-sm md:text-base mb-3 md:mb-4">{article.excerpt}</p>
+                      
                       <Link href={`/news/${article.slug}`} className="text-gta-blue hover:underline inline-flex items-center text-sm md:text-base">
-                        Read More
+                        Read More: {article.excerpt}
+                        <span className="sr-only"> - Full article about {article.title}</span>
                         <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                         </svg>
@@ -407,6 +532,7 @@ export default function HomePage() {
             <div className="mt-8 md:mt-12 text-center animate-fadeInUp">
               <Link href="/news" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-base md:text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
                 View All News
+                <span className="sr-only">Browse complete archive of GTA 6 news and updates</span>
               </Link>
             </div>
           </div>
@@ -445,13 +571,21 @@ export default function HomePage() {
       
       <Footer />
       
-      {/* Add the required CSS animations */}
+      {/* Updated CSS animations for better performance */}
       <style jsx global>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+        /* Content visibility improvements */
+        article, section, footer {
+          content-visibility: auto;
+          contain-intrinsic-size: 1px 500px;
         }
         
+        /* Use more GPU-accelerated properties */
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translate3d(0, 20px, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+        
+        /* Standard pulse animation - restored to original */
         @keyframes pulse {
           0% { opacity: 0.3; }
           50% { opacity: 0.6; }
@@ -459,37 +593,103 @@ export default function HomePage() {
         }
         
         .animate-fadeIn {
-          animation: fadeIn 1s ease-out forwards;
+          animation: fadeIn 0.6s ease-out forwards;
+          will-change: opacity, transform;
         }
         
         .animate-fadeInUp {
           opacity: 0;
-          animation: fadeIn 1s ease-out forwards;
+          animation: fadeIn 0.6s ease-out forwards;
+          will-change: opacity, transform;
         }
         
+        /* Tiered animation delays using CSS classes instead of inline styles */
+        .animate-fadeInUp-1 {
+          opacity: 0;
+          animation: fadeIn 0.6s ease-out 0.1s forwards;
+          will-change: opacity, transform;
+        }
+        
+        .animate-fadeInUp-2 {
+          opacity: 0;
+          animation: fadeIn 0.6s ease-out 0.2s forwards;
+          will-change: opacity, transform;
+        }
+        
+        .animate-fadeInUp-3 {
+          opacity: 0;
+          animation: fadeIn 0.6s ease-out 0.3s forwards;
+          will-change: opacity, transform;
+        }
+        
+        .animate-fadeInUp-4 {
+          opacity: 0;
+          animation: fadeIn 0.6s ease-out 0.4s forwards;
+          will-change: opacity, transform;
+        }
+        
+        .animate-fadeInUp-5 {
+          opacity: 0;
+          animation: fadeIn 0.6s ease-out 0.5s forwards;
+          will-change: opacity, transform;
+        }
+        
+        .animate-fadeInUp-6 {
+          opacity: 0;
+          animation: fadeIn 0.6s ease-out 0.6s forwards;
+          will-change: opacity, transform;
+        }
+        
+        /* Standard pulse animation - 8s duration */
         .animate-pulse {
           animation: pulse 8s infinite;
+          will-change: opacity;
         }
         
+        /* Optimize transition properties */
         .transition-opacity {
           transition-property: opacity;
           transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+          will-change: opacity;
         }
         
-        .duration-1500 {
-          transition-duration: 1500ms;
+        .duration-1000 {
+          transition-duration: 1000ms;
         }
 
         /* Mobile-specific optimizations */
         @media (max-width: 640px) {
           body {
             overscroll-behavior: none;
+            text-rendering: optimizeSpeed;
           }
           
           /* Improve touch targets */
           button, a {
             min-height: 44px;
           }
+        }
+        
+        /* Reduce layout shifts */
+        img, video {
+          display: block;
+          max-width: 100%;
+        }
+        
+        /* Optimize rendering performance */
+        .backdrop-blur-sm {
+          backdrop-filter: blur(4px);
+        }
+        
+        /* Regular blur for gradients */
+        .blur-\[150px\] {
+          filter: blur(150px);
+        }
+        
+        /* Content visibility for offscreen sections */
+        .content-visibility-auto {
+          content-visibility: auto;
+          contain-intrinsic-size: 1px 500px;
         }
       `}</style>
     </div>
