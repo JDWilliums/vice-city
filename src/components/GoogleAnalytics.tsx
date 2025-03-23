@@ -5,7 +5,8 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { pageview } from '@/utils/analytics';
 
-export default function GoogleAnalytics() {
+// Client component that handles tracking
+function PageViewTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -21,6 +22,10 @@ export default function GoogleAnalytics() {
     }
   }, [pathname, searchParams]);
 
+  return null;
+}
+
+export default function GoogleAnalytics() {
   return (
     <>
       {/* Google Analytics Scripts */}
@@ -40,6 +45,7 @@ export default function GoogleAnalytics() {
           `,
         }}
       />
+      <PageViewTracker />
     </>
   );
 } 
