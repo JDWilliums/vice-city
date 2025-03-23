@@ -187,6 +187,46 @@
     </div>
     
     <script>
+        // Simple logger utility that respects production vs development
+        const logger = {
+            debug: function(message) {
+                // Only log in development or when debug mode is enabled
+                const debugMode = localStorage.getItem('debugMode') === 'true';
+                if (debugMode || window.location.hostname === 'localhost') {
+                    console.log('[DEBUG]', message);
+                }
+                
+                // Also update the debug info div
+                const debugDiv = document.getElementById('debug-info');
+                if (debugDiv) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    debugDiv.textContent += `[${timestamp}] ${message}\n\n`;
+                    
+                    // Auto-scroll to bottom
+                    debugDiv.scrollTop = debugDiv.scrollHeight;
+                }
+            },
+            error: function(message) {
+                // Always log errors
+                console.error('[ERROR]', message);
+                
+                // Also update the debug info div
+                const debugDiv = document.getElementById('debug-info');
+                if (debugDiv) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    debugDiv.textContent += `[ERROR ${timestamp}] ${message}\n\n`;
+                    
+                    // Auto-scroll to bottom
+                    debugDiv.scrollTop = debugDiv.scrollHeight;
+                }
+            }
+        };
+
+        // Replace logDebug function calls with logger.debug
+        function logDebug(message) {
+            logger.debug(message);
+        }
+
         // Helper to track loaded images and verify dimensions
         document.querySelectorAll('.image-item img').forEach(img => {
             img.onload = function() {
@@ -229,16 +269,6 @@
                 
                 logDebug(`Original image loaded: ${width}×${height}px`);
             };
-        }
-        
-        // Debug logging function
-        function logDebug(message) {
-            const debugDiv = document.getElementById('debug-info');
-            const timestamp = new Date().toLocaleTimeString();
-            debugDiv.textContent += `[${timestamp}] ${message}\n\n`;
-            
-            // Auto-scroll to bottom
-            debugDiv.scrollTop = debugDiv.scrollHeight;
         }
         
         // Function to test downloads and analyze their size

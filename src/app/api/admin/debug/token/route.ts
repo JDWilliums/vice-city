@@ -2,20 +2,22 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import logger from '@/utils/logger';
+import { RequestCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('Token debug API called');
+    logger.debug('Token debug API called');
     
     // Get the session cookie
     const sessionCookie = cookies().get('session')?.value;
     
     if (!sessionCookie) {
-      console.log('No session cookie found');
+      logger.debug('No session cookie found');
       
       // Check all cookies
       const allCookies = cookies().getAll();
-      console.log('All cookies found:', allCookies.map(c => c.name).join(', '));
+      logger.debug('All cookies found:', allCookies.map(c => c.name).join(', '));
       
       return NextResponse.json({ 
         verified: false, 
@@ -24,13 +26,13 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
     
-    console.log('Session cookie found, length:', sessionCookie.length);
-    console.log('Token preview:', 
+    logger.debug('Session cookie found, length:', sessionCookie.length);
+    logger.debug('Token preview:', 
       sessionCookie.substring(0, 10) + '...' + sessionCookie.substring(sessionCookie.length - 10));
     
     // Check token format
     const hasValidFormat = sessionCookie.startsWith('ey') && sessionCookie.split('.').length === 3;
-    console.log('Token has valid JWT format:', hasValidFormat);
+    logger.debug('Token has valid JWT format:', hasValidFormat);
     
     if (!hasValidFormat) {
       return NextResponse.json({
@@ -53,19 +55,19 @@ export async function GET(request: NextRequest) {
       
       // Log initialization status before attempting to get the auth instance
       const initStatusBefore = getFirebaseAdminInitStatus();
-      console.log('Firebase Admin SDK status before getting auth:', {
+      logger.debug('Firebase Admin SDK status before getting auth:', {
         isInitialized: initStatusBefore.isInitialized,
         hasError: initStatusBefore.hasError,
         errorMessage: initStatusBefore.errorMessage || 'None'
       });
       
       const adminAuth = getAdminAuth();
-      console.log('Firebase Admin Auth initialized successfully');
+      logger.debug('Firebase Admin Auth initialized successfully');
       
       // Try to verify the token
-      console.log('Attempting to verify token...');
+      logger.debug('Attempting to verify token...');
       const decodedToken = await adminAuth.verifyIdToken(sessionCookie);
-      console.log('Token verified successfully for UID:', decodedToken.uid);
+      logger.debug('Token verified successfully for UID:', decodedToken.uid);
       
       // Success!
       return NextResponse.json({
@@ -83,19 +85,19 @@ export async function GET(request: NextRequest) {
         }
       });
     } catch (tokenError: any) {
-      console.error('Token verification failed:', tokenError);
+      logger.error('Token verification failed:', tokenError);
       
       // Log initialization status for debugging
       try {
         const { getFirebaseAdminInitStatus } = await import('@/lib/firebase-admin');
         const initStatus = getFirebaseAdminInitStatus();
-        console.error('Firebase Admin SDK status after error:', {
+        logger.error('Firebase Admin SDK status after error:', {
           isInitialized: initStatus.isInitialized,
           hasError: initStatus.hasError,
           errorMessage: initStatus.errorMessage
         });
       } catch (statusError) {
-        console.error('Error getting Firebase Admin status:', statusError);
+        logger.error('Error getting Firebase Admin status:', statusError);
       }
       
       // Try to decode the payload portion manually to provide more debug info
@@ -103,7 +105,7 @@ export async function GET(request: NextRequest) {
         const parts = sessionCookie.split('.');
         if (parts.length >= 2) {
           const payload = JSON.parse(atob(parts[1]));
-          console.log('Manual token payload decode:', payload);
+          logger.debug('Manual token payload decode:', payload);
           
           return NextResponse.json({
             verified: false,
@@ -121,7 +123,7 @@ export async function GET(request: NextRequest) {
           }, { status: 401 });
         }
       } catch (decodeError) {
-        console.error('Manual payload decode failed:', decodeError);
+        logger.error('Manual payload decode failed:', decodeError);
       }
       
       return NextResponse.json({
@@ -133,7 +135,7 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
   } catch (error: any) {
-    console.error('Error in token debug endpoint:', error);
+    logger.error('Error in token debug endpoint:', error);
     return NextResponse.json({
       verified: false,
       error: 'Server error',

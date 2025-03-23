@@ -19,6 +19,7 @@ An interactive map and comprehensive wiki for Grand Theft Auto VI, built with Ne
 - **Styling**: Tailwind CSS with custom GTA-themed color scheme
 - **Map Library**: Leaflet.js with React Leaflet
 - **Animations**: Custom CSS animations for an immersive experience
+- **Backend**: Firebase Firestore for database and Firebase Auth for authentication
 
 ## 📝 Project Structure
 
@@ -28,6 +29,32 @@ An interactive map and comprehensive wiki for Grand Theft Auto VI, built with Ne
 - `/src/styles`: Global styles and Tailwind configuration
 - `/src/types`: TypeScript type definitions
 - `/public`: Static assets including logos and map images
+
+## 🔍 Logging and Debugging
+
+The project uses a centralized logging utility to control debug output in different environments:
+
+- **Development Environment**: Detailed logs for debugging are displayed
+- **Production Environment**: Only essential error logs are shown, debug logs are disabled
+- **How to Use**:
+  ```typescript
+  import logger from '@/utils/logger';
+  
+  // Debug logs - only shown in development
+  logger.debug('This is a debug message');
+  
+  // Info logs - only shown in development
+  logger.info('This is an info message');
+  
+  // Warning logs - shown in both environments
+  logger.warn('This is a warning message');
+  
+  // Error logs - always shown
+  logger.error('This is an error message');
+  ```
+
+- **Security**: The logging system prevents sensitive information from being exposed in production
+- **Customization**: You can enable debug mode in production for testing by setting localStorage.debugMode = 'true' in the browser console
 
 ## 🚀 Getting Started
 
