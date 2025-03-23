@@ -36,24 +36,6 @@ const GTA6_IMAGES = [
   '/images/gta6-20.png',
 ];
 
-// Preload the first image to improve LCP
-const preloadMainImage = () => {
-  if (typeof window !== 'undefined') {
-    const preloadLink = document.createElement('link');
-    preloadLink.rel = 'preload';
-    preloadLink.as = 'image';
-    preloadLink.href = GTA6_IMAGES[0];
-    document.head.appendChild(preloadLink);
-    
-    // Also preload the logo which is a potential LCP candidate
-    const logoPreload = document.createElement('link');
-    logoPreload.rel = 'preload';
-    logoPreload.as = 'image';
-    logoPreload.href = '/images/gta6-logo.png';
-    document.head.appendChild(logoPreload);
-  }
-};
-
 export default function HomePage() {
   const [days, setDays] = useState<number>(0);
   const [hours, setHours] = useState<number>(0);
@@ -169,45 +151,79 @@ export default function HomePage() {
     };
   }, []);
   
-  // Preload critical images on mount
-  useEffect(() => {
-    preloadMainImage();
-  }, []);
-  
-  // Simplified image transition logic with more reliable transitions
+  // Image carousel with optimized transitions
   useEffect(() => {
     let isMounted = true;
+    let interval: NodeJS.Timeout;
+    
+    // Pre-load next few images for smoother transitions
+    const preloadNextImages = () => {
+      // Preload next 2 images
+      const nextIndex = (activeImageIndex + 1) % GTA6_IMAGES.length;
+      const nextNextIndex = (activeImageIndex + 2) % GTA6_IMAGES.length;
+      
+      if (typeof window !== 'undefined') {
+        // Use window.Image constructor with proper typing
+        const preloadNext = new window.Image();
+        preloadNext.src = GTA6_IMAGES[nextIndex];
+        
+        const preloadNextNext = new window.Image();
+        preloadNextNext.src = GTA6_IMAGES[nextNextIndex];
+      }
+    };
     
     // Function to cycle to the next image
     const cycleToNextImage = () => {
       if (!isMounted) return;
       
+      // Preload next images before starting transition
+      preloadNextImages();
+      
       // Start transition
       setIsTransitioning(true);
       
-      // After 1.5 seconds (allowing for fade out), change the image
+      // Using a slightly shorter fade out time for better experience
       setTimeout(() => {
         if (!isMounted) return;
         
         // Move to next image
         setActiveImageIndex((prevIndex) => (prevIndex + 1) % GTA6_IMAGES.length);
         
-        // End transition (which triggers fade in)
+        // Allow a moment for the new image to be visible before fading in
         setTimeout(() => {
           if (!isMounted) return;
           setIsTransitioning(false);
-        }, 100); // Short delay to ensure the image has changed
-      }, 1500);
+        }, 150);
+      }, 700);
+    };
+
+    // Start cycling after a short delay
+    const initialTimeout = setTimeout(() => {
+      // Start image rotation
+      interval = setInterval(cycleToNextImage, 7000); // Slightly longer to give more viewing time
+    }, 3000);
+    
+    // Listen for visibility changes
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // When tab becomes visible, ensure image is visible
+        setIsTransitioning(false);
+      }
     };
     
-    // Start image rotation
-    const interval = setInterval(cycleToNextImage, 5000);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
     
     return () => {
       isMounted = false;
+      clearTimeout(initialTimeout);
       clearInterval(interval);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
     };
-  }, []); // Empty dependency array to ensure it only runs once on mount
+  }, []);
 
   // Defer loading articles to improve initial page load time
   useEffect(() => {
@@ -252,11 +268,9 @@ export default function HomePage() {
         <meta property="og:url" content="https://vice.city" />
         <meta property="og:image" content="https://vice.city/images/gta6-logo.png" />
         
-        {/* Preload critical fonts if you have any custom fonts */}
+        {/* Preconnect to domains for potential third-party resources */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* Preconnect to domains for potential third-party resources */}
         <link rel="preconnect" href="https://www.youtube.com" />
       </Head>
       
@@ -267,21 +281,20 @@ export default function HomePage() {
         {GTA6_IMAGES.map((image, index) => (
           <div 
             key={image}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
+            className={`absolute inset-0 transition-opacity duration-700 ${
               index === activeImageIndex ? (isTransitioning ? 'opacity-0' : 'opacity-100') : 'opacity-0'
             }`}
-            style={{ willChange: 'opacity' }}
           >
             <Image 
               src={image}
               alt={`GTA 6 Background ${index + 1}`}
               fill
               className="object-cover object-center"
-              priority={index === 0}
+              priority={index < 3} // Prioritize first 3 images
               sizes="100vw"
-              loading={index === 0 ? "eager" : "lazy"}
-              fetchPriority={index === 0 ? "high" : "auto"}
-              unoptimized={index !== 0} // Skip optimization for non-critical images
+              quality={index < 3 ? 95 : 75} // Higher quality for first images
+              loading={index < 3 ? "eager" : "lazy"}
+              placeholder="empty"
             />
           </div>
         ))}
