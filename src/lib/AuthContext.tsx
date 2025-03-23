@@ -406,8 +406,15 @@ const setSessionCookie = (token: string) => {
   const expiryDate = new Date();
   expiryDate.setHours(expiryDate.getHours() + 1);
   
-  // Set secure flag if on HTTPS
-  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  // Set cookie attributes based on environment
+  const isHttps = window.location.protocol === 'https:';
+  const isLocalhost = window.location.hostname === 'localhost';
+  
+  // Only set Secure flag on HTTPS connections
+  const secure = isHttps ? '; Secure' : '';
+  
+  // Add domain attribute for non-localhost domains
+  const domain = !isLocalhost ? `; Domain=${window.location.hostname}` : '';
   
   // Debug: Check for any existing session cookie
   const existingCookie = document.cookie
@@ -420,9 +427,22 @@ const setSessionCookie = (token: string) => {
       existingCookie.substring(existingCookie.length - 10));
   }
   
-  // Set the cookie
-  const cookieStr = `session=${token}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax${secure}`;
-  document.cookie = cookieStr;
+  try {
+    // Set the cookie with improved attributes
+    const cookieStr = `session=${token}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax${secure}${domain}`;
+    document.cookie = cookieStr;
+    
+    // Additional debug info
+    logger.debug('Attempting to set cookie with:', {
+      expiry: expiryDate.toUTCString(),
+      secure: isHttps,
+      domain: window.location.hostname,
+      sameSite: 'Lax',
+      cookieLength: token.length
+    });
+  } catch (cookieError) {
+    logger.error('Error setting cookie:', cookieError);
+  }
   
   // Verify it was set correctly
   setTimeout(() => {
@@ -455,13 +475,26 @@ const clearSessionCookies = () => {
   const hasCookies = document.cookie.includes('session=') || document.cookie.includes('admin-session=');
   
   if (hasCookies) {
-    // Clear regular session cookie
-    document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-    
-    // Clear admin session cookie
-    document.cookie = 'admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-    
-    logger.debug('Session cookies cleared');
+    try {
+      // Get environment-specific attributes
+      const isHttps = window.location.protocol === 'https:';
+      const isLocalhost = window.location.hostname === 'localhost';
+      const secure = isHttps ? '; Secure' : '';
+      const domain = !isLocalhost ? `; Domain=${window.location.hostname}` : '';
+      
+      // Clear regular session cookie
+      document.cookie = `session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secure}${domain}`;
+      
+      // Clear admin session cookie
+      document.cookie = `admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secure}${domain}`;
+      
+      logger.debug('Session cookies cleared with attributes:', {
+        secure: isHttps,
+        domain: window.location.hostname
+      });
+    } catch (cookieError) {
+      logger.error('Error clearing cookies:', cookieError);
+    }
   } else {
     logger.debug('No session cookies to clear');
   }
