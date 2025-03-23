@@ -665,21 +665,15 @@ export default function WikiHomePage() {
           <div className="relative bg-gray-900/95 rounded-lg p-10 text-center">
             <h2 className="text-3xl font-bold text-white mb-4"> 🚧 Contribute to the Wiki 🚧 </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              <p className="text-gray-400 p-10">Currently, the wiki & contribution is under construction.</p>
+              <p className="text-gray-400 p-10">Currently, the wiki & contribution is under construction. Join our Discord if you have suggestions!</p>
               <p className="text-gray-400">Help build the most comprehensive resource for GTA 6 by contributing your knowledge and insights.</p>
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link 
-                href="/wiki"
-                className="px-8 py-4 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1"
+                href="https://discord.gg/rGqyNP4AC6"
+                className="px-8 py-4 bg-gradient-to-b from-indigo-400 to-indigo-500 text-white font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1"
               >
-                Start Contributing
-              </Link>
-              <Link 
-                href="/wiki/guide"
-                className="px-8 py-4 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1"
-              >
-                Wiki Guide
+                Join our Discord
               </Link>
             </div>
           </div>
