@@ -43,8 +43,6 @@ next-env.d.ts
 *.swp
 *.swo
 
-
-
 # Generated files
 /scripts/generate-images.sh
 /scripts/generate-images.ps1
@@ -54,3 +52,10 @@ next-env.d.ts
 # Temporary files
 /temp/
 /temp/**/* 
+
+# Image processor tool - hidden from git
+/tools/
+/tools/**/*
+/tools/image-processor/
+/tools/image-processor/node_modules/
+/tools/image-processor/package-lock.json 
