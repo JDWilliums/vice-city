@@ -56,8 +56,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold mt-6 mb-3 text-gta-blue">Use of Google Services</h2>
             <p>We use:</p>
             <ul className="list-disc pl-6 mt-2 mb-4">
-              <li>Google Authentication to simplify account sign-in and protect user identity</li>
-              <li>Google Analytics to collect anonymized data about user behavior on our site (e.g., which pages are most viewed, where traffic comes from)</li>
+              <li><a href="https://developers.google.com/identity/authentication" className="text-gta-pink hover:underline">Google Authentication</a> to simplify account sign-in and protect user identity</li>
+              <li><a href="https://google.com/analytics" className="text-gta-pink hover:underline">Google Analytics</a> to collect anonymized data about user behavior on our site (e.g., which pages are most viewed, where traffic comes from)</li>
             </ul>
             <p>Google may use cookies or other tracking technologies to deliver these services. Learn more in Google's Privacy Policy.</p>
             
@@ -90,8 +90,7 @@ export default function PrivacyPage() {
             <p>We may update this Privacy Policy over time. Any changes will be posted here with the updated effective date. Continued use of the site after changes are posted implies acceptance.</p>
             
             <h2 className="text-xl font-semibold mt-6 mb-3 text-gta-blue">Contact Us</h2>
-            <p>If you have any questions about this Privacy Policy or wish to exercise your rights, please contact us at:</p>
-            <p className="mt-2">📧 <a href="mailto:contact@vice.city" className="text-gta-pink hover:underline">contact@vice.city</a></p>
+            <p>If you have any questions about this Privacy Policy or wish to exercise your rights, please contact us at: <a href="mailto:contact@vice.city" className="text-gta-pink hover:underline">contact@vice.city</a></p>
             
             <div className="mt-8 pt-4 border-t border-gray-800">
               <p className="text-center text-gray-500">Read our <Link href="/terms" className="text-gta-blue hover:text-gta-pink">Terms & Conditions</Link> for more information about using our site.</p>
