@@ -29,33 +29,12 @@ if (typeof window !== 'undefined') {
   db = getFirestore(firebaseApp);
   storage = getStorage(firebaseApp);
   
-  // Analytics - Only initialize in the browser after window is fully loaded
-  if (process.env.NODE_ENV !== 'development') {
-    // In production, initialize analytics immediately
-    try {
-      const { getAnalytics } = require('firebase/analytics');
-      // Use dynamic import for analytics to ensure it's only loaded in browser
-      import('firebase/analytics').then((analytics) => {
-        analytics.getAnalytics(firebaseApp);
-      }).catch(error => {
-        console.error('Analytics dynamic import error:', error);
-      });
-    } catch (error) {
-      console.error('Analytics initialization error:', error);
-    }
-  } else {
-    // In development, add a listener to initialize analytics after window loads
-    window.addEventListener('load', () => {
-      try {
-        import('firebase/analytics').then((analytics) => {
-          analytics.getAnalytics(firebaseApp);
-        }).catch(error => {
-          console.error('Analytics dynamic import error in dev mode:', error);
-        });
-      } catch (error) {
-        console.error('Analytics initialization error in dev mode:', error);
-      }
-    });
+  // Analytics
+  try {
+    const { getAnalytics } = require('firebase/analytics');
+    getAnalytics(firebaseApp);
+  } catch (error) {
+    console.error('Analytics initialization error:', error);
   }
 }
 

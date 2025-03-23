@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
 import AuthWrapper from '@/components/AuthWrapper';
-import GoogleAnalytics from '@/components/GoogleAnalytics';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -22,7 +21,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-dark-bg text-white min-h-screen">
-        <GoogleAnalytics />
         <AuthWrapper>
           {children}
         </AuthWrapper>
