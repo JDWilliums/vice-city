@@ -29,12 +29,21 @@ if (typeof window !== 'undefined') {
   db = getFirestore(firebaseApp);
   storage = getStorage(firebaseApp);
   
-  // Analytics
-  try {
-    const { getAnalytics } = require('firebase/analytics');
-    getAnalytics(firebaseApp);
-  } catch (error) {
-    console.error('Analytics initialization error:', error);
+  // Analytics - dynamically import to avoid SSR issues
+  if (process.env.NODE_ENV === 'production') {
+    // Only load analytics in production
+    import('firebase/analytics').then(({ getAnalytics }) => {
+      try {
+        getAnalytics(firebaseApp);
+      } catch (error) {
+        console.error('Analytics initialization error:', error);
+      }
+    }).catch(err => {
+      // Silently handle import errors
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Analytics not loaded:', err);
+      }
+    });
   }
 }
 
