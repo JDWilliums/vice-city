@@ -405,7 +405,7 @@ export default function HomePage() {
             )}
             
             <div className="mt-8 md:mt-12 text-center animate-fadeInUp">
-              <Link href="/news" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-base md:text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-green/20 transition-all hover:-translate-y-1">
+              <Link href="/news" className="px-6 py-3 bg-gradient-to-b from-gta-pink to-pink-500 text-white text-base md:text-lg font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1">
                 View All News
               </Link>
             </div>

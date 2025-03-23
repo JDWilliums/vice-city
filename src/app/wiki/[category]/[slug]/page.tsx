@@ -710,7 +710,7 @@ function getWikiPage(slug) {
                   <div className="lg:hidden mb-8 animate-fadeIn">
                     <div className="bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-700/50 overflow-hidden shadow-xl">
                       {/* Featured Image */}
-                      <div className="relative aspect-[4/3] overflow-hidden group">
+                      <div className="relative aspect-[16/9] overflow-hidden group">
                         <Image
                           src={pageData.imageUrl}
                           alt={pageData.title}
@@ -908,7 +908,7 @@ function getWikiPage(slug) {
                     {/* Featured Image and Details Card - Combined */}
                     <div className="bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-700/50 overflow-hidden shadow-xl hover:shadow-gta-pink/10 transition-all duration-300">
                       {/* Featured Image */}
-                      <div className="relative aspect-[4/3] overflow-hidden group">
+                      <div className="relative aspect-[16/9] overflow-hidden group">
                         <Image
                           src={pageData.imageUrl}
                           alt={pageData.title}

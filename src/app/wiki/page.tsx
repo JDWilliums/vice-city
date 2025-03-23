@@ -671,13 +671,13 @@ export default function WikiHomePage() {
             <div className="flex flex-wrap justify-center gap-4">
               <Link 
                 href="/wiki"
-                className="px-8 py-4 bg-gradient-to-r from-gta-pink to-pink-600 text-white font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1"
+                className="px-8 py-4 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1"
               >
                 Start Contributing
               </Link>
               <Link 
                 href="/wiki/guide"
-                className="px-8 py-4 bg-gradient-to-r from-gta-blue to-blue-600 text-white font-bold rounded-md hover:shadow-lg hover:shadow-gta-blue/20 transition-all hover:-translate-y-1"
+                className="px-8 py-4 bg-gradient-to-b from-gta-pink to-pink-500 text-white font-bold rounded-md hover:shadow-lg hover:shadow-gta-pink/20 transition-all hover:-translate-y-1"
               >
                 Wiki Guide
               </Link>
