@@ -460,7 +460,35 @@ export const galleryItems = [
     description: 'Lovely view of Leonida as the sun goes down.',
     availableResolutions: ['720p', '1080p', '1440p', '4k'],
     date: '2024-03-20'
+  },
+  {
+    id: 51,
+    title: 'Phone Background #1',
+    category: 'phone',
+    image: '/ipad/wallpaper-mobile.png',
+    description: 'Lucia and Jason.',
+    availableResolutions: ['ipad', 'iphone', 'android'],
+    date: '2025-03-23'
+  },
+  {
+    id: 52,
+    title: 'Phone Background #2',
+    category: 'phone',
+    image: '/ipad/wallpaper-mobile2.png',
+    description: 'Phone background with Lucia and Jason.',
+    availableResolutions: ['ipad', 'iphone', 'android'],
+    date: '2025-03-23'
+  },
+  {
+    id: 53,
+    title: 'Phone Background #3',
+    category: 'phone',
+    image: '/ipad/wallpaper-mobile3.png',
+    description: 'Phone background plain.',
+    availableResolutions: ['ipad', 'iphone', 'android'],
+    date: '2025-03-23'
   }
+  
 ];
 
 // Function to fetch gallery items with filtering and pagination
