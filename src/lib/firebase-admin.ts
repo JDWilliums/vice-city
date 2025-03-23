@@ -2,6 +2,7 @@
 import { cert, getApps, initializeApp, App } from 'firebase-admin/app';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import logger from '@/utils/logger';
 
 // For better error logging
 const DEBUG = true;
@@ -34,10 +35,10 @@ function formatPrivateKey(key: string): string {
   formattedKey = `-----BEGIN PRIVATE KEY-----\n${formattedKey}\n-----END PRIVATE KEY-----\n`;
   
   if (DEBUG) {
-    console.log('Reformatted private key. New structure:');
-    console.log(`Starts with: ${formattedKey.substring(0, 40)}...`);
-    console.log(`Ends with: ...${formattedKey.substring(formattedKey.length - 40)}`);
-    console.log(`Total length: ${formattedKey.length}`);
+    logger.debug('Reformatted private key. New structure:');
+    logger.debug(`Starts with: ${formattedKey.substring(0, 40)}...`);
+    logger.debug(`Ends with: ...${formattedKey.substring(formattedKey.length - 40)}`);
+    logger.debug(`Total length: ${formattedKey.length}`);
   }
   
   return formattedKey;
@@ -46,7 +47,7 @@ function formatPrivateKey(key: string): string {
 // Simpler initialization function - will log all steps for debugging
 function createFirebaseAdminApp() {
   try {
-    if (DEBUG) console.log('🔥 Attempting to initialize Firebase Admin SDK...');
+    if (DEBUG) logger.debug('🔥 Attempting to initialize Firebase Admin SDK...');
     
     // Verify we're on the server
     if (typeof window !== 'undefined') {
@@ -67,22 +68,22 @@ function createFirebaseAdminApp() {
     }
     
     if (DEBUG) {
-      console.log('✅ Environment variables check passed');
-      console.log(`Project ID: ${process.env.FIREBASE_PROJECT_ID}`);
-      console.log(`Client Email: ${process.env.FIREBASE_CLIENT_EMAIL?.substring(0, 10)}...`);
-      console.log(`Private Key exists: ${Boolean(process.env.FIREBASE_PRIVATE_KEY)}`);
+      logger.debug('✅ Environment variables check passed');
+      logger.debug(`Project ID: ${process.env.FIREBASE_PROJECT_ID}`);
+      logger.debug(`Client Email: ${process.env.FIREBASE_CLIENT_EMAIL?.substring(0, 10)}...`);
+      logger.debug(`Private Key exists: ${Boolean(process.env.FIREBASE_PRIVATE_KEY)}`);
       
       if (process.env.FIREBASE_PRIVATE_KEY) {
         const keyPreview = process.env.FIREBASE_PRIVATE_KEY.substring(0, 50);
-        console.log(`Private Key begins with: ${keyPreview}...`);
-        console.log(`Private Key contains BEGIN PRIVATE KEY: ${process.env.FIREBASE_PRIVATE_KEY.includes('-----BEGIN PRIVATE KEY-----')}`);
+        logger.debug(`Private Key begins with: ${keyPreview}...`);
+        logger.debug(`Private Key contains BEGIN PRIVATE KEY: ${process.env.FIREBASE_PRIVATE_KEY.includes('-----BEGIN PRIVATE KEY-----')}`);
       }
     }
 
     // Check if app is already initialized
     const apps = getApps();
     if (apps.length > 0) {
-      if (DEBUG) console.log('🔄 Firebase Admin SDK already initialized, reusing instance');
+      if (DEBUG) logger.debug('🔄 Firebase Admin SDK already initialized, reusing instance');
       app = apps[0];
     } else {
       // Format the private key
@@ -95,19 +96,19 @@ function createFirebaseAdminApp() {
         privateKey: formattedKey
       };
       
-      if (DEBUG) console.log('🔑 Creating new Firebase Admin app instance...');
+      if (DEBUG) logger.debug('🔑 Creating new Firebase Admin app instance...');
       
       try {
         app = initializeApp({
           credential: cert(serviceAccount),
           projectId: process.env.FIREBASE_PROJECT_ID
         });
-        if (DEBUG) console.log('✅ Firebase Admin app initialized successfully');
+        if (DEBUG) logger.debug('✅ Firebase Admin app initialized successfully');
       } catch (certError) {
-        console.error('❌ Error creating certificate:', certError);
+        logger.error('❌ Error creating certificate:', certError);
         
         // Last resort - try a different format if the first attempt failed
-        console.log('⚠️ Attempting alternate private key format...');
+        logger.debug('⚠️ Attempting alternate private key format...');
         const alternateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
         
         const alternateServiceAccount = {
@@ -120,17 +121,17 @@ function createFirebaseAdminApp() {
           credential: cert(alternateServiceAccount),
           projectId: process.env.FIREBASE_PROJECT_ID
         });
-        if (DEBUG) console.log('✅ Firebase Admin app initialized successfully with alternate format');
+        if (DEBUG) logger.debug('✅ Firebase Admin app initialized successfully with alternate format');
       }
     }
     
     auth = getAuth(app);
     db = getFirestore(app);
     
-    if (DEBUG) console.log('✅ Firebase Admin Auth and Firestore initialized successfully');
+    if (DEBUG) logger.debug('✅ Firebase Admin Auth and Firestore initialized successfully');
     return { app, auth, db };
   } catch (error) {
-    console.error('❌ Error initializing Firebase Admin SDK:', error);
+    logger.error('❌ Error initializing Firebase Admin SDK:', error);
     initError = error as Error;
     throw error;
   }
@@ -144,10 +145,10 @@ try {
     auth = initializedAuth;
     db = initializedDb;
     
-    if (DEBUG) console.log('✅ Firebase Admin initialization completed successfully on module load');
+    if (DEBUG) logger.debug('✅ Firebase Admin initialization completed successfully on module load');
   }
 } catch (error) {
-  console.error('❌ Error during Firebase Admin initialization on module load:', error);
+  logger.error('❌ Error during Firebase Admin initialization on module load:', error);
   initError = error as Error;
 }
 
@@ -163,7 +164,7 @@ export function getAdminAuth(): Auth {
       initError = null; // Reset error if successful
       return auth;
     } catch (error) {
-      console.error('❌ Failed to get Admin Auth:', error);
+      logger.error('❌ Failed to get Admin Auth:', error);
       throw error;
     }
   }
@@ -187,7 +188,7 @@ export function getAdminDb(): Firestore {
       initError = null; // Reset error if successful
       return db;
     } catch (error) {
-      console.error('❌ Failed to get Admin Firestore:', error);
+      logger.error('❌ Failed to get Admin Firestore:', error);
       throw error;
     }
   }
@@ -205,7 +206,7 @@ export function safeGetAdminAuth(): Auth | undefined {
   try {
     return getAdminAuth();
   } catch (error) {
-    console.error('❌ Safe get Admin Auth failed:', error);
+    logger.error('❌ Safe get Admin Auth failed:', error);
     return undefined;
   }
 }
@@ -214,7 +215,7 @@ export function safeGetAdminDb(): Firestore | undefined {
   try {
     return getAdminDb();
   } catch (error) {
-    console.error('❌ Safe get Admin Firestore failed:', error);
+    logger.error('❌ Safe get Admin Firestore failed:', error);
     return undefined;
   }
 }

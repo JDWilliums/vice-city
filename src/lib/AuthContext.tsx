@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 import { createOrUpdateUser, updateUserProfile, updateUserOnlineStatus, getUserData, isUserAdmin } from './userService';
+import logger from '@/utils/logger';
 
 // Basic type for auth
 interface AuthContextType {
@@ -48,11 +49,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    console.log('Setting up auth state listener');
+    logger.debug('Setting up auth state listener');
     
     // Listen for auth state changes
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('Auth state changed:', user ? `User logged in: ${user.uid}` : 'No user');
+      logger.debug('Auth state changed:', user ? `User logged in: ${user.uid}` : 'No user');
       
       // Fast path for no user - avoid unnecessary API calls
       if (!user) {
@@ -68,19 +69,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // User is logged in - proceed with normal flow
       try {
-        console.log('Attempting to create/update user document in Firestore');
+        logger.debug('Attempting to create/update user document in Firestore');
         const userData = await createOrUpdateUser(user);
-        console.log('Successfully created/updated user document:', userData);
+        logger.debug('Successfully created/updated user document:', userData);
         
         // Get the ID token
         const idToken = await user.getIdToken();
         
         // 1. First try client-side approach
-        console.log('Setting session cookie via client-side');
+        logger.debug('Setting session cookie via client-side');
         setSessionCookie(idToken);
         
         // 2. Also try server-side approach as a backup
-        console.log('Setting session cookie via server-side API');
+        logger.debug('Setting session cookie via server-side API');
         await sendTokenToServer(idToken, user.uid);
         
         // 3. Check admin status and set admin-session cookie if needed
@@ -90,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const adminStatus = await isUserAdmin(user.uid);
         setIsAdmin(adminStatus);
       } catch (error) {
-        console.error('Failed to create/update user document:', error);
+        logger.error('Failed to create/update user document:', error);
       }
       
       setUser(user);
@@ -109,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await updateUserOnlineStatus(user.uid, status);
       } catch (error) {
-        console.error('Error updating online status:', error);
+        logger.error('Error updating online status:', error);
       }
     };
 
@@ -147,23 +148,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Let's refresh them every 55 minutes
     const tokenRefreshInterval = setInterval(async () => {
       try {
-        console.log('Refreshing Firebase ID token');
+        logger.debug('Refreshing Firebase ID token');
         // Force token refresh
         const idToken = await user.getIdToken(true);
         
         // Update cookie via both approaches
-        console.log('Refreshing session cookie via client-side');
+        logger.debug('Refreshing session cookie via client-side');
         setSessionCookie(idToken);
         
-        console.log('Refreshing session cookie via server-side API');
+        logger.debug('Refreshing session cookie via server-side API');
         await sendTokenToServer(idToken, user.uid);
         
         // Check and update admin status and cookies
         await checkAndSetAdminStatus();
         
-        console.log('Updated session cookie with refreshed token');
+        logger.debug('Updated session cookie with refreshed token');
       } catch (error) {
-        console.error('Error refreshing token:', error);
+        logger.error('Error refreshing token:', error);
       }
     }, 55 * 60 * 1000); // 55 minutes
 
@@ -173,13 +174,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Google sign-in
   const signInWithGoogle = async () => {
     try {
-      console.log('Starting Google sign-in process');
+      logger.debug('Starting Google sign-in process');
       const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
       const { getRandomProfilePicture } = await import('@/constants/profilePictures');
       
       const googleProvider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, googleProvider);
-      console.log('Google sign-in successful:', result.user.uid);
+      logger.debug('Google sign-in successful:', result.user.uid);
       
       if (result.user) {
         // Check if user already exists in Firestore
@@ -191,22 +192,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           photoURL
         });
         
-        console.log('Creating/updating user document in Firestore');
+        logger.debug('Creating/updating user document in Firestore');
         await createOrUpdateUser(result.user, {
           photoURL
         });
-        console.log('User document updated successfully');
+        logger.debug('User document updated successfully');
         
         // Set session cookie
         const idToken = await result.user.getIdToken();
         setSessionCookie(idToken);
-        console.log('Set session cookie after Google sign-in');
+        logger.debug('Set session cookie after Google sign-in');
         
         // Check and set admin session if needed
         await checkAndSetAdminStatus();
       }
     } catch (error) {
-      console.error('Google sign-in error:', error);
+      logger.error('Google sign-in error:', error);
       throw error;
     }
   };
@@ -214,13 +215,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Discord sign-in
   const signInWithDiscord = async () => {
     try {
-      console.log('Starting Discord sign-in process');
+      logger.debug('Starting Discord sign-in process');
       const { signInWithPopup, OAuthProvider } = await import('firebase/auth');
       const { getRandomProfilePicture } = await import('@/constants/profilePictures');
       
       const discordProvider = new OAuthProvider('discord');
       const result = await signInWithPopup(auth, discordProvider);
-      console.log('Discord sign-in successful:', result.user.uid);
+      logger.debug('Discord sign-in successful:', result.user.uid);
       
       if (result.user) {
         // Check if user already exists in Firestore
@@ -232,22 +233,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           photoURL
         });
         
-        console.log('Creating/updating user document in Firestore');
+        logger.debug('Creating/updating user document in Firestore');
         await createOrUpdateUser(result.user, {
           photoURL
         });
-        console.log('User document updated successfully');
+        logger.debug('User document updated successfully');
         
         // Set session cookie
         const idToken = await result.user.getIdToken();
         setSessionCookie(idToken);
-        console.log('Set session cookie after Discord sign-in');
+        logger.debug('Set session cookie after Discord sign-in');
         
         // Check and set admin session if needed
         await checkAndSetAdminStatus();
       }
     } catch (error) {
-      console.error('Discord sign-in error:', error);
+      logger.error('Discord sign-in error:', error);
       throw error;
     }
   };
@@ -261,12 +262,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Set session cookie
       const idToken = await userCredential.user.getIdToken();
       setSessionCookie(idToken);
-      console.log('Set session cookie after email sign-in');
+      logger.debug('Set session cookie after email sign-in');
       
       // Check and set admin session if needed
       await checkAndSetAdminStatus();
     } catch (error) {
-      console.error('Email sign-in error:', error);
+      logger.error('Email sign-in error:', error);
       throw error;
     }
   };
@@ -274,39 +275,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Email sign-up
   const signUpWithEmail = async (email: string, password: string, displayName: string) => {
     try {
-      console.log('Starting email sign-up process');
+      logger.debug('Starting email sign-up process');
       const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
       const { getRandomProfilePicture } = await import('@/constants/profilePictures');
       
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('User created with Firebase Auth:', userCredential.user.uid);
+      logger.debug('User created with Firebase Auth:', userCredential.user.uid);
       
       if (userCredential.user) {
         const randomPicture = getRandomProfilePicture();
-        console.log('Updating user profile with:', { displayName, photoURL: randomPicture });
+        logger.debug('Updating user profile with:', { displayName, photoURL: randomPicture });
         
         await updateProfile(userCredential.user, {
           displayName: displayName,
           photoURL: randomPicture
         });
         
-        console.log('Creating user document in Firestore');
+        logger.debug('Creating user document in Firestore');
         await createOrUpdateUser(userCredential.user, {
           displayName,
           photoURL: randomPicture
         });
-        console.log('User document created successfully');
+        logger.debug('User document created successfully');
         
         // Set session cookie
         const idToken = await userCredential.user.getIdToken();
         setSessionCookie(idToken);
-        console.log('Set session cookie after email sign-up');
+        logger.debug('Set session cookie after email sign-up');
         
         // Check and set admin session if needed
         await checkAndSetAdminStatus();
       }
     } catch (error) {
-      console.error('Email sign-up error:', error);
+      logger.error('Email sign-up error:', error);
       throw error;
     }
   };
@@ -316,12 +317,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Clear the session cookies
       clearSessionCookies();
-      console.log('Cleared session cookies on logout');
+      logger.debug('Cleared session cookies on logout');
       
       const { signOut } = await import('firebase/auth');
       await signOut(auth);
     } catch (error) {
-      console.error('Sign out error:', error);
+      logger.error('Sign out error:', error);
       throw error;
     }
   };
@@ -332,7 +333,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { sendPasswordResetEmail } = await import('firebase/auth');
       await sendPasswordResetEmail(auth, email);
     } catch (error) {
-      console.error('Password reset error:', error);
+      logger.error('Password reset error:', error);
       throw error;
     }
   };
@@ -340,17 +341,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // After successful login or token refresh, check admin status and set admin-session cookie
   const checkAndSetAdminStatus = async () => {
     try {
-      console.log('Checking admin status and setting admin-session cookie if needed');
+      logger.debug('Checking admin status and setting admin-session cookie if needed');
       const response = await fetch('/api/admin/check');
       if (response.ok) {
         const result = await response.json();
-        console.log('Admin check result:', result);
+        logger.debug('Admin check result:', result);
         setIsAdmin(result.isAdmin);
       } else {
-        console.error('Failed to check admin status:', await response.text());
+        logger.error('Failed to check admin status:', await response.text());
       }
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      logger.error('Error checking admin status:', error);
     }
   };
 
@@ -391,10 +392,10 @@ const setSessionCookie = (token: string) => {
   // Check if this is actually a Firebase token
   // Firebase tokens are JWTs which should start with "ey" and have two dots
   if (!token.startsWith('ey') || token.split('.').length !== 3) {
-    console.error('WARNING: Attempting to set an invalid Firebase ID token:', 
+    logger.error('WARNING: Attempting to set an invalid Firebase ID token:', 
       token.substring(0, 10) + '...' + token.substring(token.length - 10));
-    console.error('Token length:', token.length);
-    console.error('Token format check:', {
+    logger.error('Token length:', token.length);
+    logger.error('Token format check:', {
       startsWithEy: token.startsWith('ey'),
       hasTwoDots: token.split('.').length === 3
     });
@@ -414,7 +415,7 @@ const setSessionCookie = (token: string) => {
     .find(row => row.startsWith('session='));
   
   if (existingCookie) {
-    console.log('Replacing existing session cookie:', 
+    logger.debug('Replacing existing session cookie:', 
       existingCookie.substring(8, 18) + '...' + 
       existingCookie.substring(existingCookie.length - 10));
   }
@@ -432,15 +433,15 @@ const setSessionCookie = (token: string) => {
     if (newCookie) {
       const cookieValue = newCookie.substring(8);
       if (cookieValue === token) {
-        console.log('Session cookie correctly set, expires:', expiryDate.toUTCString());
+        logger.debug('Session cookie correctly set, expires:', expiryDate.toUTCString());
       } else {
-        console.error('Session cookie was modified! Expected:', 
+        logger.error('Session cookie was modified! Expected:', 
           token.substring(0, 10) + '...' + token.substring(token.length - 10));
-        console.error('Actual:', 
+        logger.error('Actual:', 
           cookieValue.substring(0, 10) + '...' + cookieValue.substring(cookieValue.length - 10));
       }
     } else {
-      console.error('Failed to set session cookie!');
+      logger.error('Failed to set session cookie!');
     }
   }, 100);
 };
@@ -460,9 +461,9 @@ const clearSessionCookies = () => {
     // Clear admin session cookie
     document.cookie = 'admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
     
-    console.log('Session cookies cleared');
+    logger.debug('Session cookies cleared');
   } else {
-    console.log('No session cookies to clear');
+    logger.debug('No session cookies to clear');
   }
 };
 
@@ -470,7 +471,7 @@ const clearSessionCookies = () => {
 // Add this function after the clearSessionCookie function
 async function sendTokenToServer(idToken: string, uid: string) {
   try {
-    console.log('Sending token to server via API...');
+    logger.debug('Sending token to server via API...');
     
     // First try the session endpoint
     const sessionResponse = await fetch('/api/auth/session', {
@@ -484,43 +485,43 @@ async function sendTokenToServer(idToken: string, uid: string) {
     const sessionResult = await sessionResponse.json();
     
     if (sessionResponse.ok) {
-      console.log('Token sent to session API successfully');
+      logger.debug('Token sent to session API successfully');
       
       // Now verify the session was set properly by checking the token debug endpoint
       try {
-        console.log('Verifying token was set correctly...');
+        logger.debug('Verifying token was set correctly...');
         const verifyResponse = await fetch('/api/admin/debug/token');
         
         if (verifyResponse.ok) {
           const verifyResult = await verifyResponse.json();
-          console.log('Token verification result:', verifyResult.verified ? 'Success' : 'Failed');
+          logger.debug('Token verification result:', verifyResult.verified ? 'Success' : 'Failed');
           
           if (verifyResult.verified) {
-            console.log('Session verified successfully!');
+            logger.debug('Session verified successfully!');
             return { success: true, message: 'Session set and verified' };
           } else {
-            console.warn('Session set but verification failed:', verifyResult.error);
+            logger.warn('Session set but verification failed:', verifyResult.error);
             
             // Check Firebase Admin initialization status
             const adminStatusResponse = await fetch('/api/debug/firebase-admin');
             if (adminStatusResponse.ok) {
               const adminStatus = await adminStatusResponse.json();
-              console.error('Firebase Admin initialization status:', adminStatus);
+              logger.error('Firebase Admin initialization status:', adminStatus);
               
               if (adminStatus?.initStatus?.hasError) {
-                console.error('Firebase Admin SDK has an error:', adminStatus.initStatus.errorMessage);
+                logger.error('Firebase Admin SDK has an error:', adminStatus.initStatus.errorMessage);
                 
                 // Try to fix the private key if that's the issue
                 if (adminStatus.initStatus.errorMessage?.includes('private key')) {
-                  console.log('Attempting to fix private key issue...');
+                  logger.debug('Attempting to fix private key issue...');
                   await fetch('/api/debug/fix-private-key');
                   
-                  // Try verification again after fix attempt
+                  // Try once more with the verification
                   const retryResponse = await fetch('/api/admin/debug/token');
                   const retryResult = await retryResponse.json();
                   
                   if (retryResponse.ok && retryResult.verified) {
-                    console.log('Session verified successfully after fix!');
+                    logger.debug('Session verified successfully after fix!');
                     return { success: true, message: 'Session set and verified after fixing private key' };
                   }
                 }
@@ -534,7 +535,7 @@ async function sendTokenToServer(idToken: string, uid: string) {
             };
           }
         } else {
-          console.error('Failed to verify token:', await verifyResponse.text());
+          logger.error('Failed to verify token:', await verifyResponse.text());
           return { 
             success: true, 
             message: 'Session set but verification endpoint failed', 
@@ -542,7 +543,7 @@ async function sendTokenToServer(idToken: string, uid: string) {
           };
         }
       } catch (verifyError) {
-        console.error('Error verifying token:', verifyError);
+        logger.error('Error verifying token:', verifyError);
         return { 
           success: true, 
           message: 'Session set but verification check errored', 
@@ -550,11 +551,11 @@ async function sendTokenToServer(idToken: string, uid: string) {
         };
       }
     } else {
-      console.error('Failed to send token to server:', sessionResult);
+      logger.error('Failed to send token to server:', sessionResult);
       return { success: false, error: sessionResult.error || 'Unknown error' };
     }
   } catch (error) {
-    console.error('Error sending token to server:', error);
+    logger.error('Error sending token to server:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 } 

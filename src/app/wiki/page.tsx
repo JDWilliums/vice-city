@@ -11,6 +11,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FirestoreDiagnostic from '@/components/wiki/FirestoreDiagnostic';
 import { useAuth } from '@/lib/AuthContext';
+import logger from '@/utils/logger';
 
 // Helper function to generate a random ID similar to Firestore's auto-ID
 function generateId(): string {
@@ -54,13 +55,13 @@ export default function WikiHomePage() {
         const connectivityResult = await checkFirestoreConnectivity();
         setFirestoreStatus(connectivityResult.available ? 'connected' : 'error');
         
-        console.log("Fetching wiki pages for homepage...");
+        logger.debug("Fetching wiki pages for homepage...");
         const pages = await getAllWikiPages(false); // Exclude archived pages
-        console.log(`Received ${pages.length} wiki pages from getAllWikiPages`);
+        logger.debug(`Received ${pages.length} wiki pages from getAllWikiPages`);
         
         // Log raw data to help with debugging
         if (pages.length > 0) {
-          console.log("Sample wiki page data:", {
+          logger.debug("Sample wiki page data:", {
             id: pages[0].id,
             title: pages[0].title,
             status: pages[0].status,
@@ -68,8 +69,8 @@ export default function WikiHomePage() {
           });
           
           // Add detailed logging for diagnostic purposes
-          console.log("All page IDs:", pages.map(page => page.id));
-          console.log("All page titles:", pages.map(page => page.title));
+          logger.debug("All page IDs:", pages.map(page => page.id));
+          logger.debug("All page titles:", pages.map(page => page.title));
           
           // Debug which pages come from where
           const localStorageKey = 'local_wiki_pages';
@@ -79,21 +80,21 @@ export default function WikiHomePage() {
               const localData = localStorage.getItem(localStorageKey);
               if (localData) {
                 localPages = JSON.parse(localData);
-                console.log(`Found ${localPages.length} pages in localStorage`);
+                logger.debug(`Found ${localPages.length} pages in localStorage`);
               }
             }
           } catch (e) {
-            console.error("Error reading localStorage:", e);
+            logger.error("Error reading localStorage:", e);
           }
           
           // Compare local vs fetched
           if (localPages.length > 0) {
             const localIds = new Set(localPages.map((p: any) => p.id));
             const firestoreIds = new Set(pages.filter(p => !localIds.has(p.id)).map(p => p.id));
-            console.log(`Pages breakdown - Local: ${localIds.size}, Firestore: ${firestoreIds.size}`);
+            logger.debug(`Pages breakdown - Local: ${localIds.size}, Firestore: ${firestoreIds.size}`);
           }
         } else {
-          console.log("No wiki pages received");
+          logger.debug("No wiki pages received");
         }
         
         // Process the pages to ensure they have image URLs
@@ -113,14 +114,14 @@ export default function WikiHomePage() {
         });
         
         setAllPages(processedPages);
-        console.log(`Set ${processedPages.length} processed pages to allPages state`);
+        logger.debug(`Set ${processedPages.length} processed pages to allPages state`);
         
         // Filter featured pages
         const featured = processedPages
           .filter(page => page.featured && page.status === 'published')
           .slice(0, 6); // Limit to 6 featured pages
         
-        console.log(`Found ${featured.length} featured pages`);
+        logger.debug(`Found ${featured.length} featured pages`);
         
         // Get recent pages
         const recent = processedPages
@@ -149,7 +150,7 @@ export default function WikiHomePage() {
           })
           .slice(0, 8); // Limit to 8 recent pages
           
-        console.log(`Found ${recent.length} recent pages`);
+        logger.debug(`Found ${recent.length} recent pages`);
         
         setFeaturedPages(featured);
         setRecentPages(recent);
@@ -157,7 +158,7 @@ export default function WikiHomePage() {
         if (featured.length === 0 && recent.length === 0) {
           // If we have pages but no featured or recent ones, let's make some placeholders
           if (processedPages.length > 0) {
-            console.log("No featured or recent pages - creating featured from existing pages");
+            logger.debug("No featured or recent pages - creating featured from existing pages");
             // Use some of the existing pages as featured and recent
             const tempFeatured = processedPages.slice(0, Math.min(6, processedPages.length));
             setFeaturedPages(tempFeatured);
@@ -165,7 +166,7 @@ export default function WikiHomePage() {
           }
         }
       } catch (error) {
-        console.error('Error fetching wiki pages:', error);
+        logger.error('Error fetching wiki pages:', error);
         setError('Failed to load wiki content. Please try again later.');
         
         // If there's an error (like Firestore not available), create placeholder content
@@ -189,7 +190,7 @@ export default function WikiHomePage() {
         const result = await checkFirestoreConnectivity();
         setFirestoreStatus(result.available ? 'connected' : 'error');
       } catch (error) {
-        console.error('Error checking Firestore connectivity:', error);
+        logger.error('Error checking Firestore connectivity:', error);
         setFirestoreStatus('error');
       }
     };
@@ -208,7 +209,7 @@ export default function WikiHomePage() {
     setIsSearching(true);
     const query = searchQuery.toLowerCase();
     
-    console.log(`Searching ${allPages.length} pages for "${query}"`);
+    logger.debug(`Searching ${allPages.length} pages for "${query}"`);
     
     const results = allPages.filter(page => 
       page.title.toLowerCase().includes(query) || 
@@ -216,7 +217,7 @@ export default function WikiHomePage() {
       (page.tags && Array.isArray(page.tags) && page.tags.some((tag: string) => tag.toLowerCase().includes(query)))
     ).slice(0, 8); // Limit to 8 results
     
-    console.log(`Found ${results.length} search results`, 
+    logger.debug(`Found ${results.length} search results`, 
       results.length > 0 ? results.map(r => r.title) : '');
     
     setSearchResults(results);

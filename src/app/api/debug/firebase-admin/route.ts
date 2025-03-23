@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdminInitStatus } from '@/lib/firebase-admin';
+import logger from '@/utils/logger';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('Firebase Admin debug endpoint called');
+    logger.debug('Firebase Admin debug endpoint called');
     
     // Get initialization status
     const initStatus = getFirebaseAdminInitStatus();
     
     // Log detailed information for server-side debugging
-    console.log('Firebase Admin SDK initialization status:', {
+    logger.debug('Firebase Admin SDK initialization status:', {
       isInitialized: initStatus.isInitialized ? 'Yes' : 'No',
       hasError: initStatus.hasError ? 'Yes' : 'No',
       errorMessage: initStatus.errorMessage || 'None',
@@ -18,15 +19,15 @@ export async function GET(request: NextRequest) {
       dbInitialized: initStatus.dbInitialized ? 'Yes' : 'No',
     });
     
-    console.log('Environment variables status:', initStatus.envStatus);
+    logger.debug('Environment variables status:', initStatus.envStatus);
     
     // Try to initialize the Admin Auth directly
     try {
       const { getAdminAuth } = await import('@/lib/firebase-admin');
       const auth = getAdminAuth();
-      console.log('Successfully got Admin Auth instance:', !!auth);
+      logger.debug('Successfully got Admin Auth instance:', !!auth);
     } catch (authError) {
-      console.error('Error getting Admin Auth instance:', authError);
+      logger.error('Error getting Admin Auth instance:', authError);
     }
     
     // Return the status
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error: any) {
-    console.error('Error in Firebase Admin debug endpoint:', error);
+    logger.error('Error in Firebase Admin debug endpoint:', error);
     return NextResponse.json({ 
       status: 'error', 
       message: error.message || 'Unknown error',
