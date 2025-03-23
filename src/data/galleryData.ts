@@ -475,7 +475,7 @@ export const galleryItems = [
     title: 'Phone Background #2',
     category: 'phone',
     image: '/ipad/wallpaper-mobile2.png',
-    description: 'Phone background with Lucia and Jason.',
+    description: 'Phone background without Lucia and Jason.',
     availableResolutions: ['ipad', 'iphone', 'android'],
     date: '2025-03-23'
   },
