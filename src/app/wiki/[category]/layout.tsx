@@ -2,14 +2,10 @@ import { Metadata } from 'next'
 import { WIKI_CATEGORIES } from '@/data/wikiData'
 import { getLocalImageUrl } from '@/lib/localImageService'
 
-type Params = {
-  category: string;
-};
-
 export async function generateMetadata({ 
   params 
 }: { 
-  params: Params
+  params: { category: string } 
 }): Promise<Metadata> {
   // Find the category information
   const categoryInfo = WIKI_CATEGORIES.find(cat => cat.id === params.category)
@@ -68,10 +64,8 @@ export async function generateMetadata({
 
 export default function WikiCategoryLayout({
   children,
-  params,
 }: {
-  children: React.ReactNode;
-  params?: Params;
+  children: React.ReactNode
 }) {
   return (
     <div className="min-h-screen">

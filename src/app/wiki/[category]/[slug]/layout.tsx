@@ -3,15 +3,10 @@ import { WIKI_CATEGORIES } from '@/data/wikiData'
 import { getWikiPageBySlug } from '@/lib/wikiFirestoreService'
 import { getLocalImageUrl } from '@/lib/localImageService'
 
-type Params = {
-  category: string;
-  slug: string;
-};
-
 export async function generateMetadata({ 
   params 
 }: { 
-  params: Params 
+  params: { category: string; slug: string } 
 }): Promise<Metadata> {
   try {
     // Fetch wiki page data
@@ -125,10 +120,8 @@ export async function generateMetadata({
 
 export default function WikiArticleLayout({
   children,
-  params,
 }: {
-  children: React.ReactNode;
-  params?: Params;
+  children: React.ReactNode
 }) {
   return (
     <div className="min-h-screen">

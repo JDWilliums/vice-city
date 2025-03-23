@@ -1,14 +1,10 @@
 import { Metadata } from 'next'
 import { getNewsArticleBySlug } from '@/lib/newsFirestoreService'
 
-type Params = {
-  slug: string;
-};
-
 export async function generateMetadata({ 
   params 
 }: { 
-  params: Params
+  params: { slug: string } 
 }): Promise<Metadata> {
   try {
     // Fetch article data
@@ -89,10 +85,8 @@ export async function generateMetadata({
 
 export default function ArticleLayout({
   children,
-  params,
 }: {
-  children: React.ReactNode;
-  params?: Params;
+  children: React.ReactNode
 }) {
   return (
     <div className="min-h-screen">
