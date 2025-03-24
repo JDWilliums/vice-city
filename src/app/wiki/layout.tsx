@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 
+
 export const metadata: Metadata = {
   title: 'GTA 6 Wiki | Comprehensive Guide & Database | vice.city',
   description: 'The most comprehensive GTA 6 wiki featuring detailed information on characters, locations, missions, vehicles, weapons, and gameplay mechanics in Grand Theft Auto VI.',
