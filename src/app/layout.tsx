@@ -6,15 +6,8 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { Suspense } from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from "@vercel/analytics/react"
-import { ErrorBoundary } from 'react-error-boundary';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-
-// Simple fallback for analytics components
-const AnalyticsFallback = () => {
-  // Silent failure - no UI impact
-  return null;
-};
 
 export const metadata: Metadata = {
   title: 'GTA 6 Countdown | vice.city',
@@ -40,12 +33,8 @@ export default function RootLayout({
         <AuthWrapper>
           {children}
         </AuthWrapper>
-        <ErrorBoundary fallback={<AnalyticsFallback />}>
-          <SpeedInsights />
-        </ErrorBoundary>
-        <ErrorBoundary fallback={<AnalyticsFallback />}>
-          <Analytics />
-        </ErrorBoundary>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );

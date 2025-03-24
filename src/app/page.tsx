@@ -10,7 +10,7 @@ import { NewsArticleFirestore, getAllNewsArticles } from '@/lib/newsFirestoreSer
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 // GTA 6 estimated release date (Fall 2025)
-const RELEASE_DATE = new Date('2025-12-01T00:00:00Z');
+const RELEASE_DATE = new Date('2025-12-01T00:00:00');
 
 // Array of GTA 6 images to cycle through
 const GTA6_IMAGES = [
