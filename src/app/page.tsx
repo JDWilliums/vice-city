@@ -7,7 +7,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Head from 'next/head';
 import { NewsArticleFirestore, getAllNewsArticles } from '@/lib/newsFirestoreService';
-import { SpeedInsights } from "@vercel/speed-insights/next"
 
 // GTA 6 estimated release date (Fall 2025)
 const RELEASE_DATE = new Date('2025-12-01T00:00:00Z');
@@ -53,8 +52,23 @@ export default function HomePage() {
     
     return (date: any) => {
       if (!date) return 'Unknown date';
-      const timestamp = typeof date === 'object' && date.toDate ? date.toDate() : new Date(date);
-      return formatter.format(timestamp);
+      try {
+        // Handle Firebase Timestamp objects
+        if (typeof date === 'object' && date.toDate) {
+          return formatter.format(date.toDate());
+        }
+        
+        // Handle timestamp objects with seconds
+        if (typeof date === 'object' && date.seconds) {
+          return formatter.format(new Date(date.seconds * 1000));
+        }
+        
+        // Handle string or number dates
+        return formatter.format(new Date(date));
+      } catch (err) {
+        console.error('Date formatting error:', err);
+        return 'Unknown date';
+      }
     };
   }, []);
 
@@ -91,53 +105,76 @@ export default function HomePage() {
     let cachedSeconds = 0;
     
     const updateCountdown = (timestamp: number) => {
-      // Throttle updates to once per second to reduce CPU usage
-      if (timestamp - lastUpdate < 1000) {
+      try {
+        // Throttle updates to once per second to reduce CPU usage
+        if (timestamp - lastUpdate < 1000) {
+          animationFrameId = requestAnimationFrame(updateCountdown);
+          return;
+        }
+        
+        const now = new Date();
+        // Safely get RELEASE_DATE time value
+        const releaseTime = RELEASE_DATE.getTime();
+        const currentTime = now.getTime();
+        
+        if (isNaN(releaseTime) || isNaN(currentTime)) {
+          console.error('Invalid date calculation detected');
+          // Set fallback values
+          setDays(365);
+          setHours(0);
+          setMinutes(0);
+          setSeconds(0);
+          return;
+        }
+        
+        const difference = releaseTime - currentTime;
+        
+        if (difference <= 0) {
+          // Release date has passed
+          setDays(0);
+          setHours(0);
+          setMinutes(0);
+          setSeconds(0);
+          return;
+        }
+        
+        // Calculate time remaining
+        const d = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const h = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((difference % (1000 * 60)) / 1000);
+        
+        // Only update state if values have changed
+        if (d !== cachedDays) {
+          setDays(d);
+          cachedDays = d;
+        }
+        
+        if (h !== cachedHours) {
+          setHours(h);
+          cachedHours = h;
+        }
+        
+        if (m !== cachedMinutes) {
+          setMinutes(m);
+          cachedMinutes = m;
+        }
+        
+        if (s !== cachedSeconds) {
+          setSeconds(s);
+          cachedSeconds = s;
+        }
+        
+        lastUpdate = timestamp;
         animationFrameId = requestAnimationFrame(updateCountdown);
-        return;
-      }
-      
-      const now = new Date();
-      const difference = RELEASE_DATE.getTime() - now.getTime();
-      
-      if (difference <= 0) {
-        // Release date has passed
-        setDays(0);
+      } catch (error) {
+        console.error('Countdown calculation error:', error);
+        // Fallback values in case of error
+        setDays(365);
         setHours(0);
         setMinutes(0);
         setSeconds(0);
-        return;
       }
-      
-      // Calculate time remaining
-      const d = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const h = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const m = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((difference % (1000 * 60)) / 1000);
-      
-      // Only update state if values have changed
-      if (d !== cachedDays) {
-        setDays(d);
-        cachedDays = d;
-      }
-      
-      if (h !== cachedHours) {
-        setHours(h);
-        cachedHours = h;
-      }
-      
-      if (m !== cachedMinutes) {
-        setMinutes(m);
-        cachedMinutes = m;
-      }
-      
-      if (s !== cachedSeconds) {
-        setSeconds(s);
-        cachedSeconds = s;
-      }
-      
-      lastUpdate = timestamp;
-      animationFrameId = requestAnimationFrame(updateCountdown);
     };
     
     // Start the animation frame loop

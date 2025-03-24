@@ -5,7 +5,6 @@ import AuthWrapper from '@/components/AuthWrapper';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { Suspense } from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { Analytics } from "@vercel/analytics/react"
 import { ErrorBoundary } from 'react-error-boundary';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -42,9 +41,6 @@ export default function RootLayout({
         </AuthWrapper>
         <ErrorBoundary fallback={<AnalyticsFallback />}>
           <SpeedInsights />
-        </ErrorBoundary>
-        <ErrorBoundary fallback={<AnalyticsFallback />}>
-          <Analytics />
         </ErrorBoundary>
       </body>
     </html>
