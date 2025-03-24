@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
 import AuthWrapper from '@/components/AuthWrapper';
-import GoogleAnalytics from '@/components/GoogleAnalytics';
+
 import { Suspense } from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -24,9 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <Suspense fallback={null}>
-          <GoogleAnalytics />
-        </Suspense>
+        
       </head>
       <body className="bg-dark-bg text-white min-h-screen">
         <AuthWrapper>
