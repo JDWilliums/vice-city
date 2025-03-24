@@ -5,6 +5,7 @@ import AuthWrapper from '@/components/AuthWrapper';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { Suspense } from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -33,6 +34,7 @@ export default function RootLayout({
           {children}
         </AuthWrapper>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
