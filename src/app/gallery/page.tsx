@@ -501,28 +501,30 @@ export default function Gallery() {
                     
                     {selectedImageData.availableResolutions.length > 0 ? (
                       <div className="flex flex-col gap-3">
-                        {/* Show standard resolutions */}
-                        <div>
-                          <h5 className="text-sm text-gray-300 mb-2">Standard Resolutions</h5>
-                          <div className="grid grid-cols-2 gap-2">
-                            {selectedImageData.availableResolutions.map((resolution) => {
-                              const resData = availableResolutions.find((r) => r.id === resolution);
-                              return (
-                                <button
-                                  key={resolution}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDownload(selectedImageData.image, resolution, selectedImageData.title);
-                                  }}
-                                  className="px-3 py-2 bg-gta-blue/90 hover:bg-gta-blue text-white text-sm rounded flex items-center justify-between transition-colors shadow-sm shadow-black/30"
-                                >
-                                  <span className="font-medium">{resData?.name}</span>
-                                  <span className="bg-black/30 text-white text-xs px-1.5 py-0.5 rounded ml-1">{resData?.width}×{resData?.height}</span>
-                                </button>
-                              );
-                            })}
+                        {/* Show standard resolutions only if not phone category */}
+                        {selectedImageData.category !== 'phone' && (
+                          <div>
+                            <h5 className="text-sm text-gray-300 mb-2">Standard Resolutions</h5>
+                            <div className="grid grid-cols-2 gap-2">
+                              {selectedImageData.availableResolutions.map((resolution) => {
+                                const resData = availableResolutions.find((r) => r.id === resolution);
+                                return (
+                                  <button
+                                    key={resolution}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDownload(selectedImageData.image, resolution, selectedImageData.title);
+                                    }}
+                                    className="px-3 py-2 bg-gta-blue/90 hover:bg-gta-blue text-white text-sm rounded flex items-center justify-between transition-colors shadow-sm shadow-black/30"
+                                  >
+                                    <span className="font-medium">{resData?.name}</span>
+                                    <span className="bg-black/30 text-white text-xs px-1.5 py-0.5 rounded ml-1">{resData?.width}×{resData?.height}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
+                        )}
                         
                         {/* Show phone resolutions for phone category */}
                         {selectedImageData.category === 'phone' && (

@@ -372,15 +372,6 @@ export const galleryItems = [
     date: '2024-03-20'
   },
   {
-    id: 41,
-    title: 'Trailer Teaser Square',
-    category: 'phone',
-    image: '/1080p/trailer1-teaser-sq.png',
-    description: 'Square formatted teaser for the GTA VI trailer, used for social media.',
-    availableResolutions: ['720p', '1080p'],
-    date: '2024-03-20'
-  },
-  {
     id: 42,
     title: 'Toll Road',
     category: 'screenshots',

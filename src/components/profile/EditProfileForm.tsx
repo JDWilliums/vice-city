@@ -157,21 +157,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ userData, onClose, on
           </label>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="theme" className="block text-sm text-gray-300">
-            Theme Preference
-          </label>
-          <select
-            id="theme"
-            value={theme}
-            onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}
-            className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-gray-300 shadow-sm focus:border-gta-pink focus:ring-gta-pink sm:text-sm"
-          >
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-            <option value="system">System (Auto)</option>
-          </select>
-        </div>
+        
       </div>
       
       <div className="flex gap-4">

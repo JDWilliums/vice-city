@@ -71,6 +71,16 @@ export default function HomePage() {
     return url.startsWith('images/') ? `/${url}` : `/images/${url}`;
   }, []);
 
+  // New function to handle image loading state
+  const [loadedImages, setLoadedImages] = useState<{[key: string]: boolean}>({});
+  
+  const handleImageLoad = useCallback((id: string) => {
+    setLoadedImages(prev => ({
+      ...prev,
+      [id]: true
+    }));
+  }, []);
+
   // Update countdown - optimized to reduce main thread usage
   useEffect(() => {
     let animationFrameId: number;
@@ -219,15 +229,42 @@ export default function HomePage() {
   useEffect(() => {
     // Don't start fetching articles immediately
     let mounted = true;
+    
+    // Check for cached articles to prevent flickering on page revisits
+    const ARTICLES_CACHE_KEY = 'home_latest_articles_cache';
+    const cachedArticles = typeof window !== 'undefined' ? 
+      window.sessionStorage.getItem(ARTICLES_CACHE_KEY) : null;
+    
+    if (cachedArticles) {
+      try {
+        const parsed = JSON.parse(cachedArticles);
+        setLatestArticles(parsed);
+        setIsLoadingArticles(false);
+      } catch (err) {
+        console.error('Error parsing cached articles:', err);
+      }
+    }
+    
     const loadArticlesAfterDelay = setTimeout(async () => {
       if (!mounted) return;
       
       try {
-        setIsLoadingArticles(true);
+        if (!cachedArticles) {
+          setIsLoadingArticles(true);
+        }
+        
         const articles = await getAllNewsArticles(false);
         // Get the 3 most recent articles
         if (mounted) {
           setLatestArticles(articles.slice(0, 3));
+          
+          // Cache the articles in sessionStorage
+          if (typeof window !== 'undefined') {
+            window.sessionStorage.setItem(
+              ARTICLES_CACHE_KEY, 
+              JSON.stringify(articles.slice(0, 3))
+            );
+          }
         }
       } catch (error) {
         console.error('Error fetching latest articles:', error);
@@ -236,7 +273,7 @@ export default function HomePage() {
           setIsLoadingArticles(false);
         }
       }
-    }, 1500); // Delay article loading to prioritize critical content
+    }, cachedArticles ? 5000 : 1500); // Delay loading - use longer delay if we have cached data
 
     return () => {
       mounted = false;
@@ -337,7 +374,7 @@ export default function HomePage() {
             
             {/* GTA 6 Logo - optimized for better LCP */}
             <div className="relative flex justify-center mb-10 md:mb-16 animate-fadeInUp-5">
-              <div className="absolute -inset-10 bg-gradient-to-r from-gta-pink to-gta-blue rounded-full blur-[150px] opacity-5 animate-pulse"></div>
+              
               <Image 
                 src="/images/gta6-logo.png" 
                 alt="GTA 6 Logo" 
@@ -498,20 +535,26 @@ export default function HomePage() {
                 {latestArticles.map((article) => (
                   <div key={article.id} className="bg-black/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden group hover:border-gta-blue transition-colors">
                     <div className="h-40 sm:h-48 relative overflow-hidden">
-                      {/* Reduced image load cost with loading="lazy" */}
+                      {/* Background placeholder */}
+                      <div className="absolute inset-0 bg-gray-800/80 animate-image-pulse"></div>
+                      
+                      {/* Actual image with loading transition */}
                       <Image 
                         src={getProcessedImageUrl(article.imageUrl)} 
                         alt={article.title} 
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        className={`object-cover group-hover:scale-105 transition-all duration-300 ${
+                          loadedImages[article.id] ? 'opacity-100' : 'opacity-0'
+                        }`}
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                         loading="lazy"
                         decoding="async"
-                        unoptimized={true}
+                        onLoad={() => handleImageLoad(article.id)}
                         onError={(e) => {
                           // Fallback to default image if loading fails
                           const target = e.target as HTMLImageElement;
                           target.src = '/images/gta6-1.png';
+                          handleImageLoad(article.id);
                         }}
                       />
                     </div>
@@ -595,6 +638,13 @@ export default function HomePage() {
           100% { opacity: 0.3; }
         }
         
+        /* Specialized image loading pulse - more subtle */
+        @keyframes imagePulse {
+          0% { opacity: 0.7; }
+          50% { opacity: 0.9; }
+          100% { opacity: 0.7; }
+        }
+        
         .animate-fadeIn {
           animation: fadeIn 0.6s ease-out forwards;
           will-change: opacity, transform;
@@ -656,6 +706,16 @@ export default function HomePage() {
           will-change: opacity;
         }
         
+        .transition-all {
+          transition-property: all;
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+          will-change: opacity, transform;
+        }
+        
+        .duration-300 {
+          transition-duration: 300ms;
+        }
+        
         .duration-1000 {
           transition-duration: 1000ms;
         }
@@ -693,6 +753,11 @@ export default function HomePage() {
         .content-visibility-auto {
           content-visibility: auto;
           contain-intrinsic-size: 1px 500px;
+        }
+
+        /* Specialized image loading pulse - more subtle */
+        .animate-image-pulse {
+          animation: imagePulse 2s infinite ease-in-out;
         }
       `}</style>
     </div>
