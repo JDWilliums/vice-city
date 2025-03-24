@@ -24,17 +24,6 @@ const GTA6_IMAGES = [
   '/images/gta6-7.png',
   '/images/gta6-8.png',
   '/images/gta6-9.png',
-  '/images/gta6-10.png',
-  '/images/gta6-11.png',
-  '/images/gta6-12.png',
-  '/images/gta6-13.png',
-  '/images/gta6-14.png',
-  '/images/gta6-15.png',
-  '/images/gta6-16.png',
-  '/images/gta6-17.png',
-  '/images/gta6-18.png',
-  '/images/gta6-19.png',
-  '/images/gta6-20.png',
 ];
 
 export default function HomePage() {
