@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Head from 'next/head';
 import { NewsArticleFirestore, getAllNewsArticles } from '@/lib/newsFirestoreService';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 // GTA 6 estimated release date (Fall 2025)
 const RELEASE_DATE = new Date('2025-12-01T00:00:00');
