@@ -25,6 +25,20 @@ const GTA6_IMAGES = [
   '/images/gta6-9.png',
 ];
 
+// Low resolution versions of the same images for progressive loading
+const GTA6_IMAGES_LOW_RES = [
+  '/720p/gta6-0.png',
+  '/720p/gta6-1.png',
+  '/720p/gta6-2.png',
+  '/720p/gta6-3.png',
+  '/720p/gta6-4.png',
+  '/720p/gta6-5.png',
+  '/720p/gta6-6.png',
+  '/720p/gta6-7.png',
+  '/720p/gta6-8.png',
+  '/720p/gta6-9.png',
+];
+
 export default function HomePage() {
   const [days, setDays] = useState<number>(0);
   const [hours, setHours] = useState<number>(0);
@@ -318,6 +332,16 @@ export default function HomePage() {
     };
   }, []);
 
+  const [highResImagesLoaded, setHighResImagesLoaded] = useState<{[key: number]: boolean}>({});
+
+  // Function to handle high-res image loading
+  const handleHighResImageLoad = useCallback((index: number) => {
+    setHighResImagesLoaded(prev => ({
+      ...prev,
+      [index]: true
+    }));
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       <Head>
@@ -340,7 +364,7 @@ export default function HomePage() {
       
       <Navbar transparent={true} />
       
-      {/* Background Images with optimized loading for LCP */}
+      {/* Background Images with progressive loading */}
       <div className="fixed inset-0 z-0">
         {GTA6_IMAGES.map((image, index) => (
           <div 
@@ -349,16 +373,34 @@ export default function HomePage() {
               index === activeImageIndex ? (isTransitioning ? 'opacity-0' : 'opacity-100') : 'opacity-0'
             }`}
           >
+            {/* Low-res version (always visible first) */}
             <Image 
-              src={image}
+              src={GTA6_IMAGES_LOW_RES[index]}
               alt={`GTA 6 Background ${index + 1}`}
               fill
-              className="object-cover object-center"
+              className={`object-cover object-center transition-opacity duration-300 ${
+                highResImagesLoaded[index] ? 'opacity-0' : 'opacity-100'
+              }`}
               priority={index < 3} // Prioritize first 3 images
               sizes="100vw"
-              quality={index < 3 ? 95 : 75} // Higher quality for first images
+              quality={75}
               loading={index < 3 ? "eager" : "lazy"}
               placeholder="empty"
+            />
+            
+            {/* High-res version (loads in the background) */}
+            <Image 
+              src={image}
+              alt={`GTA 6 Background ${index + 1} (High Resolution)`}
+              fill
+              className={`object-cover object-center transition-opacity duration-300 ${
+                highResImagesLoaded[index] ? 'opacity-100' : 'opacity-0'
+              }`}
+              sizes="100vw"
+              quality={95}
+              loading="lazy"
+              placeholder="empty"
+              onLoad={() => handleHighResImageLoad(index)}
             />
           </div>
         ))}
