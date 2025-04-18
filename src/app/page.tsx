@@ -39,6 +39,12 @@ const GTA6_IMAGES_LOW_RES = [
   '/720p/gta6-9.png',
 ];
 
+// Explicitly state image dimensions to avoid layout shifts
+const IMAGE_DIMENSIONS = {
+  width: 1920,
+  height: 1080
+};
+
 export default function HomePage() {
   const [days, setDays] = useState<number>(0);
   const [hours, setHours] = useState<number>(0);
@@ -381,10 +387,10 @@ export default function HomePage() {
               className={`object-cover object-center transition-opacity duration-300 ${
                 highResImagesLoaded[index] ? 'opacity-0' : 'opacity-100'
               }`}
-              priority={index < 3} // Prioritize first 3 images
+              priority={index === 0} // Only prioritize the first visible image
               sizes="100vw"
-              quality={75}
-              loading={index < 3 ? "eager" : "lazy"}
+              quality={60} // Lower quality for low-res version
+              loading={index === 0 ? "eager" : "lazy"}
               placeholder="empty"
             />
             
@@ -397,7 +403,7 @@ export default function HomePage() {
                 highResImagesLoaded[index] ? 'opacity-100' : 'opacity-0'
               }`}
               sizes="100vw"
-              quality={95}
+              quality={80} // Slightly reduced quality for better caching
               loading="lazy"
               placeholder="empty"
               onLoad={() => handleHighResImageLoad(index)}
@@ -462,6 +468,7 @@ export default function HomePage() {
                 className="w-full max-w-2xl h-auto relative" 
                 priority
                 sizes="(max-width: 640px) 90vw, (max-width: 768px) 80vw, 600px"
+                quality={85}
                 fetchPriority="high"
               />
             </div>

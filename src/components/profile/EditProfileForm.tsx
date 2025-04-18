@@ -130,6 +130,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ userData, onClose, on
                   fill
                   sizes="(max-width: 768px) 25vw, 100px"
                   unoptimized
+                  loading="lazy"
                   className="object-cover"
                 />
                 {selectedPicture === picture.url && (
