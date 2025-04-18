@@ -12,13 +12,17 @@ function PageViewTracker() {
 
   useEffect(() => {
     if (pathname) {
-      // Create URL with search params if they exist
-      const url = searchParams.size > 0 
-        ? `${pathname}?${searchParams.toString()}` 
-        : pathname;
-        
-      // Send pageview with full URL
-      pageview(url);
+      // Only track pageviews if consent is given
+      const consentStatus = localStorage.getItem('cookieConsent');
+      if (consentStatus === 'true') {
+        // Create URL with search params if they exist
+        const url = searchParams.size > 0 
+          ? `${pathname}?${searchParams.toString()}` 
+          : pathname;
+          
+        // Send pageview with full URL
+        pageview(url);
+      }
     }
   }, [pathname, searchParams]);
 
@@ -28,7 +32,7 @@ function PageViewTracker() {
 export default function GoogleAnalytics() {
   return (
     <>
-      {/* Google Analytics Scripts */}
+      {/* Google Analytics Scripts with consent mode */}
       <Script
         strategy="afterInteractive"
         src={`https://www.googletagmanager.com/gtag/js?id=G-L0E1TVCKP7`}
@@ -41,6 +45,23 @@ export default function GoogleAnalytics() {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
+            
+            // Default to denied until consent is given
+            gtag('consent', 'default', {
+              'ad_storage': 'denied',
+              'analytics_storage': 'denied',
+              'wait_for_update': 500
+            });
+            
+            // Check if consent was previously given
+            const consentStatus = localStorage.getItem('cookieConsent');
+            if (consentStatus === 'true') {
+              gtag('consent', 'update', {
+                'ad_storage': 'granted',
+                'analytics_storage': 'granted'
+              });
+            }
+            
             gtag('config', 'G-L0E1TVCKP7');
           `,
         }}
