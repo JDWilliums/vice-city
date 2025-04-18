@@ -5,8 +5,6 @@ const nextConfig = {
   
   // Image optimization configuration
   images: {
-    domains: ['localhost', 'vice.city'],
-    unoptimized: true, // Disable image optimization for all images
     remotePatterns: [
       {
         protocol: 'https',
