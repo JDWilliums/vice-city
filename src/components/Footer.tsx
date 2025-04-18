@@ -112,6 +112,12 @@ const Footer = () => {
                   Privacy Policy
                 </Link>
               </li>
+              <li>
+                <Link href="/privacy-settings" className="text-gray-300 hover:text-gta-blue transition-colors flex items-center group">
+                  <span className="w-1 h-0 group-hover:h-4 bg-gta-blue mr-2 transition-all duration-200"></span>
+                  Your Privacy Settings
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

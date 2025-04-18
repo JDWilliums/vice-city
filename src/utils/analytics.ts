@@ -8,6 +8,12 @@ declare global {
   }
 }
 
+// Get consent status
+export const getConsentStatus = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('cookieConsent') === 'true';
+};
+
 // Initialize GA - this is called once when the script is loaded
 export const initGA = (id: string) => {
   if (typeof window === 'undefined') return;
@@ -25,6 +31,9 @@ export const initGA = (id: string) => {
 export const pageview = (url: string) => {
   if (typeof window === 'undefined' || !window.gtag) return;
   
+  // Only track if consent is given
+  if (!getConsentStatus()) return;
+  
   window.gtag('config', 'G-L0E1TVCKP7', {
     page_path: url,
   });
@@ -40,6 +49,9 @@ export const event = ({ action, category, label, value }: {
   value?: number;
 }) => {
   if (typeof window === 'undefined' || !window.gtag) return;
+  
+  // Only track if consent is given
+  if (!getConsentStatus()) return;
   
   window.gtag('event', action, {
     event_category: category,

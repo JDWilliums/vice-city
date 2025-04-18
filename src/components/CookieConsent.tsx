@@ -2,42 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { getCookieConsent, setCookieConsent } from '@/utils/cookieConsent';
 
 export default function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
+    // Don't show on privacy settings page
+    if (pathname === '/privacy-settings') {
+      return;
+    }
+    
     // Check if user has already accepted cookies
-    const consentAccepted = localStorage.getItem('cookieConsent');
-    if (!consentAccepted) {
+    const consentAccepted = getCookieConsent();
+    if (consentAccepted === false && localStorage.getItem('cookieConsent') === null) {
       setShowConsent(true);
     }
-  }, []);
+  }, [pathname]);
 
   const acceptCookies = () => {
-    localStorage.setItem('cookieConsent', 'true');
+    setCookieConsent(true);
     setShowConsent(false);
-
-    // Tell Google Tag Manager that consent was given
-    if (window.gtag) {
-      window.gtag('consent', 'update', {
-        'ad_storage': 'granted',
-        'analytics_storage': 'granted'
-      });
-    }
   };
 
   const declineCookies = () => {
-    localStorage.setItem('cookieConsent', 'false');
+    setCookieConsent(false);
     setShowConsent(false);
-
-    // Tell Google Tag Manager that consent was denied
-    if (window.gtag) {
-      window.gtag('consent', 'update', {
-        'ad_storage': 'denied',
-        'analytics_storage': 'denied'
-      });
-    }
   };
 
   if (!showConsent) return null;
@@ -52,6 +44,10 @@ export default function CookieConsent() {
             <Link href="/privacy" className="text-[#ff6b00] hover:underline ml-1">
               Learn more
             </Link>
+            {' or '}
+            <Link href="/privacy-settings" className="text-[#ff6b00] hover:underline">
+              manage your preferences
+            </Link>.
           </p>
         </div>
         <div className="flex gap-3">
