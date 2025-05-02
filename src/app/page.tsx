@@ -457,7 +457,7 @@ export default function HomePage() {
             <div className="relative flex justify-center mb-10 md:mb-16 animate-fadeInUp-5">
               
               <Image 
-                src="/images/gtavi-logo.png" 
+                src="/images/gta6-logo.png" 
                 alt="GTA 6 Logo" 
                 width={600} 
                 height={300} 
