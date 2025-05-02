@@ -8,8 +8,8 @@ import Footer from '@/components/Footer';
 import Head from 'next/head';
 import { NewsArticleFirestore, getAllNewsArticles } from '@/lib/newsFirestoreService';
 
-// GTA 6 estimated release date (Fall 2025)
-const RELEASE_DATE = new Date('2025-12-01T00:00:00Z');
+// GTA 6 estimated release date (May 26, 2026)
+const RELEASE_DATE = new Date('2026-05-26T00:00:00Z');
 
 // Array of GTA 6 images to cycle through
 const GTA6_IMAGES = [
@@ -404,16 +404,12 @@ export default function HomePage() {
                 <div className="text-gray-400 uppercase tracking-wider text-xs sm:text-sm">Seconds</div>
               </div>
             </div>
-
-            <p className="text-xs sm:text-sm md:text-m text-gray-400 mb-10 md:mb-16 max-w-3xl mx-auto">
-              (Countdown to the end of Fall, actual release date is currently unknown)
-            </p>
             
             {/* GTA 6 Logo - optimized for better LCP */}
             <div className="relative flex justify-center mb-10 md:mb-16 animate-fadeInUp-5">
               
               <Image 
-                src="/images/gta6-logo.png" 
+                src="/images/gtavi-logo.png" 
                 alt="GTA 6 Logo" 
                 width={600} 
                 height={300} 
