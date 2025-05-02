@@ -6,6 +6,7 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { Suspense } from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ErrorBoundary } from 'react-error-boundary';
+import CookieConsent from '@/components/CookieConsent';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -42,6 +43,9 @@ export default function RootLayout({
         <ErrorBoundary fallback={<AnalyticsFallback />}>
           <SpeedInsights />
         </ErrorBoundary>
+        <Suspense fallback={null}>
+          <CookieConsent />
+        </Suspense>
       </body>
     </html>
   );

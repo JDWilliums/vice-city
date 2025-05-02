@@ -95,8 +95,16 @@ export default function PrivacyPage() {
             <div className="mt-8 pt-4 border-t border-gray-800">
               <p className="text-center text-gray-500">Read our <Link href="/terms" className="text-gta-blue hover:text-gta-pink">Terms & Conditions</Link> for more information about using our site.</p>
             </div>
+            <li>
+                <Link href="/privacy-settings" className="text-gray-300 hover:text-gta-blue">
+                  <span className="w-1 h-0 bg-gta-blue mr-2 transition-all duration-200"></span>
+                  Change your privacy settings here
+                </Link>
+            </li>
           </div>
+            
         </div>
+        
       </main>
       
       {/* CSS animations */}

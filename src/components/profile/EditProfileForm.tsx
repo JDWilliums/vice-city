@@ -111,33 +111,38 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ userData, onClose, on
         <label className="block text-sm font-medium text-gray-200">
           Choose Profile Picture
         </label>
-        <div className="grid grid-cols-4 gap-4">
-          {PROFILE_PICTURES.map((picture) => (
-            <button
-              key={picture.id}
-              type="button"
-              onClick={() => setSelectedPicture(picture.url)}
-              className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                selectedPicture === picture.url 
-                  ? 'border-gta-pink shadow-lg shadow-gta-pink/20' 
-                  : 'border-gray-700 hover:border-gray-500'
-              }`}
-            >
-              <Image
-                src={picture.url}
-                alt={picture.label}
-                fill
-                className="object-cover"
-              />
-              {selectedPicture === picture.url && (
-                <div className="absolute inset-0 bg-gta-pink/20 flex items-center justify-center">
-                  <div className="bg-gta-pink text-white text-xs px-2 py-1 rounded-full">
-                    Selected
+        <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="grid grid-cols-4 gap-4">
+            {PROFILE_PICTURES.map((picture) => (
+              <button
+                key={picture.id}
+                type="button"
+                onClick={() => setSelectedPicture(picture.url)}
+                className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                  selectedPicture === picture.url 
+                    ? 'border-gta-pink shadow-lg shadow-gta-pink/20' 
+                    : 'border-gray-700 hover:border-gray-500'
+                }`}
+              >
+                <Image
+                  src={picture.url}
+                  alt={picture.label}
+                  fill
+                  sizes="(max-width: 768px) 25vw, 100px"
+                  unoptimized
+                  loading="lazy"
+                  className="object-cover"
+                />
+                {selectedPicture === picture.url && (
+                  <div className="absolute inset-0 bg-gta-pink/20 flex items-center justify-center">
+                    <div className="bg-gta-pink text-white text-xs px-2 py-1 rounded-full">
+                      Selected
+                    </div>
                   </div>
-                </div>
-              )}
-            </button>
-          ))}
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ const nextConfig = {
   
   // Image optimization configuration
   images: {
+    domains: ['localhost', 'vice.city'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -27,14 +28,14 @@ const nextConfig = {
         pathname: '**',
       },
     ],
-    // Configure image sizes - expanded to include common gaming resolutions
-    deviceSizes: [640, 750, 828, 1080, 1200, 1280, 1440, 1920, 2048, 2560, 3840, 4096],
-    // Include all sizes we're using in the app
-    imageSizes: [16, 32, 48, 64, 96, 128, 200, 256, 300, 384, 400, 512, 600],
-    // Increase the image optimization buffer size to handle large images
-    minimumCacheTTL: 3600, // 1 hour cache
-    // Only allowed formats are 'image/webp' and 'image/avif'
-    formats: ['image/webp', 'image/avif'],
+    // Reduced set of device sizes to minimize cache variations
+    deviceSizes: [640, 750, 1080, 1920, 2560],
+    // Reduced set of image sizes to minimize cache variations
+    imageSizes: [16, 64, 128, 256, 384],
+    // Increase cache duration to reduce regeneration frequency
+    minimumCacheTTL: 86400, // 24 hours (from 1 hour)
+    // Only use WebP for better compression and fewer format variations
+    formats: ['image/webp'],
     // Increase memory limit for image optimization
     dangerouslyAllowSVG: false,
     contentDispositionType: 'attachment',
@@ -43,6 +44,22 @@ const nextConfig = {
   
   // Disable strict mode in production to avoid double-rendering issues
   reactStrictMode: process.env.NODE_ENV === 'development',
+  
+  // Configure headers for better caching
+  async headers() {
+    return [
+      {
+        // Apply cache headers to images
+        source: '/(720p|images)/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
+  },
   
   // Configure redirects, headers, etc. if needed
   async rewrites() {
