@@ -543,7 +543,7 @@ export default function HomePage() {
         <section className="flex items-center relative py-12 md:py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-8 md:mb-12 text-center animate-fadeInUp">
-              <span className="text-white">Official Trailer</span>
+              <span className="text-white">Official Trailers</span>
             </h2>
             
             <div className="max-w-4xl mx-auto animate-fadeInUp">
@@ -592,6 +592,54 @@ export default function HomePage() {
               
               <div className="mt-6 md:mt-8 text-center text-gray-400 animate-fadeInUp">
                 <p>Watch on <a href="https://www.youtube.com/watch?v=QdBZY2fkU-0" target="_blank" rel="noopener noreferrer" className="text-gta-pink hover:underline">YouTube</a> for highest quality</p>
+              </div>
+            </div>
+            <div className="max-w-4xl mx-auto animate-fadeInUp">
+              <div className="relative aspect-video overflow-hidden rounded-lg border border-gray-800 shadow-2xl bg-black">
+                {!youtubeLoaded ? (
+                  <div 
+                    className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer group"
+                    onClick={() => setYoutubeLoaded(true)}
+                    aria-label="Load YouTube video: Grand Theft Auto VI Trailer 2"
+                  >
+                    {/* Thumbnail with play button overlay */}
+                    <div className="relative w-full h-full">
+                      <Image 
+                        src="/images/gta6-0.png" 
+                        alt="GTA 6 Trailer Thumbnail" 
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        priority
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/60 transition-all">
+                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gta-pink/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2 md:p-3 text-center">
+                      <p className="text-white text-sm md:text-base">Click to play GTA VI Trailer 2</p>
+                      <p className="text-xs text-gray-400">Video will load from YouTube</p>
+                    </div>
+                  </div>
+                ) : (
+                  <iframe 
+                    className="absolute top-0 left-0 w-full h-full"
+                    src="https://www.youtube.com/embed/VQRLujxTm3c?autoplay=1" 
+                    title="Grand Theft Auto VI Trailer 1" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    referrerPolicy="strict-origin-when-cross-origin" 
+                    allowFullScreen
+                  ></iframe>
+                )}
+              </div>
+              
+              <div className="mt-6 md:mt-8 text-center text-gray-400 animate-fadeInUp">
+                <p>Watch on <a href="https://www.youtube.com/watch?v=VQRLujxTm3c" target="_blank" rel="noopener noreferrer" className="text-gta-pink hover:underline">YouTube</a> for highest quality</p>
               </div>
             </div>
           </div>
