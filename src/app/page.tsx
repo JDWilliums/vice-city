@@ -590,10 +590,11 @@ export default function HomePage() {
                 )}
               </div>
               
-              <div className="mt-6 md:mt-8 text-center text-gray-400 animate-fadeInUp">
+              <div className="mt-6 mb-6 md:mt-8 text-center text-gray-400 animate-fadeInUp">
                 <p>Watch on <a href="https://www.youtube.com/watch?v=QdBZY2fkU-0" target="_blank" rel="noopener noreferrer" className="text-gta-pink hover:underline">YouTube</a> for highest quality</p>
               </div>
             </div>
+
             <div className="max-w-4xl mx-auto animate-fadeInUp">
               <div className="relative aspect-video overflow-hidden rounded-lg border border-gray-800 shadow-2xl bg-black">
                 {!youtubeLoaded ? (
