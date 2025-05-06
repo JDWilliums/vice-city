@@ -606,7 +606,7 @@ export default function HomePage() {
                     {/* Thumbnail with play button overlay */}
                     <div className="relative w-full h-full">
                       <Image 
-                        src="/images/gta6-0.png" 
+                        src="/images/vi-site/keyart2.jpg"
                         alt="GTA 6 Trailer Thumbnail" 
                         fill
                         className="object-cover"
