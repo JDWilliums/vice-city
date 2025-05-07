@@ -497,7 +497,7 @@ export default function HomePage() {
                   <div className="space-y-4 md:space-y-6">
                     <div className="bg-gray-900/50 p-4 md:p-5 rounded-lg border-l-4 border-gta-blue">
                       <h3 className="text-lg md:text-xl font-bold mb-2 text-gta-blue">Dual Protagonists</h3>
-                      <p className="text-gray-300 text-sm md:text-base">Play as both Lucia and Jason, the first female protagonist in the mainline series, in a Bonnie & Clyde inspired crime saga.</p>
+                      <p className="text-gray-300 text-sm md:text-base">Play as both Jason and Lucia, the first female protagonist in the mainline series, in a Bonnie & Clyde inspired crime saga.</p>
                     </div>
                     
                     <div className="bg-gray-900/50 p-4 md:p-5 rounded-lg border-l-4 border-gta-pink">
@@ -523,8 +523,8 @@ export default function HomePage() {
                     </div>
                     
                     <div className="bg-gray-900/50 p-4 md:p-5 rounded-lg border-l-4 border-gta-pink">
-                      <h3 className="text-lg md:text-xl font-bold mb-2 text-gta-pink">Fall 2025 Release</h3>
-                      <p className="text-gray-300 text-sm md:text-base">Slated for release in Fall 2025 for PlayStation 5 and Xbox Series X|S, with a PC version likely to follow later.</p>
+                      <h3 className="text-lg md:text-xl font-bold mb-2 text-gta-pink">May 2026 Release</h3>
+                      <p className="text-gray-300 text-sm md:text-base">Slated for release on May 26, 2026 for PlayStation 5 and Xbox Series X|S, with a PC version likely to follow later.</p>
                     </div>
                   </div>
                 </div>
