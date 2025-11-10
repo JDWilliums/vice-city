@@ -9,7 +9,7 @@ import Head from 'next/head';
 import { NewsArticleFirestore, getAllNewsArticles } from '@/lib/newsFirestoreService';
 
 // GTA 6 estimated release date (May 26, 2026)
-const RELEASE_DATE = new Date('2026-05-26T00:00:00Z');
+const RELEASE_DATE = new Date('2026-11- 19T00:00:00Z');
 
 // Array of GTA 6 images to cycle through
 const GTA6_IMAGES = [
@@ -524,7 +524,7 @@ export default function HomePage() {
                     
                     <div className="bg-gray-900/50 p-4 md:p-5 rounded-lg border-l-4 border-gta-pink">
                       <h3 className="text-lg md:text-xl font-bold mb-2 text-gta-pink">May 2026 Release</h3>
-                      <p className="text-gray-300 text-sm md:text-base">Slated for release on May 26, 2026 for PlayStation 5 and Xbox Series X|S, with a PC version likely to follow later.</p>
+                      <p className="text-gray-300 text-sm md:text-base">Slated for release on November 19, 2026 for PlayStation 5 and Xbox Series X|S, with a PC version likely to follow later.</p>
                     </div>
                   </div>
                 </div>
