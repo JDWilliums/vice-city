@@ -9,7 +9,7 @@ import Head from 'next/head';
 import { NewsArticleFirestore, getAllNewsArticles } from '@/lib/newsFirestoreService';
 
 // GTA 6 estimated release date (May 26, 2026)
-const RELEASE_DATE = new Date('2026-11- 19T00:00:00Z');
+const RELEASE_DATE = new Date('2026-11-19T00:00:00Z');
 
 // Array of GTA 6 images to cycle through
 const GTA6_IMAGES = [
