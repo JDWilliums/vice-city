@@ -1,12 +1,29 @@
 // Cookie consent utility functions
 
+const CRUMBLESS_WEBSITE_ID = 'cmm45ng3m0001jjfg492z96gz';
+const CRUMBLESS_SCRIPT_SRC = 'https://www.crumbless.io/tracker.js';
+
 /**
- * Get the current cookie consent status
- * @returns boolean - true if cookies are accepted, false otherwise
+ * Inject Crumbless analytics script when consent is given (idempotent).
+ */
+export const loadCrumblessScript = (): void => {
+  if (typeof document === 'undefined') return;
+  if (document.querySelector(`script[data-website-id="${CRUMBLESS_WEBSITE_ID}"]`)) return;
+  const script = document.createElement('script');
+  script.defer = true;
+  script.dataset.websiteId = CRUMBLESS_WEBSITE_ID;
+  script.src = CRUMBLESS_SCRIPT_SRC;
+  document.head.appendChild(script);
+};
+
+/**
+ * Get whether analytics (Crumbless) is allowed.
+ * Defaults to true when not set; only false when user has explicitly disabled in privacy settings.
  */
 export const getCookieConsent = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem('cookieConsent') === 'true';
+  if (typeof window === 'undefined') return true;
+  const stored = localStorage.getItem('cookieConsent');
+  return stored !== 'false';
 };
 
 /**
@@ -16,15 +33,10 @@ export const getCookieConsent = (): boolean => {
 export const setCookieConsent = (accepted: boolean): void => {
   if (typeof window === 'undefined') return;
   
-  // Save to localStorage
   localStorage.setItem('cookieConsent', accepted ? 'true' : 'false');
   
-  // Update Google Tag Manager consent
-  if (window.gtag) {
-    window.gtag('consent', 'update', {
-      'ad_storage': accepted ? 'granted' : 'denied',
-      'analytics_storage': accepted ? 'granted' : 'denied'
-    });
+  if (accepted) {
+    loadCrumblessScript();
   }
 };
 
@@ -36,12 +48,9 @@ export const setGranularCookieConsent = (settings: {
   analytics?: boolean;
 }): void => {
   if (typeof window === 'undefined') return;
-  
-  // Update Google Tag Manager consent with granular settings
-  if (window.gtag) {
-    window.gtag('consent', 'update', {
-      'analytics_storage': settings.analytics ? 'granted' : 'denied',
-    });
+  // Crumbless respects main cookie consent; no separate gtag consent needed
+  if (settings.analytics && getCookieConsent()) {
+    loadCrumblessScript();
   }
 };
 
@@ -50,14 +59,5 @@ export const setGranularCookieConsent = (settings: {
  */
 export const clearCookieConsent = (): void => {
   if (typeof window === 'undefined') return;
-  
   localStorage.removeItem('cookieConsent');
-  
-  // Update Google Tag Manager consent to denied state
-  if (window.gtag) {
-    window.gtag('consent', 'update', {
-      'ad_storage': 'denied',
-      'analytics_storage': 'denied'
-    });
-  }
 }; 

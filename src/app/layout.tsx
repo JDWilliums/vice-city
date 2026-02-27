@@ -2,11 +2,10 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
 import AuthWrapper from '@/components/AuthWrapper';
-import GoogleAnalytics from '@/components/GoogleAnalytics';
+import CrumblessAnalytics from '@/components/CrumblessAnalytics';
 import { Suspense } from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ErrorBoundary } from 'react-error-boundary';
-import CookieConsent from '@/components/CookieConsent';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -33,7 +32,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <Suspense fallback={null}>
-          <GoogleAnalytics />
+          <CrumblessAnalytics />
         </Suspense>
       </head>
       <body className="bg-dark-bg text-white min-h-screen">
@@ -43,9 +42,6 @@ export default function RootLayout({
         <ErrorBoundary fallback={<AnalyticsFallback />}>
           <SpeedInsights />
         </ErrorBoundary>
-        <Suspense fallback={null}>
-          <CookieConsent />
-        </Suspense>
       </body>
     </html>
   );

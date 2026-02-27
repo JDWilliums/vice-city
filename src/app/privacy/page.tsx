@@ -40,7 +40,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-6 mt-2 mb-4">
               <li>Email address – collected via Google Authentication for account creation and identification</li>
               <li>Display name – shown publicly on your contributions</li>
-              <li>Anonymized usage data – through Google Analytics, such as page views and time spent on pages</li>
+              <li>Anonymized usage data – through Crumbless analytics, such as page views and time spent on pages</li>
             </ul>
             <p>We do not collect sensitive personal information such as payment data, home addresses, or government IDs.</p>
             
@@ -49,17 +49,17 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-6 mt-2 mb-4">
               <li>Create and manage your account</li>
               <li>Attribute edits and contributions to your display name</li>
-              <li>Analyze site traffic and improve functionality (via Google Analytics)</li>
+              <li>Analyze site traffic and improve functionality (via Crumbless analytics)</li>
               <li>Communicate with you about site-related matters, if needed</li>
             </ul>
             
-            <h2 className="text-xl font-semibold mt-6 mb-3 text-gta-blue">Use of Google Services</h2>
+            <h2 className="text-xl font-semibold mt-6 mb-3 text-gta-blue">Use of Third-Party Services</h2>
             <p>We use:</p>
             <ul className="list-disc pl-6 mt-2 mb-4">
               <li><a href="https://developers.google.com/identity/authentication" className="text-gta-pink hover:underline">Google Authentication</a> to simplify account sign-in and protect user identity</li>
-              <li><a href="https://google.com/analytics" className="text-gta-pink hover:underline">Google Analytics</a> to collect anonymized data about user behavior on our site (e.g., which pages are most viewed, where traffic comes from)</li>
+              <li><a href="https://www.crumbless.io" className="text-gta-pink hover:underline">Crumbless</a> to collect anonymized analytics about site usage (e.g., which pages are most viewed, where traffic comes from)</li>
             </ul>
-            <p>Google may use cookies or other tracking technologies to deliver these services. Learn more in Google's Privacy Policy.</p>
+            <p>Google may use cookies or other tracking technologies for authentication. Our analytics provider (Crumbless) is used only when you accept cookies. Learn more in our cookie and privacy settings.</p>
             
             <h2 className="text-xl font-semibold mt-6 mb-3 text-gta-blue">Cookies</h2>
             <p>Cookies help store user preferences and session data. You can disable cookies in your browser settings, but some features of the site may not function properly.</p>
