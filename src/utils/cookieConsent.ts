@@ -2,6 +2,7 @@
 
 const CRUMBLESS_WEBSITE_ID = 'cmm45ng3m0001jjfg492z96gz';
 const CRUMBLESS_SCRIPT_SRC = 'https://www.crumbless.io/tracker.js';
+const CRUMBLESS_PROXY_HOST = '/api/crumbless/collect';
 
 /**
  * Inject Crumbless analytics script when consent is given (idempotent).
@@ -12,6 +13,7 @@ export const loadCrumblessScript = (): void => {
   const script = document.createElement('script');
   script.defer = true;
   script.dataset.websiteId = CRUMBLESS_WEBSITE_ID;
+  script.dataset.host = CRUMBLESS_PROXY_HOST;
   script.src = CRUMBLESS_SCRIPT_SRC;
   document.head.appendChild(script);
 };

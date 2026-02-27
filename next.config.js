@@ -63,7 +63,12 @@ const nextConfig = {
   
   // Configure redirects, headers, etc. if needed
   async rewrites() {
-    return [];
+    return [
+      {
+        source: '/api/crumbless/:path*',
+        destination: 'https://www.crumbless.io/api/:path*',
+      },
+    ];
   },
   
   // Enable SWC minification for faster builds
