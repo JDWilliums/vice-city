@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { trackCrumbless } from '@/utils/cookieConsent';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -42,6 +43,7 @@ export default function ContactPage() {
               </p>
               <a 
                 href="mailto:contact@vice.city" 
+                onClick={() => trackCrumbless('contact_email_click')}
                 className="block text-xl font-semibold text-gta-blue hover:text-gta-pink transition-colors duration-200"
               >
                 contact@vice.city
@@ -65,6 +67,7 @@ export default function ContactPage() {
                 href="https://discord.gg/rGqyNP4AC6" 
                 target="_blank" 
                 rel="noopener noreferrer"
+                onClick={() => trackCrumbless('cta_click')}
                 className="inline-flex items-center px-5 py-3 rounded-lg bg-gta-pink text-white font-medium hover:bg-gta-pink/90 transition-colors duration-200"
               >
                 

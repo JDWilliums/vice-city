@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FirebaseError } from 'firebase/app';
 import { useAuth } from '@/lib/AuthContext';
+import { trackCrumbless } from '@/utils/cookieConsent';
 import AuthCard from '@/components/auth/AuthCard';
 import AuthButton from '@/components/auth/AuthButton';
 import InputField from '@/components/auth/InputField';
@@ -49,8 +50,9 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       setErrorMessage('');
-      await signInWithGoogle();
-      
+await signInWithGoogle();
+      trackCrumbless('login');
+
       // If user was redirected from another page, try to go back there
       if (isRedirected) {
         router.back();
@@ -77,8 +79,9 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       setErrorMessage('');
-      await signInWithEmail(email, password);
-      
+await signInWithEmail(email, password);
+      trackCrumbless('login');
+
       // If user was redirected from another page, try to go back there
       if (isRedirected) {
         router.back();

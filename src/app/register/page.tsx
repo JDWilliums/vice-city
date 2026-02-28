@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FirebaseError } from 'firebase/app';
 import { useAuth } from '@/lib/AuthContext';
+import { trackCrumbless } from '@/utils/cookieConsent';
 import AuthCard from '@/components/auth/AuthCard';
 import AuthButton from '@/components/auth/AuthButton';
 import InputField from '@/components/auth/InputField';
@@ -27,6 +28,7 @@ export default function RegisterPage() {
       setIsLoading(true);
       setErrorMessage('');
       await signInWithGoogle();
+      trackCrumbless('signup');
       router.push('/'); // Redirect to home page after successful registration
     } catch (error) {
       handleAuthError(error);
@@ -61,6 +63,7 @@ export default function RegisterPage() {
       setIsLoading(true);
       setErrorMessage('');
       await signUpWithEmail(email, password, displayName);
+      trackCrumbless('signup');
       router.push('/'); // Redirect to home page after successful registration
     } catch (error) {
       handleAuthError(error);

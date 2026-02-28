@@ -62,4 +62,14 @@ export const setGranularCookieConsent = (settings: {
 export const clearCookieConsent = (): void => {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('cookieConsent');
+};
+
+/**
+ * Track a custom Crumbless event. Safe to call anywhere; no-ops when consent is off or script not loaded.
+ * @param eventName - Event name (e.g. 'signup', 'login', 'cta_click')
+ */
+export const trackCrumbless = (eventName: string): void => {
+  if (typeof window === 'undefined') return;
+  if (!getCookieConsent()) return;
+  window.crumbless?.track?.(eventName);
 }; 
